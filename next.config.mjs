@@ -17,6 +17,12 @@ const NETWORKS = ['polkadot', 'kusama'];
 const nextConfig = {
 	// Enable standalone output for Docker deployments
 	output: 'standalone',
+	// Allow Server Actions in Codespaces/forwarded environments
+	experimental: {
+		serverActions: {
+			allowedOrigins: ['literate-space-garbanzo-vgqp6jjr4q7hwq69-3000.app.github.dev', 'localhost:3000']
+		}
+	},
 	async headers() {
 		return [
 			{

@@ -11,7 +11,14 @@ export async function getBaseUrl(): Promise<string> {
 
 	const headersList = await headers();
 	const domain = headersList.get('host') || '';
-	const protocol = headersList.get('x-forwarded-proto') || 'https';
 
-	return `${protocol}://${domain}/api/v2`;
+	// Force http for localhost/127.0.0.1, even if x-forwarded-proto says https
+	const isLocalhost = domain.includes('localhost') || domain.startsWith('127.0.0.1');
+	const forwardedProto = headersList.get('x-forwarded-proto');
+	const protocol = isLocalhost ? 'http' : forwardedProto || 'https';
+
+	const baseUrl = `${protocol}://${domain}/api/v2`;
+	console.log('🔍 getBaseUrl:', { domain, protocol, baseUrl, forwardedProto, isLocalhost });
+
+	return baseUrl;
 }

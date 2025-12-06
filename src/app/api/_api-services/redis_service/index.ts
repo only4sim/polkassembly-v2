@@ -49,7 +49,7 @@ import {
 	THREE_DAYS_IN_SECONDS
 } from '../../_api-constants/timeConstants';
 
-if (!REDIS_URL) {
+if (!REDIS_URL && IS_CACHE_ENABLED) {
 	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'REDIS_URL is not set');
 }
 
@@ -90,7 +90,11 @@ enum ERedisKeys {
 }
 
 export class RedisService {
-	private static readonly client: Redis = (() => {
+	private static readonly client: Redis | null = (() => {
+		if (!IS_CACHE_ENABLED) {
+			return null;
+		}
+
 		const client = new Redis(REDIS_URL, {
 			connectTimeout: 20000, // Increase connection timeout to 20 seconds
 			maxRetriesPerRequest: 3,
@@ -183,6 +187,7 @@ export class RedisService {
 
 	private static async Get({ key, forceCache = false }: { key: string; forceCache?: boolean }): Promise<string | null> {
 		if (!IS_CACHE_ENABLED && !forceCache) return null;
+		if (!this.client) return null;
 
 		try {
 			return this.client.get(key);
@@ -194,6 +199,7 @@ export class RedisService {
 
 	private static async Set({ key, value, ttlSeconds, forceCache = false }: { key: string; value: string; ttlSeconds?: number; forceCache?: boolean }): Promise<string | null> {
 		if (!IS_CACHE_ENABLED && !forceCache) return null;
+		if (!this.client) return null;
 
 		try {
 			if (ttlSeconds) {
@@ -209,6 +215,7 @@ export class RedisService {
 
 	private static async Delete({ key, forceCache = false }: { key: string; forceCache?: boolean }): Promise<number> {
 		if (!IS_CACHE_ENABLED && !forceCache) return 0;
+		if (!this.client) return 0;
 
 		try {
 			return this.client.del(key);
@@ -220,10 +227,11 @@ export class RedisService {
 
 	private static async DeleteKeys({ pattern, forceCache = false }: { pattern: string; forceCache?: boolean }): Promise<void> {
 		if (!IS_CACHE_ENABLED && !forceCache) return Promise.resolve();
+		if (!this.client) return Promise.resolve();
 
 		try {
 			return new Promise((resolve, reject) => {
-				const stream = this.client.scanStream({
+				const stream = this.client!.scanStream({
 					count: 200,
 					match: pattern
 				});
@@ -233,7 +241,7 @@ export class RedisService {
 				stream.on('data', async (keys) => {
 					if (keys.length && !hasError) {
 						try {
-							const pipeline = this.client.pipeline();
+							const pipeline = this.client!.pipeline();
 							// eslint-disable-next-line @typescript-eslint/no-explicit-any
 							keys.forEach((key: any) => {
 								pipeline.del(key);
@@ -268,6 +276,7 @@ export class RedisService {
 
 	private static async AddToSet({ key, value, forceCache = false }: { key: string; value: string; forceCache?: boolean }): Promise<number> {
 		if (!IS_CACHE_ENABLED && !forceCache) return 0;
+		if (!this.client) return 0;
 
 		try {
 			return this.client.sadd(key, value);
@@ -279,6 +288,7 @@ export class RedisService {
 
 	private static async RemoveFromSet({ key, value, forceCache = false }: { key: string; value: string; forceCache?: boolean }): Promise<number> {
 		if (!IS_CACHE_ENABLED && !forceCache) return 0;
+		if (!this.client) return 0;
 
 		try {
 			return this.client.srem(key, value);
@@ -290,6 +300,7 @@ export class RedisService {
 
 	private static async GetSetMembers({ key, forceCache = false }: { key: string; forceCache?: boolean }): Promise<string[]> {
 		if (!IS_CACHE_ENABLED && !forceCache) return [];
+		if (!this.client) return [];
 
 		try {
 			return this.client.smembers(key);
