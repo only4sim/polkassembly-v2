@@ -14,8 +14,9 @@ This guide explains how to run the Polkassembly development server without block
 
    ```env
    NEXT_PUBLIC_APP_ENV='development'
-   NEXT_PUBLIC_DEFAULT_NETWORK='polkadot'
    ```
+
+   > `NEXT_PUBLIC_DEFAULT_NETWORK` is optional — it falls back to `'polkadot'` when not set.
 
 3. Ensure all feature flags are set to `false` (this is the default in `.env.example`):
 
