@@ -38,13 +38,13 @@ This guide explains how to run the Polkassembly development server without block
 
 ## Feature Flags
 
-| Flag                | Default | Description                                         |
-| ------------------- | ------- | --------------------------------------------------- |
-| `ENABLE_BLOCKCHAIN` | `false` | Enables Polkadot API / on-chain wallet connections   |
-| `ENABLE_INDEXERS`   | `false` | Enables Subscan and Subsquid indexer services        |
-| `ENABLE_REDIS`      | `false` | Enables Redis caching (requires `REDIS_URL`)         |
-| `ENABLE_ALGOLIA`    | `false` | Enables Algolia search indexing                      |
-| `ENABLE_AI`         | `false` | Enables AI service (summaries, sentiment, spam)      |
+| Flag                | Default | Description                                        |
+| ------------------- | ------- | -------------------------------------------------- |
+| `ENABLE_BLOCKCHAIN` | `false` | Enables Polkadot API / on-chain wallet connections |
+| `ENABLE_INDEXERS`   | `false` | Enables Subscan and Subsquid indexer services      |
+| `ENABLE_REDIS`      | `false` | Enables Redis caching (requires `REDIS_URL`)       |
+| `ENABLE_ALGOLIA`    | `false` | Enables Algolia search indexing                    |
+| `ENABLE_AI`         | `false` | Enables AI service (summaries, sentiment, spam)    |
 
 When a feature flag is `false`:
 - The corresponding service will **not** initialize or connect.

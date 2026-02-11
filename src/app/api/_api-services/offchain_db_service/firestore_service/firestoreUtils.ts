@@ -29,6 +29,9 @@ export class FirestoreUtils {
 
 	protected static get firestoreDb(): firebaseAdmin.firestore.Firestore {
 		if (!this._firestoreDb) {
+			if (!firebaseAdmin.apps.length) {
+				throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'FIREBASE_SERVICE_ACC_CONFIG is not set. Firestore is unavailable.');
+			}
 			this._firestoreDb = firebaseAdmin.firestore();
 		}
 		return this._firestoreDb;
