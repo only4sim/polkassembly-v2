@@ -4,7 +4,7 @@
 
 // TODO: change types for params eg: network, origin, etc.
 
-import { IS_CACHE_ENABLED, REDIS_URL } from '@api/_api-constants/apiEnvVars';
+import { ENABLE_REDIS, IS_CACHE_ENABLED, REDIS_URL } from '@api/_api-constants/apiEnvVars';
 import { APIError } from '@api/_api-utils/apiError';
 import { ERROR_CODES } from '@shared/_constants/errorLiterals';
 import { StatusCodes } from 'http-status-codes';
@@ -49,8 +49,12 @@ import {
 	THREE_DAYS_IN_SECONDS
 } from '../../_api-constants/timeConstants';
 
-if (!REDIS_URL) {
+if (ENABLE_REDIS && !REDIS_URL) {
 	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'REDIS_URL is not set');
+}
+
+if (!ENABLE_REDIS) {
+	console.log('\n ℹ️ [disabled] Redis is disabled via ENABLE_REDIS flag. Cache operations will return stub data.\n');
 }
 
 enum ERedisKeys {
@@ -90,7 +94,8 @@ enum ERedisKeys {
 }
 
 export class RedisService {
-	private static readonly client: Redis = (() => {
+	private static readonly client: Redis | null = (() => {
+		if (!ENABLE_REDIS || !REDIS_URL) return null;
 		const client = new Redis(REDIS_URL, {
 			connectTimeout: 20000, // Increase connection timeout to 20 seconds
 			maxRetriesPerRequest: 3,
@@ -186,7 +191,7 @@ export class RedisService {
 	// helper methods
 
 	private static async Get({ key, forceCache = false }: { key: string; forceCache?: boolean }): Promise<string | null> {
-		if (!IS_CACHE_ENABLED && !forceCache) return null;
+		if (!this.client || (!IS_CACHE_ENABLED && !forceCache)) return null;
 
 		try {
 			return this.client.get(key);
@@ -197,7 +202,7 @@ export class RedisService {
 	}
 
 	private static async Set({ key, value, ttlSeconds, forceCache = false }: { key: string; value: string; ttlSeconds?: number; forceCache?: boolean }): Promise<string | null> {
-		if (!IS_CACHE_ENABLED && !forceCache) return null;
+		if (!this.client || (!IS_CACHE_ENABLED && !forceCache)) return null;
 
 		try {
 			if (ttlSeconds) {
@@ -212,7 +217,7 @@ export class RedisService {
 	}
 
 	private static async Delete({ key, forceCache = false }: { key: string; forceCache?: boolean }): Promise<number> {
-		if (!IS_CACHE_ENABLED && !forceCache) return 0;
+		if (!this.client || (!IS_CACHE_ENABLED && !forceCache)) return 0;
 
 		try {
 			return this.client.del(key);
@@ -223,7 +228,7 @@ export class RedisService {
 	}
 
 	private static async DeleteKeys({ pattern, forceCache = false }: { pattern: string; forceCache?: boolean }): Promise<void> {
-		if (!IS_CACHE_ENABLED && !forceCache) return Promise.resolve();
+		if (!this.client || (!IS_CACHE_ENABLED && !forceCache)) return Promise.resolve();
 
 		try {
 			return new Promise((resolve, reject) => {
@@ -271,7 +276,7 @@ export class RedisService {
 	}
 
 	private static async AddToSet({ key, value, forceCache = false }: { key: string; value: string; forceCache?: boolean }): Promise<number> {
-		if (!IS_CACHE_ENABLED && !forceCache) return 0;
+		if (!this.client || (!IS_CACHE_ENABLED && !forceCache)) return 0;
 
 		try {
 			return this.client.sadd(key, value);
@@ -282,7 +287,7 @@ export class RedisService {
 	}
 
 	private static async RemoveFromSet({ key, value, forceCache = false }: { key: string; value: string; forceCache?: boolean }): Promise<number> {
-		if (!IS_CACHE_ENABLED && !forceCache) return 0;
+		if (!this.client || (!IS_CACHE_ENABLED && !forceCache)) return 0;
 
 		try {
 			return this.client.srem(key, value);
@@ -293,7 +298,7 @@ export class RedisService {
 	}
 
 	private static async GetSetMembers({ key, forceCache = false }: { key: string; forceCache?: boolean }): Promise<string[]> {
-		if (!IS_CACHE_ENABLED && !forceCache) return [];
+		if (!this.client || (!IS_CACHE_ENABLED && !forceCache)) return [];
 
 		try {
 			return this.client.smembers(key);

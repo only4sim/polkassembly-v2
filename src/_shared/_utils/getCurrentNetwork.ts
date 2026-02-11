@@ -6,9 +6,10 @@ import { ValidatorService } from '@shared/_services/validator_service';
 import { ENetwork } from '@shared/types';
 import { getSharedEnvVars } from './getSharedEnvVars';
 
-const { NEXT_PUBLIC_DEFAULT_NETWORK: defaultNetwork } = getSharedEnvVars();
-if (!defaultNetwork || !ValidatorService.isValidNetwork(defaultNetwork)) {
-	throw new Error('NEXT_PUBLIC_DEFAULT_NETWORK is not set');
+const { NEXT_PUBLIC_DEFAULT_NETWORK: envNetwork } = getSharedEnvVars();
+const defaultNetwork = envNetwork && ValidatorService.isValidNetwork(envNetwork) ? envNetwork : ENetwork.POLKADOT;
+if (!envNetwork || !ValidatorService.isValidNetwork(envNetwork)) {
+	console.log(`\n ℹ️ [disabled] NEXT_PUBLIC_DEFAULT_NETWORK is not set or invalid. Falling back to '${defaultNetwork}'.\n`);
 }
 
 export function getCurrentNetwork(): ENetwork {

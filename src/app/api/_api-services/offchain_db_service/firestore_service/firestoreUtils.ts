@@ -9,23 +9,33 @@ import * as firebaseAdmin from 'firebase-admin';
 import { StatusCodes } from 'http-status-codes';
 
 // init firebase admin
-if (!FIREBASE_SERVICE_ACC_CONFIG) {
-	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal Error: FIREBASE_SERVICE_ACC_CONFIG missing.');
-}
-
-try {
-	if (!firebaseAdmin.apps.length) {
-		firebaseAdmin.initializeApp({
-			credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
-		});
+if (FIREBASE_SERVICE_ACC_CONFIG) {
+	try {
+		if (!firebaseAdmin.apps.length) {
+			firebaseAdmin.initializeApp({
+				credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
+			});
+		}
+	} catch (error: unknown) {
+		console.error('\nError in initialising firebase-admin: ', error, '\n');
+		throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Error in initialising firebase-admin.');
 	}
-} catch (error: unknown) {
-	console.error('\nError in initialising firebase-admin: ', error, '\n');
-	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Error in initialising firebase-admin.');
+} else {
+	console.log('\n ℹ️ [disabled] FIREBASE_SERVICE_ACC_CONFIG is not set. Firestore operations will fail if called.\n');
 }
 
 export class FirestoreUtils {
-	protected static firestoreDb: firebaseAdmin.firestore.Firestore = firebaseAdmin.firestore();
+	private static _firestoreDb: firebaseAdmin.firestore.Firestore | null = null;
+
+	protected static get firestoreDb(): firebaseAdmin.firestore.Firestore {
+		if (!this._firestoreDb) {
+			if (!firebaseAdmin.apps.length) {
+				throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'FIREBASE_SERVICE_ACC_CONFIG is not set. Firestore is unavailable.');
+			}
+			this._firestoreDb = firebaseAdmin.firestore();
+		}
+		return this._firestoreDb;
+	}
 
 	protected static increment = firebaseAdmin.firestore.FieldValue.increment;
 

@@ -6,7 +6,6 @@ import { Metadata } from 'next';
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
-import { ClientError } from '../_client-utils/clientError';
 import Overview from './Components/Overview';
 import { NextApiClientService } from '../_client-services/next_api_client_service';
 import { getReferrerFromHeaders } from '../../_shared/_utils/getReferrerFromHeaders';
@@ -30,7 +29,15 @@ async function OverviewPage() {
 	const referer = await getReferrerFromHeaders();
 
 	if (allTracks.error || !allTracks.data) {
-		throw new ClientError(allTracks.error?.message || 'Failed to fetch data');
+		return (
+			<div>
+				<Overview
+					allTracksData={{ items: [], totalCount: 0 }}
+					treasuryStatsData={[]}
+				/>
+				<KlaraAutoOpen referer={referer} />
+			</div>
+		);
 	}
 
 	return (

@@ -35,15 +35,11 @@ import { OnChainDbService } from '../onchain_db_service';
 import { validateRemarkLogin } from '../../_api-utils/validateRemarkLogin';
 
 if (!ACCESS_TOKEN_PRIVATE_KEY || !ACCESS_TOKEN_PUBLIC_KEY || !ACCESS_TOKEN_PASSPHRASE) {
-	throw new APIError(
-		ERROR_CODES.INTERNAL_SERVER_ERROR,
-		StatusCodes.INTERNAL_SERVER_ERROR,
-		'ACCESS_TOKEN_PRIVATE_KEY, ACCESS_TOKEN_PUBLIC_KEY or ACCESS_TOKEN_PASSPHRASE not set. Aborting.'
-	);
+	console.log('\n ℹ️ [disabled] ACCESS_TOKEN_PRIVATE_KEY, ACCESS_TOKEN_PUBLIC_KEY or ACCESS_TOKEN_PASSPHRASE not set. Auth operations will fail if called.\n');
 }
 
 if (!REFRESH_TOKEN_PRIVATE_KEY || !REFRESH_TOKEN_PUBLIC_KEY || !REFRESH_TOKEN_PASSPHRASE) {
-	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'REFRESH_TOKEN_PRIVATE_KEY or REFRESH_TOKEN_PASSPHRASE not set. Aborting.');
+	console.log('\n ℹ️ [disabled] REFRESH_TOKEN_PRIVATE_KEY or REFRESH_TOKEN_PASSPHRASE not set. Token refresh will fail if called.\n');
 }
 
 export class AuthService {

@@ -15,7 +15,8 @@ import { APIError } from './apiError';
 export async function getNetworkFromHeaders(): Promise<ENetwork> {
 	const readonlyHeaders = await headers();
 
-	const { NEXT_PUBLIC_APP_ENV, NEXT_PUBLIC_DEFAULT_NETWORK: defaultNetwork } = getSharedEnvVars();
+	const { NEXT_PUBLIC_APP_ENV, NEXT_PUBLIC_DEFAULT_NETWORK: envNetwork } = getSharedEnvVars();
+	const defaultNetwork = envNetwork && ValidatorService.isValidNetwork(envNetwork) ? envNetwork : ENetwork.POLKADOT;
 
 	const headerNetwork = readonlyHeaders.get('x-network');
 	const host = readonlyHeaders.get('host');

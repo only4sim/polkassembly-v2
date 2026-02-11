@@ -503,31 +503,35 @@ export class NextApiClientService {
 		data?: Record<string, unknown>;
 		skipCache?: boolean;
 	}): Promise<{ data: T | null; error: IErrorResponse | null }> {
-		const currentNetwork = await this.getCurrentNetwork();
+		try {
+			const currentNetwork = await this.getCurrentNetwork();
 
-		// Detect if we're in an iframe and specifically from Mimir
-		const isMimir = await isMimirDetected();
+			// Detect if we're in an iframe and specifically from Mimir
+			const isMimir = await isMimirDetected();
 
-		const response = await fetch(url, {
-			body: JSON.stringify(data),
-			credentials: 'include',
-			headers: {
-				...(!global.window ? await getCookieHeadersServer() : {}),
-				...(isMimir ? { 'x-iframe-context': 'mimir' } : {}),
-				[EHttpHeaderKey.CONTENT_TYPE]: 'application/json',
-				[EHttpHeaderKey.API_KEY]: getSharedEnvVars().NEXT_PUBLIC_POLKASSEMBLY_API_KEY,
-				[EHttpHeaderKey.NETWORK]: currentNetwork,
-				[EHttpHeaderKey.SKIP_CACHE]: skipCache.toString()
-			},
-			method
-		});
+			const response = await fetch(url, {
+				body: JSON.stringify(data),
+				credentials: 'include',
+				headers: {
+					...(!global.window ? await getCookieHeadersServer() : {}),
+					...(isMimir ? { 'x-iframe-context': 'mimir' } : {}),
+					[EHttpHeaderKey.CONTENT_TYPE]: 'application/json',
+					[EHttpHeaderKey.API_KEY]: getSharedEnvVars().NEXT_PUBLIC_POLKASSEMBLY_API_KEY,
+					[EHttpHeaderKey.NETWORK]: currentNetwork,
+					[EHttpHeaderKey.SKIP_CACHE]: skipCache.toString()
+				},
+				method
+			});
 
-		const resJSON = await response.json();
+			const resJSON = await response.json();
 
-		if (response.status === StatusCodes.OK) {
-			return { data: resJSON as T, error: null };
+			if (response.status === StatusCodes.OK) {
+				return { data: resJSON as T, error: null };
+			}
+			return { data: null, error: resJSON as IErrorResponse };
+		} catch {
+			return { data: null, error: { name: 'API_FETCH_ERROR', message: `Something went wrong while fetching data from ${url.pathname}. Please try again later.`, status: StatusCodes.INTERNAL_SERVER_ERROR } };
 		}
-		return { data: null, error: resJSON as IErrorResponse };
 	}
 
 	private static async nextApiClientFetchStream({

@@ -10,18 +10,20 @@ import { formatBnBalance } from '@/app/_client-utils/formatBnBalance';
 import { NON_SPAM_POSTS, SPAM_POSTS } from '@/_shared/_constants/spamDetectionExamples';
 import { MIN_COMMENTS_FOR_SUMMARY } from '@/_shared/_constants/commentSummaryConstants';
 import { CONTENT_BLACKLIST } from '@/_shared/_constants/contentBlacklist';
-import { AI_SERVICE_URL, IS_AI_ENABLED } from '../../_api-constants/apiEnvVars';
+import { AI_SERVICE_URL, ENABLE_AI, IS_AI_ENABLED } from '../../_api-constants/apiEnvVars';
 import { OffChainDbService } from '../offchain_db_service';
 import { OnChainDbService } from '../onchain_db_service';
 import { APIError } from '../../_api-utils/apiError';
 import { fetchPostData } from '../../_api-utils/fetchPostData';
 import { RedisService } from '../redis_service';
 
-if (!IS_AI_ENABLED) {
+if (!ENABLE_AI) {
+	console.log('\n ℹ️ [disabled] AI service is disabled via ENABLE_AI flag. AI content will not be generated.\n');
+} else if (!IS_AI_ENABLED) {
 	console.log('\n ℹ️ Info: AI service is not enabled, AI content will not be generated and/or included in the api data\n');
 }
 
-if (IS_AI_ENABLED && !AI_SERVICE_URL.trim()) {
+if (ENABLE_AI && IS_AI_ENABLED && !AI_SERVICE_URL.trim()) {
 	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'AI_SERVICE_URL is not set');
 }
 
@@ -162,7 +164,7 @@ export class AIService {
 	}
 
 	private static async getAIResponse(prompt: string): Promise<string | null> {
-		if (!IS_AI_ENABLED) {
+		if (!ENABLE_AI || !IS_AI_ENABLED) {
 			return null;
 		}
 

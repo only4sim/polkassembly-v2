@@ -13,12 +13,16 @@ import { getSharedEnvVars } from '@/_shared/_utils/getSharedEnvVars';
 import { markdownToPlainText } from '@/_shared/_utils/markdownToText';
 import { ValidatorService } from '@/_shared/_services/validator_service';
 import { buildCompositeIndex } from '@/_shared/_utils/childBountyUtils';
-import { ALGOLIA_WRITE_API_KEY } from '../../_api-constants/apiEnvVars';
+import { ALGOLIA_WRITE_API_KEY, ENABLE_ALGOLIA } from '../../_api-constants/apiEnvVars';
 import { APIError } from '../../_api-utils/apiError';
 import { delay } from '../../_api-utils/delay';
 import { fetchPostData } from '../../_api-utils/fetchPostData';
 
 const { NEXT_PUBLIC_ALGOLIA_APP_ID } = getSharedEnvVars();
+
+if (!ENABLE_ALGOLIA) {
+	console.log('\n ℹ️ [disabled] Algolia is disabled via ENABLE_ALGOLIA flag. Search indexing will be skipped.\n');
+}
 
 export class AlgoliaService {
 	// Maximum size for Algolia records in bytes (100KB)
@@ -26,6 +30,10 @@ export class AlgoliaService {
 
 	// Interface for initializing Algolia client
 	private static initAlgoliaApi() {
+		if (!ENABLE_ALGOLIA) {
+			return null;
+		}
+
 		if (!NEXT_PUBLIC_ALGOLIA_APP_ID || !ALGOLIA_WRITE_API_KEY) {
 			console.error('Algolia environment variables not set');
 			throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Algolia environment variables not set');
@@ -170,6 +178,7 @@ export class AlgoliaService {
 	// Helper method to save post to Algolia
 	private static async saveToAlgolia(algoliaPost: IAlgoliaPost): Promise<void> {
 		const client = this.initAlgoliaApi();
+		if (!client) return;
 
 		// Truncate content if the object is too large for Algolia
 		const truncatedPost = this.truncateContentToFitLimit(algoliaPost);
@@ -248,6 +257,7 @@ export class AlgoliaService {
 		try {
 			// Initialize Algolia client
 			const client = this.initAlgoliaApi();
+			if (!client) return;
 
 			const objectID = `${network}-${proposalType}-${indexOrHash}`;
 
