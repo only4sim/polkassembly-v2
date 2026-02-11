@@ -529,9 +529,8 @@ export class NextApiClientService {
 				return { data: resJSON as T, error: null };
 			}
 			return { data: null, error: resJSON as IErrorResponse };
-		} catch (error) {
-			console.error('Error in API call : ', url.toString(), { error });
-			return { data: null, error: { name: 'API_FETCH_ERROR', message: `${error instanceof Error ? error.message : 'Unknown error'}`, status: StatusCodes.INTERNAL_SERVER_ERROR } };
+		} catch {
+			return { data: null, error: { name: 'API_FETCH_ERROR', message: `Something went wrong while fetching data from ${url.pathname}. Please try again later.`, status: StatusCodes.INTERNAL_SERVER_ERROR } };
 		}
 	}
 
