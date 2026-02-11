@@ -2,14 +2,16 @@
 // This software may be modified and distributed under the terms
 // of the Apache-2.0 license. See the LICENSE file for details.
 
-import { SUBSCAN_API_KEY } from '@/app/api/_api-constants/apiEnvVars';
+import { ENABLE_INDEXERS, SUBSCAN_API_KEY } from '@/app/api/_api-constants/apiEnvVars';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { deepParseJson } from 'deep-parse-json';
 
-// TODO: add a feature flag
-
-if (!SUBSCAN_API_KEY) {
+if (ENABLE_INDEXERS && !SUBSCAN_API_KEY) {
 	throw new Error('SUBSCAN_API_KEY env variable is not set');
+}
+
+if (!ENABLE_INDEXERS) {
+	console.log('\n ℹ️ [disabled] Subscan indexer is disabled via ENABLE_INDEXERS flag.\n');
 }
 
 const SUBSCAN_API_HEADERS = {
@@ -19,6 +21,10 @@ const SUBSCAN_API_HEADERS = {
 };
 
 export const fetchSubscanData = async ({ url, network, body, method }: { url: string | URL; network: string; body?: Record<string, unknown>; method?: 'POST' | 'GET' }) => {
+	if (!ENABLE_INDEXERS) {
+		return { message: 'Subscan indexer disabled', data: null };
+	}
+
 	try {
 		const redisData = await RedisService.GetSubscanData({ network, url: url.toString(), body });
 

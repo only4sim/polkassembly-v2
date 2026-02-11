@@ -9,12 +9,12 @@ import { getFormattedAddress } from '@/_shared/_utils/getFormattedAddress';
 import { getSubstrateAddress } from '@/_shared/_utils/getSubstrateAddress';
 import { snakeToPascalCase } from '@/_shared/_utils/snakeToPascalCase';
 import { ENetwork, EProposalStatus, EProposalType, EProxyType, IAddressRelations, IMultisigAddress, IOnChainPostInfo, IProxyAddress } from '@/_shared/types';
-import { SUBSCAN_API_KEY } from '@/app/api/_api-constants/apiEnvVars';
+import { ENABLE_INDEXERS, SUBSCAN_API_KEY } from '@/app/api/_api-constants/apiEnvVars';
 import { APIError } from '@/app/api/_api-utils/apiError';
 import { fetchSubscanData } from '@/app/api/_api-utils/fetchSubscanData';
 import { StatusCodes } from 'http-status-codes';
 
-if (!SUBSCAN_API_KEY) {
+if (ENABLE_INDEXERS && !SUBSCAN_API_KEY) {
 	throw new Error('SUBSCAN_API_KEY env variable is not set');
 }
 

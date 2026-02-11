@@ -37,3 +37,10 @@ export const {
 export const IS_CACHE_ENABLED = process.env.IS_CACHE_ENABLED === 'true';
 export const IS_AI_ENABLED = process.env.IS_AI_ENABLED === 'true';
 export const IS_NOTIFICATION_SERVICE_ENABLED = process.env.IS_NOTIFICATION_SERVICE_ENABLED === 'true';
+
+// Feature flags for no-keys dev mode (default OFF)
+export const ENABLE_BLOCKCHAIN = process.env.ENABLE_BLOCKCHAIN === 'true';
+export const ENABLE_INDEXERS = process.env.ENABLE_INDEXERS === 'true';
+export const ENABLE_REDIS = process.env.ENABLE_REDIS === 'true';
+export const ENABLE_ALGOLIA = process.env.ENABLE_ALGOLIA === 'true';
+export const ENABLE_AI = process.env.ENABLE_AI === 'true';
