@@ -1,7 +1,7 @@
 .topicContainer {
-   @apply flex gap-3 text-xs capitalize flex-wrap;
+	@apply flex flex-wrap gap-3 text-xs capitalize;
 }
 
 .topicButton {
-   @apply cursor-pointer px-4 h-8 rounded-xl border border-none capitalize text-xs tracking-wide shadow-none ;
+	@apply h-8 cursor-pointer rounded-xl border border-none px-4 text-xs capitalize tracking-wide shadow-none;
 }

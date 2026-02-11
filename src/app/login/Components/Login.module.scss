@@ -1,11 +1,11 @@
 .rootClass {
-    @apply flex h-full w-full items-start justify-center p-8 sm:p-20
+	@apply flex h-full w-full items-start justify-center p-8 sm:p-20;
 }
 
 .loginComp {
-    @apply w-[350px] sm:w-[600px] rounded-lg shadow-lg bg-bg_modal
+	@apply w-[350px] rounded-lg bg-bg_modal shadow-lg sm:w-[600px];
 }
 
 .header {
-    @apply border-b border-border_grey p-4
+	@apply border-b border-border_grey p-4;
 }

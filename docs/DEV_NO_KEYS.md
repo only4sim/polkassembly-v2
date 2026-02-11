@@ -48,6 +48,7 @@ This guide explains how to run the Polkassembly development server without block
 | `ENABLE_AI`         | `false` | Enables AI service (summaries, sentiment, spam)    |
 
 When a feature flag is `false`:
+
 - The corresponding service will **not** initialize or connect.
 - API calls that depend on the service will return empty/stub data.
 - A `[disabled]` log message is printed at startup for each disabled service.
@@ -79,9 +80,11 @@ To enable full functionality, set the corresponding feature flag to `true` and p
 ## Troubleshooting
 
 **Server won't start?**
+
 - Check that all `ENABLE_*` flags are set to `false`.
 - Check that `IS_CACHE_ENABLED`, `IS_AI_ENABLED`, and `IS_NOTIFICATION_SERVICE_ENABLED` are set to `false`.
 
 **Pages show errors?**
+
 - This is expected when data services are disabled. The error boundary will show a friendly message.
 - If you need working data, provide `FIREBASE_SERVICE_ACC_CONFIG` for Firestore access.
