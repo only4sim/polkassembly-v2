@@ -1,9 +1,7 @@
 [
 	{
 		"id": 1,
-		"badges": [
-			"Common Good"
-		],
+		"badges": ["Common Good"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/paritytech/cumulus",
 		"investorsCount": 0,
@@ -16,9 +14,7 @@
 	},
 	{
 		"id": 2,
-		"badges": [
-			"Common Good"
-		],
+		"badges": ["Common Good"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/paritytech/cumulus",
 		"investorsCount": 0,
@@ -31,10 +27,7 @@
 	},
 	{
 		"id": 3,
-		"badges": [
-			"NFT",
-			" Gaming"
-		],
+		"badges": ["NFT", " Gaming"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/bit-country/Metaverse-Network",
 		"investorsCount": 33,
@@ -53,9 +46,7 @@
 	},
 	{
 		"id": 4,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/AcalaNetwork/Acala",
 		"investorsCount": 32,
@@ -74,9 +65,7 @@
 	},
 	{
 		"id": 5,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/AcalaNetwork/Acala",
 		"investorsCount": 32,
@@ -95,9 +84,7 @@
 	},
 	{
 		"id": 6,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/AstarNetwork/Astar",
 		"investorsCount": 32,
@@ -116,9 +103,7 @@
 	},
 	{
 		"id": 7,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/AstarNetwork/Astar",
 		"investorsCount": 31,
@@ -137,11 +122,7 @@
 	},
 	{
 		"id": 8,
-		"badges": [
-			"Bridge",
-			" DeFi",
-			" SmartContracts"
-		],
+		"badges": ["Bridge", " DeFi", " SmartContracts"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/bifrost-finance/bifrost",
 		"investorsCount": 24,
@@ -160,9 +141,7 @@
 	},
 	{
 		"id": 9,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/equilibrium-eosdt/equilibrium-substrate-chain",
 		"investorsCount": 23,
@@ -181,9 +160,7 @@
 	},
 	{
 		"id": 10,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 23,
@@ -202,9 +179,7 @@
 	},
 	{
 		"id": 11,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/crustio/crust",
 		"investorsCount": 22,
@@ -223,11 +198,7 @@
 	},
 	{
 		"id": 12,
-		"badges": [
-			"IOT",
-			" Data",
-			" Scaling"
-		],
+		"badges": ["IOT", " Data", " Scaling"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/NodleCode/chain",
 		"investorsCount": 22,
@@ -246,10 +217,7 @@
 	},
 	{
 		"id": 13,
-		"badges": [
-			"Privacy",
-			" DeFi"
-		],
+		"badges": ["Privacy", " DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/Manta-Network/Manta",
 		"investorsCount": 20,
@@ -268,9 +236,7 @@
 	},
 	{
 		"id": 14,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/parallel-finance/parallel",
 		"investorsCount": 18,
@@ -289,9 +255,7 @@
 	},
 	{
 		"id": 15,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/parallel-finance/parallel",
 		"investorsCount": 18,
@@ -310,9 +274,7 @@
 	},
 	{
 		"id": 16,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/PureStake/moonbeam",
 		"investorsCount": 16,
@@ -331,9 +293,7 @@
 	},
 	{
 		"id": 17,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/PureStake/moonbeam",
 		"investorsCount": 16,
@@ -352,9 +312,7 @@
 	},
 	{
 		"id": 18,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/centrifuge/centrifuge-chain/",
 		"investorsCount": 16,
@@ -373,9 +331,7 @@
 	},
 	{
 		"id": 19,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/centrifuge/centrifuge-chain",
 		"investorsCount": 16,
@@ -394,11 +350,7 @@
 	},
 	{
 		"id": 20,
-		"badges": [
-			"Data",
-			" Identity",
-			" Privacy"
-		],
+		"badges": ["Data", " Identity", " Privacy"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/litentry/litentry-parachain",
 		"investorsCount": 14,
@@ -417,9 +369,7 @@
 	},
 	{
 		"id": 21,
-		"badges": [
-			"Privacy"
-		],
+		"badges": ["Privacy"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/integritee-network/worker",
 		"investorsCount": 12,
@@ -457,10 +407,7 @@
 	},
 	{
 		"id": 23,
-		"badges": [
-			"Data",
-			" Privacy"
-		],
+		"badges": ["Data", " Privacy"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/Phala-Network/phala-blockchain",
 		"investorsCount": 9,
@@ -479,10 +426,7 @@
 	},
 	{
 		"id": 24,
-		"badges": [
-			"Privacy",
-			" Data"
-		],
+		"badges": ["Privacy", " Data"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Phala-Network/phala-blockchain",
 		"investorsCount": 9,
@@ -501,9 +445,7 @@
 	},
 	{
 		"id": 25,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/galacticcouncil/HydraDX-node",
 		"investorsCount": 8,
@@ -522,11 +464,7 @@
 	},
 	{
 		"id": 26,
-		"badges": [
-			"SmartContracts",
-			" DeFi",
-			" Scaling"
-		],
+		"badges": ["SmartContracts", " DeFi", " Scaling"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/OAK-Foundation/OAK-blockchain",
 		"investorsCount": 8,
@@ -545,11 +483,7 @@
 	},
 	{
 		"id": 27,
-		"badges": [
-			"Bridge",
-			" NFT",
-			" Gaming"
-		],
+		"badges": ["Bridge", " NFT", " Gaming"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/darwinia-network/darwinia/tree/main/runtime/crab",
 		"investorsCount": 7,
@@ -568,9 +502,7 @@
 	},
 	{
 		"id": 28,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/interlay/interbtc",
 		"investorsCount": 7,
@@ -589,10 +521,7 @@
 	},
 	{
 		"id": 29,
-		"badges": [
-			"DeFi",
-			" Bridge"
-		],
+		"badges": ["DeFi", " Bridge"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/interlay/interbtc",
 		"investorsCount": 7,
@@ -611,9 +540,7 @@
 	},
 	{
 		"id": 30,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/galacticcouncil/Basilisk-node",
 		"investorsCount": 7,
@@ -632,9 +559,7 @@
 	},
 	{
 		"id": 31,
-		"badges": [
-			"NFT"
-		],
+		"badges": ["NFT"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 6,
@@ -653,10 +578,7 @@
 	},
 	{
 		"id": 32,
-		"badges": [
-			"Data",
-			" Identity"
-		],
+		"badges": ["Data", " Identity"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/KILTprotocol/mashnet-node",
 		"investorsCount": 3,
@@ -675,9 +597,7 @@
 	},
 	{
 		"id": 33,
-		"badges": [
-			"IOT"
-		],
+		"badges": ["IOT"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/airalab/robonomics",
 		"investorsCount": 3,
@@ -696,11 +616,7 @@
 	},
 	{
 		"id": 34,
-		"badges": [
-			"DeFi",
-			" Exchange",
-			" Bridge"
-		],
+		"badges": ["DeFi", " Exchange", " Bridge"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/sora-xor",
 		"investorsCount": 1,
@@ -719,10 +635,7 @@
 	},
 	{
 		"id": 35,
-		"badges": [
-			"DAO",
-			" Common Good"
-		],
+		"badges": ["DAO", " Common Good"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/encointer/encointer-parachain",
 		"investorsCount": 0,
@@ -767,10 +680,7 @@
 	},
 	{
 		"id": 38,
-		"badges": [
-			"NFT",
-			" Gaming"
-		],
+		"badges": ["NFT", " Gaming"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 23,
@@ -783,10 +693,7 @@
 	},
 	{
 		"id": 39,
-		"badges": [
-			"SmartContracts",
-			" DeFi"
-		],
+		"badges": ["SmartContracts", " DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/clover-network/clover",
 		"investorsCount": 10,
@@ -805,9 +712,7 @@
 	},
 	{
 		"id": 40,
-		"badges": [
-			"Oracle"
-		],
+		"badges": ["Oracle"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/zeitgeistpm/zeitgeist",
 		"investorsCount": 9,
@@ -820,10 +725,7 @@
 	},
 	{
 		"id": 41,
-		"badges": [
-			"SmartContracts",
-			" DeFi"
-		],
+		"badges": ["SmartContracts", " DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/clover-network/clover",
 		"investorsCount": 8,
@@ -842,9 +744,7 @@
 	},
 	{
 		"id": 42,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/mangata-finance/mangata-node",
 		"investorsCount": 5,
@@ -857,9 +757,7 @@
 	},
 	{
 		"id": 43,
-		"badges": [
-			"DAO"
-		],
+		"badges": ["DAO"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -872,9 +770,7 @@
 	},
 	{
 		"id": 44,
-		"badges": [
-			"DAO"
-		],
+		"badges": ["DAO"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 39,
@@ -893,10 +789,7 @@
 	},
 	{
 		"id": 45,
-		"badges": [
-			"Oracle",
-			" DeFi"
-		],
+		"badges": ["Oracle", " DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/Kylin-Network/kylin-collator",
 		"investorsCount": 24,
@@ -915,11 +808,7 @@
 	},
 	{
 		"id": 46,
-		"badges": [
-			"Data",
-			" Identity",
-			" Privacy"
-		],
+		"badges": ["Data", " Identity", " Privacy"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/litentry/litentry-parachain",
 		"investorsCount": 13,
@@ -938,9 +827,7 @@
 	},
 	{
 		"id": 47,
-		"badges": [
-			"Oracle"
-		],
+		"badges": ["Oracle"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/aresprotocols/mars",
 		"investorsCount": 6,
@@ -959,9 +846,7 @@
 	},
 	{
 		"id": 48,
-		"badges": [
-			"NFT"
-		],
+		"badges": ["NFT"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 6,
@@ -980,11 +865,7 @@
 	},
 	{
 		"id": 49,
-		"badges": [
-			"DeFi",
-			" Exchange",
-			" Bridge"
-		],
+		"badges": ["DeFi", " Exchange", " Bridge"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Polkadex-Substrate/Polkadex",
 		"investorsCount": 24,
@@ -1003,9 +884,7 @@
 	},
 	{
 		"id": 50,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Coinversation/coinpro",
 		"investorsCount": 3,
@@ -1024,10 +903,7 @@
 	},
 	{
 		"id": 51,
-		"badges": [
-			"DAO",
-			" NFT"
-		],
+		"badges": ["DAO", " NFT"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 1,
@@ -1046,9 +922,7 @@
 	},
 	{
 		"id": 52,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/DataHighway-DHX/DataHighway-Parachain",
 		"investorsCount": 0,
@@ -1061,9 +935,7 @@
 	},
 	{
 		"id": 53,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -1076,10 +948,7 @@
 	},
 	{
 		"id": 54,
-		"badges": [
-			"NFT",
-			" Gaming"
-		],
+		"badges": ["NFT", " Gaming"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/bit-country/Metaverse-Network",
 		"investorsCount": 33,
@@ -1098,9 +967,7 @@
 	},
 	{
 		"id": 55,
-		"badges": [
-			"DAO"
-		],
+		"badges": ["DAO"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/SubDAO-Network/subDAO-contracts",
 		"investorsCount": 27,
@@ -1119,9 +986,7 @@
 	},
 	{
 		"id": 56,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/konomi-network/konomi-node",
 		"investorsCount": 25,
@@ -1140,11 +1005,7 @@
 	},
 	{
 		"id": 57,
-		"badges": [
-			"Bridge",
-			" DeFi",
-			" SmartContracts"
-		],
+		"badges": ["Bridge", " DeFi", " SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/bifrost-finance/bifrost",
 		"investorsCount": 24,
@@ -1163,10 +1024,7 @@
 	},
 	{
 		"id": 58,
-		"badges": [
-			"Oracle",
-			" DeFi"
-		],
+		"badges": ["Oracle", " DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Kylin-Network/kylin-collator",
 		"investorsCount": 24,
@@ -1223,9 +1081,7 @@
 	},
 	{
 		"id": 61,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/crustio/crust",
 		"investorsCount": 22,
@@ -1244,11 +1100,7 @@
 	},
 	{
 		"id": 62,
-		"badges": [
-			"Privacy",
-			" DeFi",
-			" SmartContracts"
-		],
+		"badges": ["Privacy", " DeFi", " SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Manta-Network/Manta",
 		"investorsCount": 20,
@@ -1267,10 +1119,7 @@
 	},
 	{
 		"id": 63,
-		"badges": [
-			"Bridge",
-			" Waitlist"
-		],
+		"badges": ["Bridge", " Waitlist"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/pontem-network/pontem",
 		"investorsCount": 16,
@@ -1289,9 +1138,7 @@
 	},
 	{
 		"id": 64,
-		"badges": [
-			"Bridge"
-		],
+		"badges": ["Bridge"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/pontem-network/pontem",
 		"investorsCount": 16,
@@ -1310,9 +1157,7 @@
 	},
 	{
 		"id": 65,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 15,
@@ -1331,9 +1176,7 @@
 	},
 	{
 		"id": 66,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 15,
@@ -1371,11 +1214,7 @@
 	},
 	{
 		"id": 68,
-		"badges": [
-			"SmartContracts",
-			" DeFi",
-			" Scaling"
-		],
+		"badges": ["SmartContracts", " DeFi", " Scaling"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/OAK-Foundation/OAK-blockchain",
 		"investorsCount": 8,
@@ -1394,11 +1233,7 @@
 	},
 	{
 		"id": 69,
-		"badges": [
-			"Bridge",
-			" NFT",
-			" Gaming"
-		],
+		"badges": ["Bridge", " NFT", " Gaming"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/darwinia-network/darwinia",
 		"investorsCount": 7,
@@ -1417,9 +1252,7 @@
 	},
 	{
 		"id": 70,
-		"badges": [
-			"Oracle"
-		],
+		"badges": ["Oracle"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/aresprotocols/ares",
 		"investorsCount": 7,
@@ -1438,9 +1271,7 @@
 	},
 	{
 		"id": 71,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/laminar-protocol/laminar-chain",
 		"investorsCount": 0,
@@ -1459,10 +1290,7 @@
 	},
 	{
 		"id": 72,
-		"badges": [
-			"DAO",
-			" NFT"
-		],
+		"badges": ["DAO", " NFT"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/InvArch/InvArch-node",
 		"investorsCount": 0,
@@ -1481,10 +1309,7 @@
 	},
 	{
 		"id": 73,
-		"badges": [
-			"DAO",
-			" DeFi"
-		],
+		"badges": ["DAO", " DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/ImbueNetwork/imbue",
 		"investorsCount": 0,
@@ -1503,9 +1328,7 @@
 	},
 	{
 		"id": 74,
-		"badges": [
-			"Gaming"
-		],
+		"badges": ["Gaming"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -1524,9 +1347,7 @@
 	},
 	{
 		"id": 75,
-		"badges": [
-			"Gaming"
-		],
+		"badges": ["Gaming"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -1564,10 +1385,7 @@
 	},
 	{
 		"id": 77,
-		"badges": [
-			"DeFi",
-			" SmartContracts"
-		],
+		"badges": ["DeFi", " SmartContracts"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/polkafoundry/newpolka",
 		"investorsCount": 23,
@@ -1580,10 +1398,7 @@
 	},
 	{
 		"id": 78,
-		"badges": [
-			"DeFi",
-			" SmartContracts"
-		],
+		"badges": ["DeFi", " SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 23,
@@ -1596,9 +1411,7 @@
 	},
 	{
 		"id": 79,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/subspace/subspace",
 		"investorsCount": 12,
@@ -1637,9 +1450,7 @@
 	},
 	{
 		"id": 82,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/mathwallet/MathChain",
 		"investorsCount": 8,
@@ -1652,10 +1463,7 @@
 	},
 	{
 		"id": 83,
-		"badges": [
-			"Privacy",
-			" Data"
-		],
+		"badges": ["Privacy", " Data"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/zCloak-Network/zcloak-node",
 		"investorsCount": 7,
@@ -1681,10 +1489,7 @@
 	},
 	{
 		"id": 85,
-		"badges": [
-			"Data",
-			" Waitlist"
-		],
+		"badges": ["Data", " Waitlist"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/OriginTrail/origintrail-parachain",
 		"investorsCount": 5,
@@ -1710,9 +1515,7 @@
 	},
 	{
 		"id": 87,
-		"badges": [
-			"DAO"
-		],
+		"badges": ["DAO"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Joystream/joystream",
 		"investorsCount": 4,
@@ -1725,9 +1528,7 @@
 	},
 	{
 		"id": 88,
-		"badges": [
-			"NFT"
-		],
+		"badges": ["NFT"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/capsule-corp-ternoa/chain",
 		"investorsCount": 3,
@@ -1740,9 +1541,7 @@
 	},
 	{
 		"id": 89,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/DataHighway-DHX/DataHighway-Parachain",
 		"investorsCount": 0,
@@ -1755,12 +1554,7 @@
 	},
 	{
 		"id": 90,
-		"badges": [
-			"DAO",
-			" NFT",
-			" Bridge",
-			" Waitlist"
-		],
+		"badges": ["DAO", " NFT", " Bridge", " Waitlist"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/Kabocha-Network/kabocha-node-old",
 		"investorsCount": 0,
@@ -1786,9 +1580,7 @@
 	},
 	{
 		"id": 92,
-		"badges": [
-			"NFT"
-		],
+		"badges": ["NFT"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -1814,9 +1606,7 @@
 	},
 	{
 		"id": 94,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -1829,9 +1619,7 @@
 	},
 	{
 		"id": 95,
-		"badges": [
-			"DAO"
-		],
+		"badges": ["DAO"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -1844,9 +1632,7 @@
 	},
 	{
 		"id": 96,
-		"badges": [
-			"Scaling"
-		],
+		"badges": ["Scaling"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/celer-network/goCeler-oss",
 		"investorsCount": 38,
@@ -1865,9 +1651,7 @@
 	},
 	{
 		"id": 97,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 32,
@@ -1886,10 +1670,7 @@
 	},
 	{
 		"id": 98,
-		"badges": [
-			"Data",
-			" Identity"
-		],
+		"badges": ["Data", " Identity"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/docknetwork/dock-substrate",
 		"investorsCount": 16,
@@ -1908,9 +1689,7 @@
 	},
 	{
 		"id": 99,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 13,
@@ -1929,11 +1708,7 @@
 	},
 	{
 		"id": 100,
-		"badges": [
-			"Gaming",
-			" NFT",
-			" Scaling"
-		],
+		"badges": ["Gaming", " NFT", " Scaling"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 13,
@@ -1952,9 +1727,7 @@
 	},
 	{
 		"id": 101,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/stafiprotocol/stafi-node",
 		"investorsCount": 12,
@@ -1973,9 +1746,7 @@
 	},
 	{
 		"id": 102,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 11,
@@ -1994,9 +1765,7 @@
 	},
 	{
 		"id": 103,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/akropolisio/akropolis",
 		"investorsCount": 9,
@@ -2015,11 +1784,7 @@
 	},
 	{
 		"id": 104,
-		"badges": [
-			"DeFi",
-			" NFT",
-			" Privacy"
-		],
+		"badges": ["DeFi", " NFT", " Privacy"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/deeper-chain/deeper-chain",
 		"investorsCount": 8,
@@ -2038,9 +1803,7 @@
 	},
 	{
 		"id": 105,
-		"badges": [
-			"Privacy"
-		],
+		"badges": ["Privacy"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 7,
@@ -2059,9 +1822,7 @@
 	},
 	{
 		"id": 106,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/t3rn/t3rn",
 		"investorsCount": 3,
@@ -2080,9 +1841,7 @@
 	},
 	{
 		"id": 107,
-		"badges": [
-			"DAO"
-		],
+		"badges": ["DAO"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/opensquare-network/opensquare",
 		"investorsCount": 2,
@@ -2101,9 +1860,7 @@
 	},
 	{
 		"id": 108,
-		"badges": [
-			"Privacy"
-		],
+		"badges": ["Privacy"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/LayerXcom/zero-chain",
 		"investorsCount": 1,
@@ -2122,9 +1879,7 @@
 	},
 	{
 		"id": 109,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/datdotorg/datdot-node-rust",
 		"investorsCount": 0,
@@ -2143,9 +1898,7 @@
 	},
 	{
 		"id": 110,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/daohub-io/cap9",
 		"investorsCount": 0,
@@ -2164,9 +1917,7 @@
 	},
 	{
 		"id": 111,
-		"badges": [
-			"Gaming"
-		],
+		"badges": ["Gaming"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/ajuna-network/SubstrateNetApi",
 		"investorsCount": 0,
@@ -2204,9 +1955,7 @@
 	},
 	{
 		"id": 113,
-		"badges": [
-			"Privacy"
-		],
+		"badges": ["Privacy"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/zeropoolnetwork/zeropool-substrate-groth16-example",
 		"investorsCount": 0,
@@ -2225,9 +1974,7 @@
 	},
 	{
 		"id": 114,
-		"badges": [
-			"Privacy"
-		],
+		"badges": ["Privacy"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Caelumlabs/caelumv2",
 		"investorsCount": 0,
@@ -2265,9 +2012,7 @@
 	},
 	{
 		"id": 116,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/definex/definex-libs",
 		"investorsCount": 0,
@@ -2286,9 +2031,7 @@
 	},
 	{
 		"id": 117,
-		"badges": [
-			"Bridge"
-		],
+		"badges": ["Bridge"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2307,9 +2050,7 @@
 	},
 	{
 		"id": 118,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2328,9 +2069,7 @@
 	},
 	{
 		"id": 119,
-		"badges": [
-			"Oracle"
-		],
+		"badges": ["Oracle"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/smartcontractkit/chainlink",
 		"investorsCount": 26,
@@ -2343,9 +2082,7 @@
 	},
 	{
 		"id": 120,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/subquery/subql",
 		"investorsCount": 24,
@@ -2358,9 +2095,7 @@
 	},
 	{
 		"id": 121,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/bluzelle/curium",
 		"investorsCount": 24,
@@ -2373,9 +2108,7 @@
 	},
 	{
 		"id": 122,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/reef-defi/reef-chain",
 		"investorsCount": 23,
@@ -2388,10 +2121,7 @@
 	},
 	{
 		"id": 123,
-		"badges": [
-			"DeFi",
-			" Bridge"
-		],
+		"badges": ["DeFi", " Bridge"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 21,
@@ -2404,9 +2134,7 @@
 	},
 	{
 		"id": 124,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/TidalFinance/tidal-contracts",
 		"investorsCount": 20,
@@ -2445,9 +2173,7 @@
 	},
 	{
 		"id": 127,
-		"badges": [
-			"IOT"
-		],
+		"badges": ["IOT"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 16,
@@ -2460,10 +2186,7 @@
 	},
 	{
 		"id": 128,
-		"badges": [
-			"Data",
-			" Oracle"
-		],
+		"badges": ["Data", " Oracle"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/paralink-network/paralink-substrate",
 		"investorsCount": 15,
@@ -2476,9 +2199,7 @@
 	},
 	{
 		"id": 129,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/gear-tech/gear",
 		"investorsCount": 13,
@@ -2491,11 +2212,7 @@
 	},
 	{
 		"id": 130,
-		"badges": [
-			"Gaming",
-			" NFT",
-			" Scaling"
-		],
+		"badges": ["Gaming", " NFT", " Scaling"],
 		"chain": "kusama",
 		"githubURL": "-",
 		"investorsCount": 13,
@@ -2534,9 +2251,7 @@
 	},
 	{
 		"id": 133,
-		"badges": [
-			"Gaming"
-		],
+		"badges": ["Gaming"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 10,
@@ -2549,9 +2264,7 @@
 	},
 	{
 		"id": 134,
-		"badges": [
-			"Privacy"
-		],
+		"badges": ["Privacy"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/automata-network/automata",
 		"investorsCount": 9,
@@ -2564,10 +2277,7 @@
 	},
 	{
 		"id": 135,
-		"badges": [
-			"Gaming",
-			" NFT"
-		],
+		"badges": ["Gaming", " NFT"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 8,
@@ -2580,9 +2290,7 @@
 	},
 	{
 		"id": 136,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 8,
@@ -2595,9 +2303,7 @@
 	},
 	{
 		"id": 137,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/Edgeware-Network/edgeware-node",
 		"investorsCount": 6,
@@ -2610,9 +2316,7 @@
 	},
 	{
 		"id": 138,
-		"badges": [
-			"Bridge"
-		],
+		"badges": ["Bridge"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/chainx-org/ChainX",
 		"investorsCount": 5,
@@ -2625,9 +2329,7 @@
 	},
 	{
 		"id": 139,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/mangata-finance/mangata-node",
 		"investorsCount": 5,
@@ -2653,9 +2355,7 @@
 	},
 	{
 		"id": 141,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/RaiFinance/raiswap-core",
 		"investorsCount": 4,
@@ -2668,9 +2368,7 @@
 	},
 	{
 		"id": 142,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 3,
@@ -2702,9 +2400,7 @@
 	},
 	{
 		"id": 144,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 1,
@@ -2717,9 +2413,7 @@
 	},
 	{
 		"id": 145,
-		"badges": [
-			"Oracle"
-		],
+		"badges": ["Oracle"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 1,
@@ -2732,9 +2426,7 @@
 	},
 	{
 		"id": 146,
-		"badges": [
-			"Bridge"
-		],
+		"badges": ["Bridge"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 1,
@@ -2747,9 +2439,7 @@
 	},
 	{
 		"id": 147,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/compound-finance/gateway",
 		"investorsCount": 0,
@@ -2762,9 +2452,7 @@
 	},
 	{
 		"id": 148,
-		"badges": [
-			"SmartContracts"
-		],
+		"badges": ["SmartContracts"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/kulupu/kulupu",
 		"investorsCount": 0,
@@ -2777,11 +2465,7 @@
 	},
 	{
 		"id": 149,
-		"badges": [
-			"DeFi",
-			" Identity",
-			" IoT"
-		],
+		"badges": ["DeFi", " Identity", " IoT"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/peaqnetwork/peaq-network-node",
 		"investorsCount": 0,
@@ -2839,9 +2523,7 @@
 	},
 	{
 		"id": 153,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "https://github.com/sunriseprotocol/sunrise",
 		"investorsCount": 0,
@@ -2854,10 +2536,7 @@
 	},
 	{
 		"id": 154,
-		"badges": [
-			"DeFi",
-			" Exchange"
-		],
+		"badges": ["DeFi", " Exchange"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/CurioTeam/curio-parachain-node",
 		"investorsCount": 0,
@@ -2883,9 +2562,7 @@
 	},
 	{
 		"id": 156,
-		"badges": [
-			"Parathread"
-		],
+		"badges": ["Parathread"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2898,10 +2575,7 @@
 	},
 	{
 		"id": 157,
-		"badges": [
-			"NFT",
-			" Gaming"
-		],
+		"badges": ["NFT", " Gaming"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2933,10 +2607,7 @@
 	},
 	{
 		"id": 159,
-		"badges": [
-			"DAO",
-			" Gaming"
-		],
+		"badges": ["DAO", " Gaming"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2949,9 +2620,7 @@
 	},
 	{
 		"id": 160,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2964,9 +2633,7 @@
 	},
 	{
 		"id": 161,
-		"badges": [
-			"Exchange"
-		],
+		"badges": ["Exchange"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2979,9 +2646,7 @@
 	},
 	{
 		"id": 162,
-		"badges": [
-			"Oracle"
-		],
+		"badges": ["Oracle"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -2994,9 +2659,7 @@
 	},
 	{
 		"id": 163,
-		"badges": [
-			"Bridge"
-		],
+		"badges": ["Bridge"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -3009,9 +2672,7 @@
 	},
 	{
 		"id": 164,
-		"badges": [
-			"Data"
-		],
+		"badges": ["Data"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -3037,9 +2698,7 @@
 	},
 	{
 		"id": 166,
-		"badges": [
-			"Parathread"
-		],
+		"badges": ["Parathread"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -3052,9 +2711,7 @@
 	},
 	{
 		"id": 167,
-		"badges": [
-			"Parathread"
-		],
+		"badges": ["Parathread"],
 		"chain": "polkadot",
 		"githubURL": "-",
 		"investorsCount": 0,
@@ -3067,9 +2724,7 @@
 	},
 	{
 		"id": 168,
-		"badges": [
-			"DeFi"
-		],
+		"badges": ["DeFi"],
 		"chain": "kusama",
 		"githubURL": "https://github.com/pendulum-chain/pendulum",
 		"investorsCount": 6,

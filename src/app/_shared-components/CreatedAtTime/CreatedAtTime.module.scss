@@ -1,11 +1,11 @@
 .infoItem {
-    @apply flex items-center text-wallet_btn_text gap-1 text-xs;
+	@apply flex items-center gap-1 text-xs text-wallet_btn_text;
 }
 
 .infoIcon {
-    @apply h-3 w-3 md:h-3.5 md:w-3.5;
+	@apply h-3 w-3 md:h-3.5 md:w-3.5;
 }
 
 .infoTimer {
-    @apply whitespace-nowrap text-[10px] md:text-xs
+	@apply whitespace-nowrap text-[10px] md:text-xs;
 }

@@ -14,35 +14,35 @@
 	"singleAttributePerLine": true,
 	"plugins": ["prettier-plugin-tailwindcss"],
 	"overrides": [
-  {
-    "files": "*.css",
-    "options": {
-      "parser": "css"
-    }
-  },
-	{
-    "files": "*.scss",
-    "options": {
-      "parser": "scss"
-    }
-  },
-	{
-    "files": "*.json",
-    "options": {
-      "parser": "json"
-    }
-  },
-	{
-    "files": "*.html",
-    "options": {
-      "parser": "html"
-    }
-  },
-	{
-    "files": "*.md",
-    "options": {
-      "parser": "markdown"
-    }
-  }
-]
+		{
+			"files": "*.css",
+			"options": {
+				"parser": "css"
+			}
+		},
+		{
+			"files": "*.scss",
+			"options": {
+				"parser": "scss"
+			}
+		},
+		{
+			"files": "*.json",
+			"options": {
+				"parser": "json"
+			}
+		},
+		{
+			"files": "*.html",
+			"options": {
+				"parser": "html"
+			}
+		},
+		{
+			"files": "*.md",
+			"options": {
+				"parser": "markdown"
+			}
+		}
+	]
 }

@@ -530,7 +530,14 @@ export class NextApiClientService {
 			}
 			return { data: null, error: resJSON as IErrorResponse };
 		} catch {
-			return { data: null, error: { name: 'API_FETCH_ERROR', message: `Something went wrong while fetching data from ${url.pathname}. Please try again later.`, status: StatusCodes.INTERNAL_SERVER_ERROR } };
+			return {
+				data: null,
+				error: {
+					name: 'API_FETCH_ERROR',
+					message: `Something went wrong while fetching data from ${url.pathname}. Please try again later.`,
+					status: StatusCodes.INTERNAL_SERVER_ERROR
+				}
+			};
 		}
 	}
 

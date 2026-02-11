@@ -42,9 +42,8 @@
 	@apply -left-1 top-1/2 -translate-y-1/2;
 }
 
-
 .activeborderhover {
-	@apply border-[1px] border-solid border-transparent rounded-lg;
+	@apply rounded-lg border-[1px] border-solid border-transparent;
 }
 
 .activeborderhover:hover {

@@ -1,19 +1,19 @@
 .switchToWeb2 {
-    @apply mt-4 flex items-center justify-center gap-x-1 text-sm font-medium text-wallet_btn_text
+	@apply mt-4 flex items-center justify-center gap-x-1 text-sm font-medium text-wallet_btn_text;
 }
 
 .footer {
-    @apply mt-4 flex w-full justify-center gap-x-4
+	@apply mt-4 flex w-full justify-center gap-x-4;
 }
 
 .loginButton {
-    @apply px-12
+	@apply px-12;
 }
 
 .addressHeader {
-    @apply mb-4 flex items-center gap-x-2
+	@apply mb-4 flex items-center gap-x-2;
 }
 
 .walletName {
-    @apply text-lg sm:text-xl font-medium text-text_primary
+	@apply text-lg font-medium text-text_primary sm:text-xl;
 }
