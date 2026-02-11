@@ -25,7 +25,14 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 }
 
 export class FirestoreUtils {
-	protected static firestoreDb: firebaseAdmin.firestore.Firestore = firebaseAdmin.firestore();
+	private static _firestoreDb: firebaseAdmin.firestore.Firestore | null = null;
+
+	protected static get firestoreDb(): firebaseAdmin.firestore.Firestore {
+		if (!this._firestoreDb) {
+			this._firestoreDb = firebaseAdmin.firestore();
+		}
+		return this._firestoreDb;
+	}
 
 	protected static increment = firebaseAdmin.firestore.FieldValue.increment;
 

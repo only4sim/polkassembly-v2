@@ -22,31 +22,33 @@ import styles from './Search.module.scss';
 
 const { NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY } = getSharedEnvVars();
 
-const algoliaClient = algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY);
+const algoliaClient = NEXT_PUBLIC_ALGOLIA_APP_ID && NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY ? algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY) : null;
 
 // To prevent initial load of all data
-const searchClient = {
-	...algoliaClient,
-	search(requests: any) {
-		if (requests.every(({ params }: any) => !params.query)) {
-			return Promise.resolve({
-				results: requests.map(() => ({
-					hits: [],
-					nbHits: 0,
-					nbPages: 0,
-					page: 0,
-					processingTimeMS: 0,
-					hitsPerPage: 0,
-					exhaustiveNbHits: false,
-					query: '',
-					params: ''
-				}))
-			});
-		}
+const searchClient = algoliaClient
+	? {
+			...algoliaClient,
+			search(requests: any) {
+				if (requests.every(({ params }: any) => !params.query)) {
+					return Promise.resolve({
+						results: requests.map(() => ({
+							hits: [],
+							nbHits: 0,
+							nbPages: 0,
+							page: 0,
+							processingTimeMS: 0,
+							hitsPerPage: 0,
+							exhaustiveNbHits: false,
+							query: '',
+							params: ''
+						}))
+					});
+				}
 
-		return algoliaClient.search(requests);
-	}
-};
+				return algoliaClient.search(requests);
+			}
+		}
+	: null;
 
 function Search() {
 	const [activeIndex, setActiveIndex] = useState<ESearchType>(ESearchType.POSTS);
@@ -97,7 +99,7 @@ function Search() {
 					</DialogTitle>
 				</DialogHeader>
 
-				{searchEnabledNetworks.includes(network.toUpperCase()) ? (
+				{searchClient && searchEnabledNetworks.includes(network.toUpperCase()) ? (
 					<InstantSearch
 						key={isDialogOpen ? 'open' : 'closed'}
 						searchClient={searchClient}
