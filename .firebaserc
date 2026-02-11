@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "polkassembly-v2"
-  }
+    "default": "cbs-assembly",
+    "cbs-demo": "cbs-assembly"
+  },
+  "targets": {},
+  "etags": {}
 }
