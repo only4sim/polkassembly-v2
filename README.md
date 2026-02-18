@@ -1,8 +1,4 @@
-# Polkassembly - https://polkassembly.io <img width="750" alt="web3 foundation_grants_badge_black" src="https://user-images.githubusercontent.com/874046/119712025-cb8ae900-be7d-11eb-9ca7-cac14991bb5e.png">
-
-The place to discuss and vote on Kusama and Polkadot governance.
-
-Polkassembly is a platform for anyone to discover and participate in Polkadot and Kusama governance. You can browse proposals made on chain, discuss with the community and vote directly from the website using a browser extension. Proposal authors are the only one able to edit the proposal post and description. You don't have to, but adding an email may help to recover your account, also you can get notifications for discussions of interest or when a new proposal appears on-chain.
+# DemoOs
 
 ---
 
@@ -12,7 +8,49 @@ This repo hosts
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+cd polkassembly-v2
+
+nvm install 22
+nvm use 22
+
+yarn install --frozen-lockfile
+
+npm install -g firebase-tools
+firebase --version
+```
+
+Then, login Firebase:
+
+```bash
+firebase login
+firebase use --add
+```
+
+Third, initiate Firebase emulator:
+
+```bash
+firebase init emulators
+```
+
+Choose at least the following emulators:
+
+```bash
+- Firestore Emulator
+- Functions Emulator
+- Auth Emulator
+- Emulator UI
+```
+
+Start emulator:
+
+```bash
+firebase emulators:start --only firestore,functions,auth
+```
+
+Use another bash terminal run the development server:
 
 ```bash
 npm run dev
