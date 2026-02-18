@@ -1,5 +1,3 @@
-下面给你两部分内容：
-
 # DemoOS Development Guide (Local Dev, Emulators, Build, Run, Debug)
 
 > This guide helps new developers set up DemoOS from scratch: install dependencies, configure Firebase Emulator Suite, build Cloud Functions, run Next.js, and debug common issues.

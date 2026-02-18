@@ -43,6 +43,31 @@ D) Voting:
   - no top-level side effects that throw
   - show disabled UI or remove navigation entry
 
+### 4a) Code Preservation Rule (MANDATORY for every PR)
+
+This project is a **fork** of polkassembly-v2. All original upstream code must be **preserved** so blockchain features can be re-enabled later by flipping a flag.
+
+**NEVER delete or replace original code.** Always ADD alongside it.
+
+When modifying **existing page files** (`page.tsx`):
+
+- Add a feature-flag guard at the top; keep ALL original code below it unchanged.
+- If static imports cause build failures, use the dynamic-import wrapper pattern:
+  rename original to `*Impl.tsx` and create a thin `page.tsx` that conditionally loads it.
+
+When modifying **existing files** (`functions/src/index.ts`, sidebar constants, etc.):
+
+- APPEND new exports / logic. Do NOT rewrite or remove existing exports.
+- Use early-return or conditional blocks so original logic still executes when the flag is enabled.
+
+When creating **DemoOS alternatives** to existing components:
+
+- Create NEW files (e.g., `DemoLoginForm.tsx` alongside `LoginComponent.tsx`).
+- In the consuming page, use `ENABLE_BLOCKCHAIN` to switch between original and DemoOS component.
+- Original component file must remain untouched.
+
+**Verification**: `git diff` for any PR must show primarily ADDITIONS. Large deletions of original code = PR must be rejected.
+
 ## 5) Feature Flags & Build Safety
 
 - A feature being disabled must also be excluded from build-time import paths.
@@ -71,22 +96,22 @@ D) Voting:
 > Issues ordered by priority. Dependency arrows show which must merge first.
 > Parallelizable pairs: #1 ∥ #2, #7 ∥ #8.
 
-| #   | Title                                                                    | Status         | Depends On          | Est. Size |
-| --- | ------------------------------------------------------------------------ | -------------- | ------------------- | --------- |
-| 1   | Strip non-MVP blockchain routes & stabilize no-chain build               | 🔲 not started | —                   | M         |
-| 2   | Firebase client SDK init + emulator auto-connect                         | 🔲 not started | —                   | S         |
-| 3   | User profile (`users/{uid}`) + admin role + `onAuthUserCreated` function | 🔲 not started | #2                  | M         |
-| 4   | Email/Password auth (register / login / logout)                          | 🔲 not started | #2, #3              | M         |
-| 5   | Posts CRUD (create / list / detail for discussions)                      | 🔲 not started | #3, #4              | L         |
-| 6   | Comments CRUD                                                            | 🔲 not started | #5                  | M         |
-| 7   | Voting (multi-select, gate-only, one-person-one-vote) + realtime stats   | 🔲 not started | #5, #3              | L         |
-| 8   | Moderation (pin / lock / hide) via admin-only Cloud Functions            | 🔲 not started | #5, #3              | M         |
-| 9   | Firestore security rules + CI test harness                               | 🔲 not started | #3–#8 (incremental) | M         |
+| #   | Title                                                                          | Status         | Depends On          | Est. Size |
+| --- | ------------------------------------------------------------------------------ | -------------- | ------------------- | --------- |
+| 1   | Hide non-MVP blockchain routes behind feature flags & stabilize no-chain build | 🔲 not started | —                   | M         |
+| 2   | Firebase client SDK init + emulator auto-connect                               | 🔲 not started | —                   | S         |
+| 3   | User profile (`users/{uid}`) + admin role + `onAuthUserCreated` function       | 🔲 not started | #2                  | M         |
+| 4   | Email/Password auth (register / login / logout)                                | 🔲 not started | #2, #3              | M         |
+| 5   | Posts CRUD (create / list / detail for discussions)                            | 🔲 not started | #3, #4              | L         |
+| 6   | Comments CRUD                                                                  | 🔲 not started | #5                  | M         |
+| 7   | Voting (multi-select, gate-only, one-person-one-vote) + realtime stats         | 🔲 not started | #5, #3              | L         |
+| 8   | Moderation (pin / lock / hide) via admin-only Cloud Functions                  | 🔲 not started | #5, #3              | M         |
+| 9   | Firestore security rules + CI test harness                                     | 🔲 not started | #3–#8 (incremental) | M         |
 
 ### Dependency Graph
 
 ```
-#1 (strip routes) ──────────────────────────────────────────┐
+#1 (hide routes) ───────────────────────────────────────────┐
 #2 (firebase client SDK) ─→ #3 (user profile) ─→ #4 (auth) │
                                     │                       │
                                     ↓                       │
