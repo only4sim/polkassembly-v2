@@ -11,8 +11,8 @@ import { Metadata } from 'next';
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
-import BountiesListingPage from './Components/BountiesListingPage';
 import { redirect } from 'next/navigation';
+import BountiesListingPage from './Components/BountiesListingPage';
 
 const zodQuerySchema = z.object({
 	page: z.coerce.number().min(1).optional().default(1),

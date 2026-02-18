@@ -8,10 +8,10 @@ import { ERROR_CODES, ERROR_MESSAGES } from '@/_shared/_constants/errorLiterals'
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
+import { redirect } from 'next/navigation';
 import { NextApiClientService } from '../_client-services/next_api_client_service';
 import { ClientError } from '../_client-utils/clientError';
 import Delegation from './Components/Delegation';
-import { redirect } from 'next/navigation';
 
 export async function generateMetadata(): Promise<Metadata> {
 	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {

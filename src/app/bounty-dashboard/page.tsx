@@ -7,10 +7,10 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
+import { redirect } from 'next/navigation';
 import { LoadingSpinner } from '../_shared-components/LoadingSpinner';
 import BountyDashboard from './Components';
 import { getNetworkFromHeaders } from '../api/_api-utils/getNetworkFromHeaders';
-import { redirect } from 'next/navigation';
 
 export async function generateMetadata(): Promise<Metadata> {
 	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
