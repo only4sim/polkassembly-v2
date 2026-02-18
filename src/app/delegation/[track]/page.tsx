@@ -13,6 +13,7 @@ import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeader
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { Metadata } from 'next';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
+import { redirect } from 'next/navigation';
 import DelegationTrack from './Component/DelegationTrack/DelegationTrack';
 
 interface Props {
@@ -20,6 +21,9 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const { track } = await params;
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
@@ -33,6 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	});
 }
 async function DelegationTrackPage({ params }: Props) {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const { track } = await params;
 	const user = await CookieService.getUserFromCookie();
 	const network = getCurrentNetwork();

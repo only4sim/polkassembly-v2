@@ -16,12 +16,20 @@ import OverviewHeading from './OverviewHeading';
 import AppGrid from './AppGrid/AppGrid';
 import JobsAndBounties from './JobsAndBounties/JobsAndBounties';
 
-function Overview({ allTracksData, treasuryStatsData }: { allTracksData: IGenericListingResponse<IPostListing>; treasuryStatsData: ITreasuryStats[] }) {
+function Overview({
+	allTracksData,
+	treasuryStatsData,
+	isBlockchainEnabled = true
+}: {
+	allTracksData: IGenericListingResponse<IPostListing>;
+	treasuryStatsData: ITreasuryStats[];
+	isBlockchainEnabled?: boolean;
+}) {
 	return (
 		<div className={styles.overview_container}>
 			<OverviewHeading />
 			<div className='mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 py-8 lg:px-16'>
-				{treasuryStatsData?.length > 0 && (
+				{isBlockchainEnabled && treasuryStatsData?.length > 0 && (
 					<div className='flex flex-col gap-4 lg:flex-row'>
 						<div className='w-full rounded-xl border border-border_grey bg-bg_modal p-4 shadow-sm lg:w-1/2'>
 							<OverviewTreasuryStats data={treasuryStatsData} />
@@ -34,9 +42,9 @@ function Overview({ allTracksData, treasuryStatsData }: { allTracksData: IGeneri
 						</div>
 					</div>
 				)}
-				<AppGrid />
+				{isBlockchainEnabled && <AppGrid />}
 
-				<TreasuryReportBanner />
+				{isBlockchainEnabled && <TreasuryReportBanner />}
 				<div className='mt-2 grid grid-cols-1 gap-6 lg:grid-cols-3'>
 					<div className='w-full lg:col-span-2'>
 						<Suspense
@@ -50,9 +58,11 @@ function Overview({ allTracksData, treasuryStatsData }: { allTracksData: IGeneri
 						</Suspense>
 					</div>
 
-					<div className='w-full lg:col-span-1'>
-						<JobsAndBounties />
-					</div>
+					{isBlockchainEnabled && (
+						<div className='w-full lg:col-span-1'>
+							<JobsAndBounties />
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

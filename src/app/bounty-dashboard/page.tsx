@@ -7,11 +7,15 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
+import { redirect } from 'next/navigation';
 import { LoadingSpinner } from '../_shared-components/LoadingSpinner';
 import BountyDashboard from './Components';
 import { getNetworkFromHeaders } from '../api/_api-utils/getNetworkFromHeaders';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -25,6 +29,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function BountyDashboardPage() {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const { data: bountiesStats } = await NextApiClientService.fetchBountiesStats();
 	const to = new Date();
 	const from = new Date();

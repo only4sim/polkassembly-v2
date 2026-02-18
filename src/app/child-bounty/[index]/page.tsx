@@ -11,11 +11,14 @@ import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeader
 import { markdownToPlainText } from '@/_shared/_utils/markdownToText';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
 import { formatChildBountyDisplayIndex } from '@/_shared/_utils/childBountyUtils';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { StatusCodes } from 'http-status-codes';
 import ServerComponentError from '@/app/_shared-components/ServerComponentError';
 
 export async function generateMetadata({ params }: { params: Promise<{ index: string }> }): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const { index } = await params;
 	const network = await getNetworkFromHeaders();
 	const { data } = await NextApiClientService.fetchProposalDetails({ proposalType: EProposalType.CHILD_BOUNTY, indexOrHash: index });
@@ -36,6 +39,9 @@ export async function generateMetadata({ params }: { params: Promise<{ index: st
 }
 
 async function ChildBounty({ params }: { params: Promise<{ index: string }> }) {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const { index } = await params;
 	const { data, error } = await NextApiClientService.fetchProposalDetails({ proposalType: EProposalType.CHILD_BOUNTY, indexOrHash: index });
 

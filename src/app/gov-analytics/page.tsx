@@ -7,12 +7,16 @@ import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
 import { NextApiClientService } from '@/app/_client-services/next_api_client_service';
+import { redirect } from 'next/navigation';
 import GovStats from './components/GovStats';
 import GovOverview from './components/GovOverview';
 import GovVoting from './components/GovVoting';
 import { AnalyticsHeader } from './components/Header/Header';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -35,6 +39,9 @@ async function fetchGovAnalyticsData() {
 }
 
 async function GovAnalyticsPage() {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const analyticsData = await fetchGovAnalyticsData();
 
 	return (

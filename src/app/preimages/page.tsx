@@ -15,10 +15,14 @@ import SearchBar from '@ui/Preimages/SearchBar/SearchBar';
 import { EPreImageTabs } from '@/_shared/types';
 import UserPreimagesTab from '@/app/_shared-components/Preimages/UserPreimagesTab/UserPreimagesTab';
 import styles from '@ui/Preimages/SearchBar/SearchBar.module.scss';
+import { redirect } from 'next/navigation';
 import { NextApiClientService } from '../_client-services/next_api_client_service';
 import { ClientError } from '../_client-utils/clientError';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -32,6 +36,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function Preimages({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const searchParamsValue = await searchParams;
 	const page = parseInt(searchParamsValue.page || '1', 10);
 

@@ -11,6 +11,7 @@ import { Metadata } from 'next';
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
+import { redirect } from 'next/navigation';
 import BountiesListingPage from './Components/BountiesListingPage';
 
 const zodQuerySchema = z.object({
@@ -19,6 +20,10 @@ const zodQuerySchema = z.object({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
+
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -49,6 +54,10 @@ const convertStatusToStatusesArray = (status: EBountyStatus): EProposalStatus[] 
 };
 
 async function OnchainBountyPage({ searchParams }: { searchParams: Promise<{ page?: string; status?: string }> }) {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
+
 	const searchParamsValue = await searchParams;
 	const { page, status } = zodQuerySchema.parse(searchParamsValue);
 
