@@ -17,11 +17,13 @@ import AppGrid from './AppGrid/AppGrid';
 import JobsAndBounties from './JobsAndBounties/JobsAndBounties';
 
 function Overview({ allTracksData, treasuryStatsData }: { allTracksData: IGenericListingResponse<IPostListing>; treasuryStatsData: ITreasuryStats[] }) {
+	const isBlockchainEnabled = process.env.ENABLE_BLOCKCHAIN === 'true';
+
 	return (
 		<div className={styles.overview_container}>
 			<OverviewHeading />
 			<div className='mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 py-8 lg:px-16'>
-				{treasuryStatsData?.length > 0 && (
+				{isBlockchainEnabled && treasuryStatsData?.length > 0 && (
 					<div className='flex flex-col gap-4 lg:flex-row'>
 						<div className='w-full rounded-xl border border-border_grey bg-bg_modal p-4 shadow-sm lg:w-1/2'>
 							<OverviewTreasuryStats data={treasuryStatsData} />
@@ -34,11 +36,11 @@ function Overview({ allTracksData, treasuryStatsData }: { allTracksData: IGeneri
 						</div>
 					</div>
 				)}
-				<AppGrid />
+				{isBlockchainEnabled && <AppGrid />}
 
-				<TreasuryReportBanner />
-				<div className='mt-2 grid grid-cols-1 gap-6 lg:grid-cols-3'>
-					<div className='w-full lg:col-span-2'>
+				{isBlockchainEnabled && <TreasuryReportBanner />}
+				<div className={`mt-2 grid grid-cols-1 gap-6 ${isBlockchainEnabled ? 'lg:grid-cols-3' : ''}`}>
+					<div className={`w-full ${isBlockchainEnabled ? 'lg:col-span-2' : ''}`}>
 						<Suspense
 							fallback={
 								<div className='relative flex min-h-40 w-full items-center justify-center'>
@@ -50,9 +52,11 @@ function Overview({ allTracksData, treasuryStatsData }: { allTracksData: IGeneri
 						</Suspense>
 					</div>
 
-					<div className='w-full lg:col-span-1'>
-						<JobsAndBounties />
-					</div>
+					{isBlockchainEnabled && (
+						<div className='w-full lg:col-span-1'>
+							<JobsAndBounties />
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

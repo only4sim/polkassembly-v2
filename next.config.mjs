@@ -18,6 +18,9 @@ const DOMAINS = ['polkassembly.io', 'polkassembly.network'];
 const nextConfig = {
 	// Enable standalone output for Docker deployments
 	output: 'standalone',
+	env: {
+		ENABLE_BLOCKCHAIN: process.env.ENABLE_BLOCKCHAIN || 'false'
+	},
 	async headers() {
 		return [
 			{

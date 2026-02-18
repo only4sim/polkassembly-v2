@@ -57,15 +57,11 @@ export const getSidebarData = (networkKey: ENetwork, pathname: string, t: (key: 
 		throw new Error(`Network ${networkKey} not found`);
 	}
 
-	const TREASURY_KEY = 'Sidebar.treasury';
-	const REFERENDA_KEY = 'Sidebar.referenda';
-
 	const baseConfig = {
 		heading: t('Sidebar.main'),
 		initalItems: ActiveItems(
 			[
 				{ title: t('Sidebar.home'), url: '/', icon: Home },
-				{ title: t('Sidebar.openGov'), url: '/activity-feed', icon: OpenGov },
 				{ title: t('Sidebar.discussions'), url: '/discussions', icon: Discussion }
 			],
 			pathname
@@ -73,6 +69,22 @@ export const getSidebarData = (networkKey: ENetwork, pathname: string, t: (key: 
 		mainItems: [],
 		endItems: []
 	};
+
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return [baseConfig];
+	}
+
+	const TREASURY_KEY = 'Sidebar.treasury';
+	const REFERENDA_KEY = 'Sidebar.referenda';
+
+	baseConfig.initalItems = ActiveItems(
+		[
+			{ title: t('Sidebar.home'), url: '/', icon: Home },
+			{ title: t('Sidebar.openGov'), url: '/activity-feed', icon: OpenGov },
+			{ title: t('Sidebar.discussions'), url: '/discussions', icon: Discussion }
+		],
+		pathname
+	);
 
 	if (network.govtype === EGovType.OPENGOV) {
 		return [
