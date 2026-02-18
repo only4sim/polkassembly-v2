@@ -8,11 +8,15 @@ import { Metadata } from 'next';
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
+import { redirect } from 'next/navigation';
 import Leaderboard from './Components/index';
 import { ClientError } from '../_client-utils/clientError';
 import { NextApiClientService } from '../_client-services/next_api_client_service';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -26,6 +30,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function LeaderboardPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const searchParamsValue = await searchParams;
 	const page = parseInt(searchParamsValue.page || '1', DEFAULT_LISTING_LIMIT);
 

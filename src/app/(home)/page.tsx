@@ -27,6 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function OverviewPage() {
 	const { allTracks, treasuryStats } = await NextApiClientService.fetchOverviewData();
 	const referer = await getReferrerFromHeaders();
+	const isBlockchainEnabled = process.env.ENABLE_BLOCKCHAIN === 'true';
 
 	if (allTracks.error || !allTracks.data) {
 		return (
@@ -34,6 +35,7 @@ async function OverviewPage() {
 				<Overview
 					allTracksData={{ items: [], totalCount: 0 }}
 					treasuryStatsData={[]}
+					isBlockchainEnabled={isBlockchainEnabled}
 				/>
 				<KlaraAutoOpen referer={referer} />
 			</div>
@@ -45,6 +47,7 @@ async function OverviewPage() {
 			<Overview
 				allTracksData={allTracks.data}
 				treasuryStatsData={treasuryStats.error ? [] : treasuryStats.data || []}
+				isBlockchainEnabled={isBlockchainEnabled}
 			/>
 			<KlaraAutoOpen referer={referer} />
 		</div>

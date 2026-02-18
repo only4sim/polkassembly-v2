@@ -57,6 +57,24 @@ export const getSidebarData = (networkKey: ENetwork, pathname: string, t: (key: 
 		throw new Error(`Network ${networkKey} not found`);
 	}
 
+	// Feature flag: when blockchain is disabled, show only Home + Discussions
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return [
+			{
+				heading: t('Sidebar.main'),
+				initalItems: ActiveItems(
+					[
+						{ title: t('Sidebar.home'), url: '/', icon: Home },
+						{ title: t('Sidebar.discussions'), url: '/discussions', icon: Discussion }
+					],
+					pathname
+				),
+				mainItems: [],
+				endItems: []
+			}
+		];
+	}
+
 	const TREASURY_KEY = 'Sidebar.treasury';
 	const REFERENDA_KEY = 'Sidebar.referenda';
 

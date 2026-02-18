@@ -10,10 +10,14 @@ import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeader
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
 import { Tabs, TabsContent } from '@ui/Tabs';
 import { EProxyDashboardTabs } from '@/_shared/types';
+import { redirect } from 'next/navigation';
 import MyProxiesTab from './Components/MyProxiesTab/MyProxiesTab';
 import AllProxiesTab from './Components/AllProxiesTab/AllProxiesTab';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -27,6 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function Proxies() {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	return (
 		<div className='w-full'>
 			<Tabs defaultValue={EProxyDashboardTabs.ALL}>

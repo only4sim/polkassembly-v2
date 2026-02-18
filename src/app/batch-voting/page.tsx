@@ -10,8 +10,12 @@ import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMet
 import { ClientError } from '../_client-utils/clientError';
 import { NextApiClientService } from '../_client-services/next_api_client_service';
 import BatchVoting from './Components/BatchVoting';
+import { redirect } from 'next/navigation';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -25,6 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function BatchVotingPage() {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
+
 	const { data: activityFeedData, error: activityFeedError } = await NextApiClientService.fetchActivityFeed({ page: 1, limit: 10 });
 
 	if (activityFeedError || !activityFeedData) {

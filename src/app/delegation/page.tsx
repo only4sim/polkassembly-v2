@@ -11,8 +11,12 @@ import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMet
 import { NextApiClientService } from '../_client-services/next_api_client_service';
 import { ClientError } from '../_client-utils/clientError';
 import Delegation from './Components/Delegation';
+import { redirect } from 'next/navigation';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -26,6 +30,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function DelegationPage() {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const { data: delegationStats, error } = await NextApiClientService.getDelegateStats();
 
 	if (error || !delegationStats) throw new ClientError(ERROR_CODES.CLIENT_ERROR, error?.message || ERROR_MESSAGES[ERROR_CODES.CLIENT_ERROR]);

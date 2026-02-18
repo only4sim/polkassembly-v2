@@ -15,8 +15,12 @@ import { EPreImageTabs } from '@/_shared/types';
 import SearchBar from '@ui/Preimages/SearchBar/SearchBar';
 import UserPreimageCheck from '@ui/Preimages/UserPreimagesTab/UserPreimageCheck';
 import styles from '@ui/Preimages/SearchBar/SearchBar.module.scss';
+import { redirect } from 'next/navigation';
 
 export async function generateMetadata({ params }: { params: Promise<{ hash: string }> }): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const { hash } = await params;
 	const network = await getNetworkFromHeaders();
 	const { title, description } = OPENGRAPH_METADATA;
@@ -62,6 +66,9 @@ export async function generateMetadata({ params }: { params: Promise<{ hash: str
 }
 
 async function Preimages({ params }: { params: Promise<{ hash: string }> }) {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const paramsValue = await params;
 	const hash = paramsValue.hash || '';
 	const { data } = await NextApiClientService.fetchPreimageByHash({ hash });
