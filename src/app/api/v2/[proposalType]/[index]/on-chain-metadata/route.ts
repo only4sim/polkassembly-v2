@@ -19,7 +19,7 @@ const zodParamsSchema = z.object({
 });
 
 export const GET = withErrorHandling(
-	async (req: NextRequest, { params }: { params: Promise<{ proposalType: string; index: string }> }): Promise<NextResponse<IOnChainMetadata>> => {
+	async (req: NextRequest, { params }: { params: Promise<{ proposalType: string; index: string }> }): Promise<NextResponse<IOnChainMetadata | null>> => {
 		const { proposalType, index } = zodParamsSchema.parse(await params);
 
 		const network = await getNetworkFromHeaders();
