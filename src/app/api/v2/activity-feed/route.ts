@@ -11,6 +11,7 @@ import { AuthService } from '@/app/api/_api-services/auth_service';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { OffChainDbService } from '@/app/api/_api-services/offchain_db_service';
 import { RedisService } from '@/app/api/_api-services/redis_service';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { ValidatorService } from '@/_shared/_services/validator_service';
@@ -49,6 +50,8 @@ async function createResponse(data: IGenericListingResponse<IPostListing>, acces
 }
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({ items: [], totalCount: 0 });
+
 	// Parse query parameters
 	const zodQuerySchema = z.object({
 		page: z.coerce.number().optional().default(1),

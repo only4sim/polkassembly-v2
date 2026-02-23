@@ -6,6 +6,7 @@ import { DEFAULT_LISTING_LIMIT, MAX_LISTING_LIMIT } from '@/_shared/_constants/l
 import { ON_CHAIN_PROPOSAL_TYPES } from '@/_shared/_constants/onChainProposalTypes';
 import { EProposalType, EVoteDecision, EVoteSortOptions, EVotesDisplayType } from '@/_shared/types';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { NextRequest, NextResponse } from 'next/server';
@@ -37,6 +38,8 @@ export const GET = withErrorHandling(async (req: NextRequest, { params }: { para
 	const { page, limit, decision, orderBy, votesType } = zodQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
 
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({ items: [], totalCount: 0 });
 
 	const voteData = await OnChainDbService.GetPostVoteData({ network, proposalType, indexOrHash: index, page, limit, decision, orderBy, votesType });
 

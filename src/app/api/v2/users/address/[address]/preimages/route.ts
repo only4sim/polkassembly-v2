@@ -7,6 +7,7 @@ import { ValidatorService } from '@/_shared/_services/validator_service';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 
@@ -24,6 +25,8 @@ export const GET = withErrorHandling(async (req: NextRequest, { params }: { para
 	const { address } = zodParamsSchema.parse(await params);
 
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({ items: [], totalCount: 0 });
 
 	const userPreimageListing = await OnChainDbService.GetPreimagesByAddress({
 		network,

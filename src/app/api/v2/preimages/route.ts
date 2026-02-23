@@ -6,6 +6,7 @@ import { MAX_LISTING_LIMIT, DEFAULT_LISTING_LIMIT } from '@/_shared/_constants/l
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { OnChainDbService } from '../../_api-services/onchain_db_service';
+import { ENABLE_BLOCKCHAIN } from '../../_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '../../_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '../../_api-utils/withErrorHandling';
 
@@ -18,6 +19,8 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 	const { page, limit } = zodQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
 
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({ items: [], totalCount: 0 });
 
 	const preimageListing = await OnChainDbService.GetPreimageListing({ network, page, limit });
 

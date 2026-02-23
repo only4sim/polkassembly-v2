@@ -10,6 +10,7 @@ import { OffChainDbService } from '@/app/api/_api-services/offchain_db_service';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { APIError } from '@/app/api/_api-utils/apiError';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getReqBody } from '@/app/api/_api-utils/getReqBody';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
@@ -27,6 +28,8 @@ const zodParamsSchema = z.object({
 export const GET = withErrorHandling(async (req: Request, { params }: { params: Promise<{ address: string }> }) => {
 	const { address } = zodParamsSchema.parse(await params);
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json(null);
 
 	const delegate = await OffChainDbService.GetPolkassemblyDelegateByAddress({ network, address });
 
