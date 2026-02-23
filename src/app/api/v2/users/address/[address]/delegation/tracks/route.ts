@@ -14,6 +14,7 @@ import { getEncodedAddress } from '@/_shared/_utils/getEncodedAddress';
 import { APIError } from '@/app/api/_api-utils/apiError';
 import { ERROR_CODES } from '@/_shared/_constants/errorLiterals';
 import { StatusCodes } from 'http-status-codes';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 
 const zodParamsSchema = z.object({
 	address: z.string().refine((addr) => ValidatorService.isValidWeb3Address(addr), 'Not a valid web3 address')
@@ -22,6 +23,10 @@ const zodParamsSchema = z.object({
 // get delegation status and active proposals for all tracks
 export const GET = withErrorHandling(async (req: NextRequest, { params }: { params: Promise<{ address: string }> }) => {
 	const [{ address }, network] = await Promise.all([zodParamsSchema.parse(await params), getNetworkFromHeaders()]);
+
+	if (!ENABLE_BLOCKCHAIN) {
+		return NextResponse.json([]);
+	}
 
 	const { trackDetails } = NETWORKS_DETAILS[network as ENetwork];
 	const allTrackIds = Object.values(trackDetails).map((track) => track.trackId);

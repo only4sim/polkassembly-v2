@@ -17,6 +17,7 @@ import { StatusCodes } from 'http-status-codes';
 import { ValidatorService } from '@/_shared/_services/validator_service';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { getSubstrateAddress } from '@/_shared/_utils/getSubstrateAddress';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 
 type UserVoteWithPostDetails = Omit<IProfileVote, 'postDetails'> & {
 	postDetails: IPost;
@@ -29,6 +30,11 @@ type UserVotesResponse = {
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) {
+		return NextResponse.json([]);
+	}
+
 	const queryParamsSchema = z.object({
 		page: z.coerce.number().optional().default(1),
 		limit: z.coerce.number().max(MAX_LISTING_LIMIT).optional().default(DEFAULT_LISTING_LIMIT),

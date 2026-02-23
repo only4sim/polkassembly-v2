@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { OffChainDbService } from '@/app/api/_api-services/offchain_db_service';
 import { DEFAULT_LISTING_LIMIT, MAX_LISTING_LIMIT } from '@/_shared/_constants/listingLimit';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 
 export const GET = withErrorHandling(async (req: NextRequest, { params }: { params: Promise<{ proposalType: string; index: string }> }): Promise<NextResponse> => {
 	const zodParamsSchema = z.object({
@@ -27,6 +28,10 @@ export const GET = withErrorHandling(async (req: NextRequest, { params }: { para
 	const { page, limit } = zodQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
 
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) {
+		return NextResponse.json([]);
+	}
 
 	// Fetch child bounties for the parent bounty (indexer returns per-parent indices)
 	const onchainChildBountiesInfo: IGenericListingResponse<IOnChainPostInfo> = await OnChainDbService.GetChildBountiesByParentBountyIndex({

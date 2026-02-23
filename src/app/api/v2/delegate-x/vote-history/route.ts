@@ -14,6 +14,7 @@ import { MAX_LISTING_LIMIT, DEFAULT_LISTING_LIMIT } from '@/_shared/_constants/l
 import { z } from 'zod';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { EProposalStatus } from '@/_shared/types';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 
 const zodQuerySchema = z.object({
 	page: z.coerce.number().optional().default(1),
@@ -22,6 +23,11 @@ const zodQuerySchema = z.object({
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) {
+		return NextResponse.json({});
+	}
+
 	const { page, limit } = zodQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
 	const { newAccessToken } = await AuthService.ValidateAuthAndRefreshTokens();
 	if (!newAccessToken) {

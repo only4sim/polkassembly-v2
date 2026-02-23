@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { headers } from 'next/headers';
 import { RedisService } from '@/app/api/_api-services/redis_service';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 
 const zodParamsSchema = z.object({
 	proposalType: z.enum([EProposalType.REFERENDUM_V2, EProposalType.REFERENDUM]),
@@ -19,6 +20,10 @@ const zodParamsSchema = z.object({
 export const GET = withErrorHandling(
 	async (req: NextRequest, { params }: { params: Promise<{ proposalType: string; index: string }> }): Promise<NextResponse<IPostAnalytics | null>> => {
 		const { proposalType, index } = zodParamsSchema.parse(await params);
+
+		if (!ENABLE_BLOCKCHAIN) {
+			return NextResponse.json({} as IPostAnalytics);
+		}
 
 		const [network, headersList] = await Promise.all([getNetworkFromHeaders(), headers()]);
 		const skipCache = headersList.get(EHttpHeaderKey.SKIP_CACHE) === 'true';
