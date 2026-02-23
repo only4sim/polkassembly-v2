@@ -8,11 +8,15 @@ import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { ValidatorService } from '@/_shared/_services/validator_service';
 import { EHttpHeaderKey } from '@/_shared/types';
 
 export const GET = withErrorHandling(async (req: NextRequest, { params }: { params: Promise<{ trackNo: string }> }) => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({});
+
 	const skipCache = req.headers.get(EHttpHeaderKey.SKIP_CACHE) === 'true';
 
 	const zodParamsSchema = z.object({

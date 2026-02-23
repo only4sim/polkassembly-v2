@@ -7,10 +7,13 @@ import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { NextResponse } from 'next/server';
 
 export const GET = withErrorHandling(async () => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({});
 
 	// Check if we have cached track counts
 	const cachedTrackCounts = await RedisService.GetTrackCounts({ network });

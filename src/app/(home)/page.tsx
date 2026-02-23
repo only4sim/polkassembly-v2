@@ -25,9 +25,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function OverviewPage() {
-	const { allTracks, treasuryStats } = await NextApiClientService.fetchOverviewData();
-	const referer = await getReferrerFromHeaders();
 	const isBlockchainEnabled = process.env.ENABLE_BLOCKCHAIN === 'true';
+	const { allTracks, treasuryStats } = isBlockchainEnabled
+		? await NextApiClientService.fetchOverviewData()
+		: { allTracks: { data: { items: [], totalCount: 0 }, error: null }, treasuryStats: { data: [], error: null } };
+	const referer = await getReferrerFromHeaders();
 
 	if (allTracks.error || !allTracks.data) {
 		return (

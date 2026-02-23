@@ -7,11 +7,15 @@ import { RedisService } from '@/app/api/_api-services/redis_service';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { EHttpHeaderKey } from '@/_shared/types';
 import { NETWORKS_DETAILS } from '@/_shared/_constants/networks';
 
 export const GET = withErrorHandling(async (req: NextRequest): Promise<NextResponse> => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({});
+
 	const skipCache = req.headers.get(EHttpHeaderKey.SKIP_CACHE) === 'true';
 
 	// Try to get from cache first
