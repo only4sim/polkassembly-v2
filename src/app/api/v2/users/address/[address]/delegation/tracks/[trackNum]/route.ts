@@ -3,6 +3,7 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import { ValidatorService } from '@/_shared/_services/validator_service';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
@@ -17,6 +18,8 @@ import { dayjs } from '@/_shared/_utils/dayjsInit';
 
 // get delegation status and active proposals for all tracks
 export const GET = withErrorHandling(async (req: NextRequest, { params }: { params: Promise<{ address: string; trackNum: string }> }) => {
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json(null);
+
 	const [network] = await Promise.all([getNetworkFromHeaders(), cryptoWaitReady()]);
 
 	const zodParamsSchema = z.object({

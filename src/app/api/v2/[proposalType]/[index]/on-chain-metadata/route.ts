@@ -6,6 +6,7 @@ import { ERROR_CODES } from '@/_shared/_constants/errorLiterals';
 import { EProposalType, IOnChainMetadata } from '@/_shared/types';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { APIError } from '@/app/api/_api-utils/apiError';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { StatusCodes } from 'http-status-codes';
@@ -18,10 +19,12 @@ const zodParamsSchema = z.object({
 });
 
 export const GET = withErrorHandling(
-	async (req: NextRequest, { params }: { params: Promise<{ proposalType: string; index: string }> }): Promise<NextResponse<IOnChainMetadata>> => {
+	async (req: NextRequest, { params }: { params: Promise<{ proposalType: string; index: string }> }): Promise<NextResponse<IOnChainMetadata | null>> => {
 		const { proposalType, index } = zodParamsSchema.parse(await params);
 
 		const network = await getNetworkFromHeaders();
+
+		if (!ENABLE_BLOCKCHAIN) return NextResponse.json(null);
 
 		const onChainMetadata = await OnChainDbService.GetPostOnChainMetadata({ network, indexOrHash: index, proposalType });
 

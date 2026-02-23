@@ -12,11 +12,14 @@ import PollForProposal from '@/app/_shared-components/PollForProposal';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { markdownToPlainText } from '@/_shared/_utils/markdownToText';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { StatusCodes } from 'http-status-codes';
 import ServerComponentError from '@/app/_shared-components/ServerComponentError';
 
 export async function generateMetadata({ params }: { params: Promise<{ index: string }> }): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS' };
+	}
 	const { index } = await params;
 
 	const network = await getNetworkFromHeaders();
@@ -35,6 +38,9 @@ export async function generateMetadata({ params }: { params: Promise<{ index: st
 }
 
 async function Referenda({ params, searchParams }: { params: Promise<{ index: string }>; searchParams: Promise<{ created?: string }> }) {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		redirect('/');
+	}
 	const { index } = await params;
 	const { created } = await searchParams;
 

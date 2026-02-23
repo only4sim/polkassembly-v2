@@ -4,6 +4,7 @@
 
 import { ValidatorService } from '@/_shared/_services/validator_service';
 import { EProposalType, IGenericListingResponse, IOnChainPostListing, IPostListing, IUserPosts, EHttpHeaderKey } from '@/_shared/types';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
@@ -19,6 +20,8 @@ const addressParamsSchema = z.object({
 
 // get posts created by a user's address
 export const GET = withErrorHandling(async (request: NextRequest, { params }: { params: Promise<{ address: string }> }) => {
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({ items: [], totalCount: 0 });
+
 	const [{ address: walletAddress }, networkName] = await Promise.all([addressParamsSchema.parse(await params), getNetworkFromHeaders()]);
 
 	const paginationParamsSchema = z.object({

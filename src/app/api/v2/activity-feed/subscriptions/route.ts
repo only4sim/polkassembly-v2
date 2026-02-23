@@ -14,6 +14,7 @@ import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeader
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { ValidatorService } from '@/_shared/_services/validator_service';
 import { COOKIE_HEADER_ACTION_NAME } from '@/_shared/_constants/cookieHeaderActionName';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 
 // 1. check for auth
 // 2. fetch all post subscriptions for the user
@@ -22,6 +23,10 @@ import { COOKIE_HEADER_ACTION_NAME } from '@/_shared/_constants/cookieHeaderActi
 // 5. sort by comments as well
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
+	if (!ENABLE_BLOCKCHAIN) {
+		return NextResponse.json([]);
+	}
+
 	// Parse and validate query parameters
 	const zodQuerySchema = z.object({
 		page: z.coerce.number().optional().default(1),

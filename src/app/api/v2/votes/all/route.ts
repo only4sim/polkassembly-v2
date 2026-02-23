@@ -14,6 +14,7 @@ import { OffChainDbService } from '@/app/api/_api-services/offchain_db_service';
 import { APIError } from '@/app/api/_api-utils/apiError';
 import { ERROR_CODES } from '@/_shared/_constants/errorLiterals';
 import { StatusCodes } from 'http-status-codes';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 
 async function getPublicUser({ proposer, userId }: { proposer?: string; userId?: number }) {
 	let publicUser: IPublicUser | null = null;
@@ -74,6 +75,11 @@ async function fetchPostData({ network, proposalType, indexOrHash }: { network: 
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) {
+		return NextResponse.json([]);
+	}
+
 	const queryParamsSchema = z.object({
 		page: z.coerce.number().optional().default(1),
 		limit: z.coerce.number().max(10000).optional().default(DEFAULT_LISTING_LIMIT)

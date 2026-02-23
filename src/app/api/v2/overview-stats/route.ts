@@ -3,12 +3,18 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import { NextResponse } from 'next/server';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { withErrorHandling } from '../../_api-utils/withErrorHandling';
 import { getNetworkFromHeaders } from '../../_api-utils/getNetworkFromHeaders';
 import { OnChainDbService } from '../../_api-services/onchain_db_service';
 
 export const GET = withErrorHandling(async () => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) {
+		return NextResponse.json({ activeProposalsCount: 0, weeklyVotesCount: 0, weeklySpends: '0' });
+	}
+
 	const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 	const stats = await OnChainDbService.GetActivityStats({ network, oneWeekAgo });
 

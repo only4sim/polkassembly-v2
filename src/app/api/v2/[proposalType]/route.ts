@@ -31,6 +31,7 @@ import { StatusCodes } from 'http-status-codes';
 import { headers } from 'next/headers';
 import { MAX_POLL_OPTION_LENGTH, MAX_POLL_OPTIONS_COUNT, MIN_POLL_OPTIONS_COUNT } from '@/_shared/_constants/pollLimits';
 import { buildCompositeIndex } from '@/_shared/_utils/childBountyUtils';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { APIError } from '../../_api-utils/apiError';
 import { AuthService } from '../../_api-services/auth_service';
 import { getReqBody } from '../../_api-utils/getReqBody';
@@ -57,6 +58,11 @@ export const GET = withErrorHandling(async (req: NextRequest, { params }) => {
 	const { page, limit, status: statuses, origin: origins, tags, userId } = zodQuerySchema.parse(searchParamsObject);
 
 	const [network, headersList] = await Promise.all([getNetworkFromHeaders(), headers()]);
+
+	if (!ENABLE_BLOCKCHAIN && ValidatorService.isValidOnChainProposalType(proposalType)) {
+		return NextResponse.json({ items: [], totalCount: 0 });
+	}
+
 	const skipCache = headersList.get(EHttpHeaderKey.SKIP_CACHE) === 'true';
 
 	// Only get from cache if not skipping cache

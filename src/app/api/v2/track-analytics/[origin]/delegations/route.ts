@@ -8,6 +8,7 @@ import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -19,6 +20,8 @@ export const GET = withErrorHandling(async (req: NextRequest, { params }) => {
 	const { origin } = zodParamsSchema.parse(await params);
 
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({});
 
 	const cachedTrackAnalyticsDelegation = await RedisService.GetTrackAnalyticsDelegation({ network, origin });
 	if (cachedTrackAnalyticsDelegation) {

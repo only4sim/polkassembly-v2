@@ -6,10 +6,13 @@ import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeader
 import { NextResponse } from 'next/server';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { withErrorHandling } from '../../../_api-utils/withErrorHandling';
 
 export const GET = withErrorHandling(async () => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({});
 
 	const cachedStats = await RedisService.GetDelegationStats(network);
 	if (cachedStats) {

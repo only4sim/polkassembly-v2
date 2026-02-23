@@ -12,6 +12,7 @@ import { OffChainDbService } from '@/app/api/_api-services/offchain_db_service';
 import { OnChainDbService } from '@/app/api/_api-services/onchain_db_service';
 import { RedisService } from '@/app/api/_api-services/redis_service';
 import { APIError } from '@/app/api/_api-utils/apiError';
+import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getReqBody } from '@/app/api/_api-utils/getReqBody';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
@@ -37,6 +38,8 @@ interface IParityDelegate {
 
 export const GET = withErrorHandling(async () => {
 	const network = await getNetworkFromHeaders();
+
+	if (!ENABLE_BLOCKCHAIN) return NextResponse.json({ items: [], totalCount: 0 });
 
 	const cachedDelegateDetails = await RedisService.GetDelegateDetails(network);
 	if (cachedDelegateDetails) {
