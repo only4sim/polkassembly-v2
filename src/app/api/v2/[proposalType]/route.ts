@@ -59,7 +59,7 @@ export const GET = withErrorHandling(async (req: NextRequest, { params }) => {
 
 	const [network, headersList] = await Promise.all([getNetworkFromHeaders(), headers()]);
 
-	if (!ENABLE_BLOCKCHAIN) {
+	if (!ENABLE_BLOCKCHAIN && ValidatorService.isValidOnChainProposalType(proposalType)) {
 		return NextResponse.json({ items: [], totalCount: 0 });
 	}
 
