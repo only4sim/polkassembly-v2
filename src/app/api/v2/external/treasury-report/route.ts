@@ -3,7 +3,7 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import { NextResponse } from 'next/server';
-import { NEWS_GOOGLE_SHEET_ID, TREASURY_REPORT_GOOGLE_SHEET_NAME } from '@/app/api/_api-constants/apiEnvVars';
+import { GOOGLE_API_KEY, NEWS_GOOGLE_SHEET_ID, TREASURY_REPORT_GOOGLE_SHEET_NAME } from '@/app/api/_api-constants/apiEnvVars';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { GoogleSheetService } from '../../../_api-services/external_api_service/googlesheets_service';
 
@@ -15,6 +15,11 @@ interface IRawTreasuryReport {
 }
 
 export const GET = withErrorHandling(async () => {
+	// Guard: return empty array when Google API key is not configured
+	if (!GOOGLE_API_KEY) {
+		return NextResponse.json([]);
+	}
+
 	const sheetId = NEWS_GOOGLE_SHEET_ID;
 	const sheetName = TREASURY_REPORT_GOOGLE_SHEET_NAME || '';
 	const reportItems = await GoogleSheetService.fetchSheetData(sheetId, sheetName);

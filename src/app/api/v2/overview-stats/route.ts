@@ -12,7 +12,7 @@ export const GET = withErrorHandling(async () => {
 	const network = await getNetworkFromHeaders();
 
 	if (!ENABLE_BLOCKCHAIN) {
-		return NextResponse.json({ activeProposalsCount: 0, weeklyVotesCount: 0, weeklySpends: '0' });
+		return NextResponse.json({ activeProposalsCount: 0, weeklyVotesCount: 0, weeklySpends: [] });
 	}
 
 	const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();

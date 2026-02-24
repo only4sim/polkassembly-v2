@@ -32,6 +32,21 @@ const zodQuerySchema = z.object({
 });
 
 async function DiscussionsPage({ searchParams }: { searchParams: Promise<{ page?: string; status?: string }> }) {
+	// Guard: when blockchain is disabled and Firestore Admin is not configured,
+	// show empty listing to avoid runtime crash
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return (
+			<div>
+				<ListingPage
+					proposalType={EProposalType.DISCUSSION}
+					initialData={{ items: [], totalCount: 0 }}
+					statuses={[]}
+					page={1}
+				/>
+			</div>
+		);
+	}
+
 	const searchParamsValue = await searchParams;
 	const { page, status: statuses } = zodQuerySchema.parse(searchParamsValue);
 
