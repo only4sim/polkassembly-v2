@@ -22,8 +22,10 @@ export const clientAuth = getAuth(app);
 export const clientDb = getFirestore(app);
 export const clientFunctions = getFunctions(app);
 
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+let emulatorsConnected = false;
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && !emulatorsConnected) {
 	connectAuthEmulator(clientAuth, 'http://localhost:9099', { disableWarnings: true });
 	connectFirestoreEmulator(clientDb, 'localhost', 8080);
 	connectFunctionsEmulator(clientFunctions, 'localhost', 5001);
+	emulatorsConnected = true;
 }
