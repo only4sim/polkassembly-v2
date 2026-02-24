@@ -43,9 +43,11 @@ function ActivityStats() {
 	});
 
 	const formattedVotes = data ? new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(data.weeklyVotesCount) : '0';
-	const weeklySpends = data?.weeklySpends.reduce((acc, curr) => {
-		return acc.add(new BN(curr.amount));
-	}, BN_ZERO);
+	const weeklySpends = Array.isArray(data?.weeklySpends)
+		? data.weeklySpends.reduce((acc, curr) => {
+				return acc.add(new BN(curr.amount));
+			}, BN_ZERO)
+		: BN_ZERO;
 	const formattedSpends = data && weeklySpends ? formatBnBalance(weeklySpends, { withUnit: true, compactNotation: true, numberAfterComma: 1 }, network) : '0';
 
 	const stats = [

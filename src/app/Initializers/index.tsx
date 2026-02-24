@@ -25,6 +25,7 @@ import { NextApiClientService } from '../_client-services/next_api_client_servic
 import { isMimirDetected } from '../_client-services/isMimirDetected';
 
 function Initializers({ userData, userPreferences }: { userData: IAccessTokenPayload | null; userPreferences: IUserPreferences }) {
+	const isBlockchainEnabled = process.env.NEXT_PUBLIC_ENABLE_BLOCKCHAIN === 'true';
 	const network = getCurrentNetwork();
 
 	const userDataClient = CookieClientService.getAccessTokenPayload();
@@ -116,6 +117,7 @@ function Initializers({ userData, userPreferences }: { userData: IAccessTokenPay
 		let identityApiIntervalId: ReturnType<typeof setInterval>;
 
 		(async () => {
+			if (!isBlockchainEnabled) return;
 			if (identityApi) return;
 
 			const newApi = await IdentityService.Init(network);
@@ -144,6 +146,7 @@ function Initializers({ userData, userPreferences }: { userData: IAccessTokenPay
 		let assethubApiIntervalId: ReturnType<typeof setInterval>;
 
 		(async () => {
+			if (!isBlockchainEnabled) return;
 			if (assethubApi) return;
 
 			const newApi = await AssethubApiService.Init(network);
@@ -172,6 +175,7 @@ function Initializers({ userData, userPreferences }: { userData: IAccessTokenPay
 		let polkadotApiIntervalId: ReturnType<typeof setInterval>;
 
 		(async () => {
+			if (!isBlockchainEnabled) return;
 			if (polkadotApi) return;
 
 			const newApi = await PolkadotApiService.Init(network);
