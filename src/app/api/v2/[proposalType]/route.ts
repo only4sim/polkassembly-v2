@@ -63,6 +63,12 @@ export const GET = withErrorHandling(async (req: NextRequest, { params }) => {
 		return NextResponse.json({ items: [], totalCount: 0 });
 	}
 
+	// Guard: return empty listing for off-chain proposals when blockchain is disabled
+	// (Firestore Admin SDK is not configured in no-chain dev mode)
+	if (!ENABLE_BLOCKCHAIN && !ValidatorService.isValidOnChainProposalType(proposalType)) {
+		return NextResponse.json({ items: [], totalCount: 0 });
+	}
+
 	const skipCache = headersList.get(EHttpHeaderKey.SKIP_CACHE) === 'true';
 
 	// Only get from cache if not skipping cache
