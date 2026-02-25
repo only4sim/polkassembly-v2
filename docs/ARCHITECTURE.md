@@ -206,6 +206,61 @@ The following path aliases are configured in `tsconfig.json`:
 4. **Scalability**: New features follow established patterns
 5. **Team Collaboration**: Different teams can work on different layers independently
 
+## Data Model: `users/{uid}`
+
+The `users` collection stores user profile documents keyed by Firebase Auth UID.
+
+### Schema
+
+| Field          | Type                   | Default   | Description                                      |
+| -------------- | ---------------------- | --------- | ------------------------------------------------ |
+| `uid`          | `string`               | —         | Firebase Auth UID (document ID)                  |
+| `email`        | `string`               | `""`      | User's email address                             |
+| `displayName`  | `string`               | `""`      | User's display name                              |
+| `role`         | `'user' \| 'admin'`    | `'user'`  | User role; admin assigned manually via Firestore |
+| `pointsBalance`| `number`              | `0`       | Voting-eligibility points balance                |
+| `createdAt`    | `Timestamp`            | server    | Document creation timestamp                      |
+| `updatedAt`    | `Timestamp`            | server    | Last-update timestamp                            |
+
+### Auto-Creation
+
+The `onAuthUserCreated` Cloud Function (blocking `beforeUserCreated` trigger) automatically
+creates a `users/{uid}` document with default values when a new Firebase Auth user signs up.
+
+### Domain Entity
+
+```typescript
+// src/domain/entities/User.ts
+export interface User {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: 'user' | 'admin';
+  pointsBalance: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Repository Interface
+
+```typescript
+// src/ports/repositories/UserRepository.ts
+export interface UserRepository {
+  getUserByUid(uid: string): Promise<User | null>;
+  createUser(user: Omit<User, 'createdAt' | 'updatedAt'>): Promise<User>;
+  updateUser(uid: string, updates: Partial<Omit<User, 'uid' | 'createdAt'>>): Promise<void>;
+}
+```
+
+### Adapter
+
+- `src/adapters/firestore/FirestoreUserRepository.ts` — Firestore implementation (stub, to be completed).
+
+### API
+
+- `GET /api/v2/users/me` — Returns the authenticated user's public profile.
+
 ## References
 
 - [Clean Architecture by Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
