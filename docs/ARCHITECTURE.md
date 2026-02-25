@@ -250,6 +250,8 @@ export interface UserRepository {
   getUserByUid(uid: string): Promise<User | null>;
   createUser(user: Omit<User, 'createdAt' | 'updatedAt'>): Promise<User>;
   updateUser(uid: string, updates: Partial<Omit<User, 'uid' | 'createdAt'>>): Promise<void>;
+  setRole(uid: string, role: 'user' | 'admin'): Promise<void>;
+  getPointsBalance(uid: string): Promise<number>;
 }
 ```
 

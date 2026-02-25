@@ -71,4 +71,29 @@ export class FirestoreUserRepository implements UserRepository {
 		// 2. firestore.collection('users').doc(uid).update({ ...updates, updatedAt: new Date() })
 		throw new Error('Not implemented: updateUser');
 	}
+
+	/**
+	 * Set the role of a user
+	 *
+	 * TODO: Implement role update
+	 * - Update role field and updatedAt timestamp
+	 */
+	async setRole(_uid: string, _role: 'user' | 'admin'): Promise<void> {
+		// TODO: Implement
+		// firestore.collection('users').doc(uid).update({ role, updatedAt: new Date() })
+		throw new Error('Not implemented: setRole');
+	}
+
+	/**
+	 * Get the points balance for a user
+	 *
+	 * TODO: Implement points balance retrieval
+	 * - Fetch user document and return pointsBalance field
+	 */
+	async getPointsBalance(_uid: string): Promise<number> {
+		// TODO: Implement
+		// const doc = await firestore.collection('users').doc(uid).get();
+		// return doc.data()?.pointsBalance ?? 0;
+		throw new Error('Not implemented: getPointsBalance');
+	}
 }

@@ -3,7 +3,7 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import * as logger from 'firebase-functions/logger';
-import { beforeUserCreated } from 'firebase-functions/v2/identity';
+import { auth } from 'firebase-functions/v1';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
 
@@ -13,35 +13,28 @@ if (getApps().length === 0) {
 }
 
 /**
- * Cloud Function triggered before a new Firebase Auth user is created.
+ * Cloud Function triggered when a new Firebase Auth user is created.
  * Auto-creates a user profile document at users/{uid} with default values.
  */
-export const onAuthUserCreated = beforeUserCreated(async (event) => {
-	if (!event.data) {
-		logger.error('No user data in event');
-		return;
-	}
-
-	const { uid, email, displayName } = event.data;
-
+export const onAuthUserCreated = auth.user().onCreate(async (userRecord) => {
 	const db = getFirestore();
 
 	try {
 		await db
 			.collection('users')
-			.doc(uid)
+			.doc(userRecord.uid)
 			.set({
-				uid,
-				email: email || '',
-				displayName: displayName || '',
+				uid: userRecord.uid,
+				email: userRecord.email || '',
+				displayName: userRecord.displayName || userRecord.email?.split('@')[0] || '',
 				role: 'user',
 				pointsBalance: 0,
 				createdAt: FieldValue.serverTimestamp(),
 				updatedAt: FieldValue.serverTimestamp()
 			});
 
-		logger.info(`User profile created for uid: ${uid}`);
+		logger.info(`User profile created for uid: ${userRecord.uid}`);
 	} catch (error) {
-		logger.error(`Error creating user profile for uid: ${uid}`, error);
+		logger.error(`Error creating user profile for uid: ${userRecord.uid}`, error);
 	}
 });

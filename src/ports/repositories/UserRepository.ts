@@ -31,4 +31,18 @@ export interface UserRepository {
 	 * @param updates - Partial user data to update
 	 */
 	updateUser(uid: string, updates: Partial<Omit<User, 'uid' | 'createdAt'>>): Promise<void>;
+
+	/**
+	 * Set the role of a user
+	 * @param uid - Firebase Auth UID
+	 * @param role - New role ('user' or 'admin')
+	 */
+	setRole(uid: string, role: 'user' | 'admin'): Promise<void>;
+
+	/**
+	 * Get the points balance for a user
+	 * @param uid - Firebase Auth UID
+	 * @returns Points balance
+	 */
+	getPointsBalance(uid: string): Promise<number>;
 }
