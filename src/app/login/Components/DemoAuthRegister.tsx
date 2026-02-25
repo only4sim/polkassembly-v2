@@ -15,6 +15,7 @@ import { useRouter } from 'nextjs-toploader/app';
 import { useDemoUser } from '@/hooks/useDemoUser';
 
 interface IFormFields {
+	displayName: string;
 	email: string;
 	password: string;
 	confirmPassword: string;
@@ -30,10 +31,10 @@ function DemoAuthRegister({ switchToLogin }: { switchToLogin: () => void }) {
 	const form = useForm<IFormFields>();
 
 	const handleRegister = async (values: IFormFields) => {
-		const { email, password, confirmPassword } = values;
+		const { displayName, email, password, confirmPassword } = values;
 
-		if (!email || !password) {
-			setErrorMessage('Please enter your email and password.');
+		if (!email || !password || !displayName) {
+			setErrorMessage('Please fill in all fields.');
 			return;
 		}
 
@@ -45,7 +46,7 @@ function DemoAuthRegister({ switchToLogin }: { switchToLogin: () => void }) {
 		try {
 			setLoading(true);
 			setErrorMessage('');
-			await register(email, password);
+			await register(email, password, displayName);
 			router.replace('/');
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
@@ -60,6 +61,26 @@ function DemoAuthRegister({ switchToLogin }: { switchToLogin: () => void }) {
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(handleRegister)}>
 					<div className='flex flex-col gap-4 p-4'>
+						<FormField
+							control={form.control}
+							name='displayName'
+							key='displayName'
+							disabled={loading}
+							rules={{ required: 'Display name is required' }}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Display Name</FormLabel>
+									<FormControl>
+										<Input
+											placeholder='Enter your display name'
+											type='text'
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 						<FormField
 							control={form.control}
 							name='email'

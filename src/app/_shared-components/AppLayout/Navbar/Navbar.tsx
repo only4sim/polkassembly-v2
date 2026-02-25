@@ -26,6 +26,7 @@ import { ShieldMinusIcon } from 'lucide-react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { isMimirDetected } from '@/app/_client-services/isMimirDetected';
+import { useFirebaseAuth } from '@/app/_client-services/firebase/useFirebaseAuth';
 import { getCurrentNetwork } from '@/_shared/_utils/getCurrentNetwork';
 import { NETWORKS_DETAILS } from '@/_shared/_constants/networks';
 import classes from './Navbar.module.scss';
@@ -52,6 +53,9 @@ function Navbar() {
 	const t = useTranslations();
 	const { userPreferences, setUserPreferences } = useUserPreferences();
 	const [isModalOpen, setModalOpen] = useState(false);
+
+	const isBlockchainEnabled = process.env.NEXT_PUBLIC_ENABLE_BLOCKCHAIN === 'true';
+	const { user: demoUser, logout: demoLogout } = useFirebaseAuth();
 
 	const network = getCurrentNetwork();
 	const pathname = usePathname();
@@ -80,6 +84,10 @@ function Navbar() {
 	};
 
 	const onLogout = async () => {
+		if (!isBlockchainEnabled) {
+			await demoLogout();
+			return;
+		}
 		const isMimir = await isMimirDetected();
 
 		await AuthClientService.logout({ isIframe: !!isMimir, onLogout: () => setUser(null) });
@@ -153,7 +161,40 @@ function Navbar() {
 						<NetworkDropdown />
 					</span>
 					<span>
-						{user?.id ? (
+						{!isBlockchainEnabled ? (
+							demoUser ? (
+								<DropdownMenu>
+									<DropdownMenuTrigger className='rounded-3xl border border-border_grey bg-wallet_disabled_bg px-3 py-2 text-sm normal-case text-text_primary'>
+										<p>{demoUser.displayName || demoUser.email}</p>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent className='min-w-max'>
+										<DropdownMenuItem
+											asChild
+											className='hover:bg-sidebar_menu_hover'
+										>
+											<Button
+												variant='ghost'
+												className='flex w-full justify-start p-0 px-2 text-sm text-basic_text'
+												onClick={onLogout}
+												size='sm'
+											>
+												<Image
+													src={LogoutIcon}
+													alt='logout'
+													width={24}
+													height={24}
+												/>
+												{t('Profile.logout')}
+											</Button>
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							) : (
+								<Link href='/login'>
+									<Button>{t('Profile.login')}</Button>
+								</Link>
+							)
+						) : user?.id ? (
 							<DropdownMenu>
 								<DropdownMenuTrigger
 									className='rounded-3xl border border-border_grey bg-wallet_disabled_bg px-3 py-2 text-sm normal-case text-text_primary'
@@ -315,7 +356,30 @@ function Navbar() {
 							</div>
 							<ThemeToggleButton className='w-full' />
 							<div>
-								{user?.id ? (
+								{!isBlockchainEnabled ? (
+									demoUser ? (
+										<DropdownMenu>
+											<DropdownMenuTrigger className='rounded-3xl border border-border_grey bg-wallet_disabled_bg px-3 py-2 text-sm normal-case text-text_primary'>
+												<p>{demoUser.displayName || demoUser.email}</p>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent>
+												<DropdownMenuItem>
+													<Button
+														variant='ghost'
+														className='flex w-full justify-start p-0 text-sm'
+														onClick={onLogout}
+													>
+														{t('Profile.logout')}
+													</Button>
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									) : (
+										<Link href='/login'>
+											<Button>{t('Profile.login')}</Button>
+										</Link>
+									)
+								) : user?.id ? (
 									<DropdownMenu>
 										<DropdownMenuTrigger
 											className='rounded-3xl border border-border_grey bg-wallet_disabled_bg px-3 py-2 text-sm normal-case text-text_primary'

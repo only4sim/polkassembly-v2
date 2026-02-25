@@ -3,7 +3,7 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import { useCallback, useEffect, useState } from 'react';
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile, User } from 'firebase/auth';
 import { clientAuth } from './firebaseClientApp';
 
 export interface IDemoUser {
@@ -33,8 +33,16 @@ export function useFirebaseAuth() {
 		return () => unsubscribe();
 	}, []);
 
-	const register = useCallback(async (email: string, password: string) => {
+	const register = useCallback(async (email: string, password: string, displayName?: string) => {
 		const userCredential = await createUserWithEmailAndPassword(clientAuth, email, password);
+		if (displayName) {
+			await updateProfile(userCredential.user, { displayName });
+			setUser({
+				uid: userCredential.user.uid,
+				email: userCredential.user.email,
+				displayName
+			});
+		}
 		return userCredential.user;
 	}, []);
 
