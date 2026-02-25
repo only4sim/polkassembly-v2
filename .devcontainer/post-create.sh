@@ -22,10 +22,14 @@ echo ">>> Installing Firebase CLI ..."
 npm install -g firebase-tools
 echo "Firebase CLI version: $(firebase --version)"
 
-# ---- 4. Install functions dependencies ----
+# ---- 4. Install functions dependencies & build ----
 echo ""
 echo ">>> Installing Firebase Functions dependencies ..."
-cd functions && npm install && cd ..
+cd functions && npm install
+echo ""
+echo ">>> Building Firebase Functions (tsc) ..."
+npm run build
+cd ..
 
 # ---- 5. Download Firebase emulators ----
 echo ""
@@ -43,6 +47,9 @@ echo "    firebase emulators:start --only firestore,functions,auth"
 echo ""
 echo "  To start the dev server (in another terminal):"
 echo "    yarn dev"
+echo ""
+echo "  To auto-rebuild functions on source changes:"
+echo "    cd functions && npm run build:watch"
 echo ""
 echo "  App:            http://localhost:3000"
 echo "  Emulator UI:    http://localhost:4000"

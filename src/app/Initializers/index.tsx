@@ -23,6 +23,8 @@ import { assethubApiAtom } from '../_atoms/polkadotJsApi/assethubApiAtom';
 import { AssethubApiService } from '../_client-services/assethub_api_service';
 import { NextApiClientService } from '../_client-services/next_api_client_service';
 import { isMimirDetected } from '../_client-services/isMimirDetected';
+// Side-effect import: connects Firebase client SDK to local emulators in dev mode
+import '../_client-services/firebase/firebaseClientApp';
 
 function Initializers({ userData, userPreferences }: { userData: IAccessTokenPayload | null; userPreferences: IUserPreferences }) {
 	const isBlockchainEnabled = process.env.NEXT_PUBLIC_ENABLE_BLOCKCHAIN === 'true';

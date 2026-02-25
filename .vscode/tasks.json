@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Functions: build:watch",
+			"type": "shell",
+			"command": "npm run build:watch",
+			"options": { "cwd": "${workspaceFolder}/functions" },
+			"isBackground": true,
+			"problemMatcher": ["$tsc-watch"],
+			"group": "build"
+		},
+		{
+			"label": "Firebase: emulators",
+			"type": "shell",
+			"command": "firebase emulators:start --only firestore,functions,auth",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Dev: all",
+			"dependsOn": ["Functions: build:watch", "Firebase: emulators"],
+			"dependsOrder": "parallel",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}

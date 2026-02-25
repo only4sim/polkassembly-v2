@@ -28,4 +28,6 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && !
 	connectFirestoreEmulator(clientDb, 'localhost', 8080);
 	connectFunctionsEmulator(clientFunctions, 'localhost', 5001);
 	emulatorsConnected = true;
+	// eslint-disable-next-line no-console
+	console.info('[Firebase Emulators] Connected — Auth(:9099), Firestore(:8080), Functions(:5001)');
 }
