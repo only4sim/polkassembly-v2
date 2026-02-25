@@ -15,6 +15,7 @@ import { ECacheRefreshType, EWallet, IV1User, IV1UserAddress, IV2User, IV2UserAd
 import { updatePostAlgolia } from './utils/updatePostAlgolia';
 import { updateUserAlgolia } from './utils/updateUserAlgolia';
 import { updateUserAddressesAlgolia } from './utils/updateUserAddressesAlgolia';
+export { onAuthUserCreated } from './onAuthUserCreated';
 
 // Load environment variables
 dotenv.config();
