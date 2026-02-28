@@ -20,6 +20,10 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 		console.error('\nError in initialising firebase-admin: ', error, '\n');
 		throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Error in initialising firebase-admin.');
 	}
+} else if (process.env.NODE_ENV === 'development' && !firebaseAdmin.apps.length) {
+	// Emulator mode: initialise without credentials so the SDK connects to local emulators
+	firebaseAdmin.initializeApp();
+	console.log('\n ℹ️ Firebase Admin initialised without credentials (emulator / development mode).\n');
 } else {
 	console.log('\n ℹ️ [disabled] FIREBASE_SERVICE_ACC_CONFIG is not set. Firestore operations will fail if called.\n');
 }
@@ -27,6 +31,7 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 export class FirestoreUtils {
 	private static _firestoreDb: firebaseAdmin.firestore.Firestore | null = null;
 
+	/* eslint-disable no-underscore-dangle */
 	protected static get firestoreDb(): firebaseAdmin.firestore.Firestore {
 		if (!this._firestoreDb) {
 			if (!firebaseAdmin.apps.length) {
@@ -36,13 +41,14 @@ export class FirestoreUtils {
 		}
 		return this._firestoreDb;
 	}
+	/* eslint-enable no-underscore-dangle */
 
 	protected static increment = firebaseAdmin.firestore.FieldValue.increment;
 
 	protected static serverTimestamp = firebaseAdmin.firestore.FieldValue.serverTimestamp;
 
 	// collection references
-	protected static usersCollectionRef = () => firebaseAdmin.firestore().collection('users');
+	protected static usersCollectionRef = () => this.firestoreDb.collection('users');
 
 	protected static addressesCollectionRef = () => this.firestoreDb.collection('addresses');
 

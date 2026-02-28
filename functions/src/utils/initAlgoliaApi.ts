@@ -5,12 +5,12 @@
 import { algoliasearch } from 'algoliasearch';
 import * as logger from 'firebase-functions/logger';
 
-export const initAlgoliaApi = () => {
+export const initAlgoliaApi = (): ReturnType<typeof algoliasearch> | null => {
 	const { ALGOLIA_APP_ID, ALGOLIA_WRITE_API_KEY } = process.env;
 
 	if (!ALGOLIA_APP_ID || !ALGOLIA_WRITE_API_KEY) {
-		logger.error('Algolia environment variables not set');
-		throw new Error('Algolia environment variables not set');
+		logger.warn('Algolia environment variables not set – skipping Algolia initialisation.');
+		return null;
 	}
 
 	try {
