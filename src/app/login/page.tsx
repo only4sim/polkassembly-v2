@@ -8,8 +8,12 @@ import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeader
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
 import classes from './Components/Login.module.scss';
 import LoginComponent from './Components/Login';
+import DemoAuthLogin from './Components/DemoAuthLogin';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'DemoOS - Login' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -23,6 +27,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 async function Login() {
+	// When ENABLE_BLOCKCHAIN=false, render DemoAuthLogin instead
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return (
+			<div className={classes.rootClass}>
+				<div className={classes.loginComp}>
+					<DemoAuthLogin />
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className={classes.rootClass}>
 			<div className={classes.loginComp}>
