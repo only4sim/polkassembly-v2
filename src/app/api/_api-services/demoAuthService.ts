@@ -10,6 +10,12 @@ if (FIREBASE_SERVICE_ACC_CONFIG && !firebaseAdmin.apps.length) {
 		credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
 	});
 } else if (process.env.NODE_ENV === 'development' && !firebaseAdmin.apps.length) {
+	if (!process.env.FIRESTORE_EMULATOR_HOST) {
+		process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+	}
+	if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+		process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+	}
 	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
 	firebaseAdmin.initializeApp({ projectId });
 }

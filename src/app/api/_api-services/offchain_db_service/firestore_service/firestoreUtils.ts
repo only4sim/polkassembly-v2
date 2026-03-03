@@ -21,7 +21,14 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 		throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Error in initialising firebase-admin.');
 	}
 } else if (process.env.NODE_ENV === 'development' && !firebaseAdmin.apps.length) {
-	// Emulator mode: initialise with a projectId so the SDK can connect to local emulators
+	// Emulator mode: set emulator host env vars so the Admin SDK routes to local emulators
+	// instead of trying real GCP credentials via gRPC.
+	if (!process.env.FIRESTORE_EMULATOR_HOST) {
+		process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+	}
+	if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+		process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+	}
 	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
 	firebaseAdmin.initializeApp({ projectId });
 	console.log(`\n ℹ️ Firebase Admin initialised for project "${projectId}" (emulator / development mode).\n`);
