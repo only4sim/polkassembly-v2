@@ -58,6 +58,10 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+
+	img {
+		width: auto;
+	}
 }
 
 .hide_scrollbar {
