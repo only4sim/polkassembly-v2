@@ -61,9 +61,9 @@
 }
 
 /* Complement Tailwind's preflight `img { height: auto }` with `width: auto`
-   so Next.js Image doesn't warn "width or height modified, but not the other".
-   Placed outside @layer so it beats layered preflight in the cascade;
-   any Tailwind utility class or inline style still overrides this. */
+   so both dimensions are consistently `auto`. This helps avoid the Next.js Image
+   "width or height modified, but not the other" warning for any remaining
+   Image components outside the sidebar (which uses plain <img> for SVGs). */
 img {
 	width: auto;
 }
