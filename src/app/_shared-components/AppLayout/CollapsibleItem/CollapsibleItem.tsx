@@ -43,6 +43,7 @@ function NestedPopover({ item }: { item: ISidebarMenuItem }) {
 								alt={item.title || 'icon'}
 								width={24}
 								height={24}
+								style={{ width: 'auto', height: 'auto' }}
 							/>
 						</div>
 					)}
@@ -74,6 +75,7 @@ function NestedPopover({ item }: { item: ISidebarMenuItem }) {
 													width={24}
 													height={24}
 													className={DARK_ICON_CLASS}
+													style={{ width: 'auto', height: 'auto' }}
 												/>
 											</div>
 										)}
@@ -109,6 +111,7 @@ function NestedCollapsible({ item }: { item: ISidebarMenuItem }) {
 									alt={item.title || 'icon'}
 									width={24}
 									height={24}
+									style={{ width: 'auto', height: 'auto' }}
 								/>
 							</div>
 						)}
@@ -137,6 +140,7 @@ function NestedCollapsible({ item }: { item: ISidebarMenuItem }) {
 													className={`${subItem.isActive ? SELECTED_ICON_CLASS : DARK_ICON_CLASS}`}
 													width={20}
 													height={20}
+													style={{ width: 'auto', height: 'auto' }}
 												/>
 											</div>
 										)}
@@ -180,6 +184,7 @@ function CollapsedState({ item }: { item: ISidebarMenuItem }) {
 											className={`${item.isActive || item.items?.some((subItem) => subItem.isActive) ? SELECTED_ICON_CLASS : DARK_ICON_CLASS}`}
 											width={24}
 											height={24}
+											style={{ width: 'auto', height: 'auto' }}
 										/>
 									</div>
 								)}
@@ -211,6 +216,7 @@ function CollapsedState({ item }: { item: ISidebarMenuItem }) {
 															className={DARK_ICON_CLASS}
 															width={24}
 															height={24}
+															style={{ width: 'auto', height: 'auto' }}
 														/>
 													</div>
 												)}
@@ -246,6 +252,7 @@ function CollapsibleButton({ item, isOpen, onClick }: { item: ISidebarMenuItem; 
 						className={`${item.isActive || item.items?.some((subItem) => subItem.isActive) ? SELECTED_ICON_CLASS : DARK_ICON_CLASS}`}
 						width={24}
 						height={24}
+						style={{ width: 'auto', height: 'auto' }}
 					/>
 				</div>
 			)}
@@ -314,6 +321,7 @@ function ExpandedState({ item, isOpen, setIsOpen }: { item: ISidebarMenuItem; is
 																alt={subItem.title || 'icon'}
 																width={24}
 																height={24}
+																style={{ width: 'auto', height: 'auto' }}
 															/>
 														</div>
 													)}
