@@ -92,6 +92,7 @@ function ChatsHistory() {
 									alt='Klara Avatar'
 									width={36}
 									height={36}
+									style={{ width: 'auto', height: 'auto' }}
 								/>
 								<p className='text-left text-[11px] font-semibold text-text_primary'>Hi, I am Klara, ask me about your governance interests</p>
 							</div>

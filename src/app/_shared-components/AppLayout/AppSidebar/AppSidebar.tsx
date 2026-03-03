@@ -110,6 +110,7 @@ function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 									alt='Klara AI Assistant'
 									width={36}
 									height={36}
+									style={{ width: 'auto', height: 'auto' }}
 								/>
 								<div className='flex flex-col text-left'>
 									<div className='flex items-center gap-1 text-sm font-semibold text-text_primary'>
@@ -134,6 +135,7 @@ function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 								alt='Klara AI Assistant'
 								width={36}
 								height={36}
+								style={{ width: 'auto', height: 'auto' }}
 							/>
 						</div>
 					</button>
