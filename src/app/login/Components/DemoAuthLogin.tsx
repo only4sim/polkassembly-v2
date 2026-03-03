@@ -20,7 +20,7 @@ interface IFormFields {
 	password: string;
 }
 
-function DemoAuthLogin() {
+function DemoAuthLogin({ isModal }: { isModal?: boolean }) {
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
 	const [showRegister, setShowRegister] = useState(false);
@@ -44,7 +44,11 @@ function DemoAuthLogin() {
 			setLoading(true);
 			setErrorMessage('');
 			await login(email, password);
-			router.replace('/');
+			if (isModal) {
+				router.back();
+			} else {
+				router.replace('/');
+			}
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : 'Login failed. Please try again.';
 			setErrorMessage(message);
@@ -54,7 +58,7 @@ function DemoAuthLogin() {
 	};
 
 	if (showRegister) {
-		return <DemoAuthRegister switchToLogin={() => setShowRegister(false)} />;
+		return <DemoAuthRegister switchToLogin={() => setShowRegister(false)} isModal={isModal} />;
 	}
 
 	return (

@@ -21,7 +21,7 @@ interface IFormFields {
 	confirmPassword: string;
 }
 
-function DemoAuthRegister({ switchToLogin }: { switchToLogin: () => void }) {
+function DemoAuthRegister({ switchToLogin, isModal }: { switchToLogin: () => void; isModal?: boolean }) {
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
 
@@ -49,7 +49,11 @@ function DemoAuthRegister({ switchToLogin }: { switchToLogin: () => void }) {
 			setLoading(true);
 			setErrorMessage('');
 			await register(email, password, displayName);
-			router.replace('/');
+			if (isModal) {
+				router.back();
+			} else {
+				router.replace('/');
+			}
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
 			setErrorMessage(message);

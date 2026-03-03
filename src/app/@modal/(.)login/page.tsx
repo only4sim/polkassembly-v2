@@ -33,7 +33,7 @@ function Login() {
 					</DialogTitle>
 				</DialogHeader>
 				<div className='sm:px-4'>
-					{isBlockchainEnabled ? <LoginComponent isModal /> : <DemoAuthLogin />}
+					{isBlockchainEnabled ? <LoginComponent isModal /> : <DemoAuthLogin isModal />}
 				</div>
 			</DialogContent>
 		</Dialog>
