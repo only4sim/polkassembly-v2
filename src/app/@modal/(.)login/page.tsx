@@ -4,7 +4,7 @@
 
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@ui/Dialog/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@ui/Dialog/Dialog';
 import LoginComponent from '@/app/login/Components/Login';
 import DemoAuthLogin from '@/app/login/Components/DemoAuthLogin';
 import React from 'react';
@@ -31,6 +31,7 @@ function Login() {
 					<DialogTitle>
 						<HeaderLabel />
 					</DialogTitle>
+					<DialogDescription className='sr-only'>Login or create an account</DialogDescription>
 				</DialogHeader>
 				<div className='sm:px-4'>
 					{isBlockchainEnabled ? <LoginComponent isModal /> : <DemoAuthLogin isModal />}

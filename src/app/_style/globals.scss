@@ -58,11 +58,14 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+}
 
-	img[width][height] {
-		width: auto;
-		height: auto;
-	}
+/* Complement Tailwind's preflight `img { height: auto }` with `width: auto`
+   so Next.js Image doesn't warn "width or height modified, but not the other".
+   Placed outside @layer so it beats layered preflight in the cascade;
+   any Tailwind utility class or inline style still overrides this. */
+img {
+	width: auto;
 }
 
 .hide_scrollbar {
