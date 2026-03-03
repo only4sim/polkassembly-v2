@@ -140,6 +140,7 @@ function Navbar() {
 								width={24}
 								height={24}
 								className={classes.translateIcon}
+								style={{ width: 'auto', height: 'auto' }}
 							/>
 							<span className={classes.translateIconLocale}>{userPreferences.locale}</span>
 						</SelectTrigger>
@@ -183,6 +184,7 @@ function Navbar() {
 													alt='logout'
 													width={24}
 													height={24}
+													style={{ width: 'auto', height: 'auto' }}
 												/>
 												{t('Profile.logout')}
 											</Button>
@@ -224,6 +226,7 @@ function Navbar() {
 												alt='profile'
 												width={24}
 												height={24}
+												style={{ width: 'auto', height: 'auto' }}
 											/>
 											{t('Profile.profile')}
 										</Link>
@@ -241,6 +244,7 @@ function Navbar() {
 												alt='set identity'
 												width={24}
 												height={24}
+												style={{ width: 'auto', height: 'auto' }}
 											/>
 											{t('SetIdentity.setIdentity')}
 										</Link>
@@ -258,6 +262,7 @@ function Navbar() {
 												alt='request judgement'
 												width={24}
 												height={24}
+												style={{ width: 'auto', height: 'auto' }}
 											/>
 											{t('SetIdentity.requestJudgement')}
 										</Link>
@@ -286,6 +291,7 @@ function Navbar() {
 												alt='logout'
 												width={24}
 												height={24}
+												style={{ width: 'auto', height: 'auto' }}
 											/>
 											{t('Profile.logout')}
 										</Button>

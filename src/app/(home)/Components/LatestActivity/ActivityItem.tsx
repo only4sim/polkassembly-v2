@@ -104,6 +104,7 @@ function ActivityItem({ rowData }: { rowData: IPostListing }) {
 									width={14}
 									height={14}
 									className={userPreferences.theme === ETheme.DARK ? 'darkIcon opacity-60' : 'opacity-60'}
+									style={{ width: 'auto', height: 'auto' }}
 								/>
 								<span>{metrics?.comments || 0}</span>
 							</div>

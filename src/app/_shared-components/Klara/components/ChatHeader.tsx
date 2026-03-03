@@ -129,7 +129,7 @@ function ChatHeader({ chatState, setChatState, openMobileHistory }: Props) {
 						alt='history'
 						width={24}
 						height={24}
-						className='size-6'
+						style={{ width: 'auto', height: 'auto' }}
 					/>
 				</button>
 				<button

@@ -63,7 +63,7 @@ function ChatsHistoryMobile({ onClose }: { onClose: () => void }) {
 							alt='history'
 							width={24}
 							height={24}
-							className='h-6 w-6'
+							style={{ width: 'auto', height: 'auto' }}
 						/>
 						<p className='text-xl font-semibold text-text_primary'>Chat History</p>
 					</div>
@@ -100,6 +100,7 @@ function ChatsHistoryMobile({ onClose }: { onClose: () => void }) {
 								alt='Empty HistoryBox'
 								width={160}
 								height={160}
+								style={{ width: 'auto', height: 'auto' }}
 							/>
 						</div>
 						<div>

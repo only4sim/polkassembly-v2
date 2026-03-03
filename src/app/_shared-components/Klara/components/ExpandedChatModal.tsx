@@ -110,6 +110,7 @@ export default function ExpandedChatModal({ open, chat }: { open: boolean; chat:
 										alt='new chat'
 										width={24}
 										height={24}
+										style={{ width: 'auto', height: 'auto' }}
 									/>
 									New Chat
 								</button>
@@ -135,6 +136,7 @@ export default function ExpandedChatModal({ open, chat }: { open: boolean; chat:
 										alt='Empty HistoryBox'
 										width={160}
 										height={160}
+										style={{ width: 'auto', height: 'auto' }}
 									/>
 
 									{!user?.id && (

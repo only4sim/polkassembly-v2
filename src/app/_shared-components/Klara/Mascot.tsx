@@ -35,9 +35,10 @@ function Mascot({ type }: MascotProps) {
 					<Image
 						src={mascotUrl}
 						alt={`${type} mascot`}
-						className='h-auto w-28'
+						className='w-28'
 						width={112}
 						height={112}
+						style={{ width: 'auto', height: 'auto' }}
 					/>
 				</div>
 				{type === 'loading' && (

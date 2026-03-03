@@ -83,6 +83,7 @@ function ChatsHistory() {
 								alt='Empty HistoryBox'
 								width={160}
 								height={160}
+								style={{ width: 'auto', height: 'auto' }}
 							/>
 						</div>
 						<div>

@@ -59,8 +59,9 @@
 		@apply bg-background text-foreground;
 	}
 
-	img {
+	img[width][height] {
 		width: auto;
+		height: auto;
 	}
 }
 
