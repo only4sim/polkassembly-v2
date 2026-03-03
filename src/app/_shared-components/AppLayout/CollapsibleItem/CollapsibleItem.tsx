@@ -16,8 +16,7 @@ import style from './CollapsibleItem.module.scss';
 // Extract src string from Next.js static image imports (objects with { src }) or plain strings.
 // Sidebar icons are SVGs that don't benefit from next/image optimization, so we use plain <img>
 // to avoid the Next.js Image "width or height modified" dev warning.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getIconSrc(icon: any): string {
+function getIconSrc(icon: string | { src: string } | null | undefined): string {
 	if (!icon) return '';
 	if (typeof icon === 'string') return icon;
 	if (typeof icon === 'object' && icon.src) return icon.src;
@@ -81,7 +80,7 @@ function NestedPopover({ item }: { item: ISidebarMenuItem }) {
 											<div className={style.iconWrapper}>
 												{/* eslint-disable-next-line @next/next/no-img-element */}
 												<img
-													src={getIconSrc(subItem.icon || '')}
+													src={getIconSrc(subItem.icon)}
 													alt={subItem.title || 'icon'}
 													width={24}
 													height={24}
