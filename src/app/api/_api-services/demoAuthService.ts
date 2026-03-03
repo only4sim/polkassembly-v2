@@ -9,6 +9,9 @@ if (FIREBASE_SERVICE_ACC_CONFIG && !firebaseAdmin.apps.length) {
 	firebaseAdmin.initializeApp({
 		credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
 	});
+} else if (process.env.NODE_ENV === 'development' && !firebaseAdmin.apps.length) {
+	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
+	firebaseAdmin.initializeApp({ projectId });
 }
 
 export class DemoAuthService {

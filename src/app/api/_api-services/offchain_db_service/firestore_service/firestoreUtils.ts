@@ -21,9 +21,10 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 		throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Error in initialising firebase-admin.');
 	}
 } else if (process.env.NODE_ENV === 'development' && !firebaseAdmin.apps.length) {
-	// Emulator mode: initialise without credentials so the SDK connects to local emulators
-	firebaseAdmin.initializeApp();
-	console.log('\n ℹ️ Firebase Admin initialised without credentials (emulator / development mode).\n');
+	// Emulator mode: initialise with a projectId so the SDK can connect to local emulators
+	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
+	firebaseAdmin.initializeApp({ projectId });
+	console.log(`\n ℹ️ Firebase Admin initialised for project "${projectId}" (emulator / development mode).\n`);
 } else {
 	console.log('\n ℹ️ [disabled] FIREBASE_SERVICE_ACC_CONFIG is not set. Firestore operations will fail if called.\n');
 }

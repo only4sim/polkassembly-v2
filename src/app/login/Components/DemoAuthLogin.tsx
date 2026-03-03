@@ -28,7 +28,9 @@ function DemoAuthLogin() {
 	const { login } = useDemoUser();
 	const router = useRouter();
 
-	const form = useForm<IFormFields>();
+	const form = useForm<IFormFields>({
+		defaultValues: { email: '', password: '' }
+	});
 
 	const handleLogin = async (values: IFormFields) => {
 		const { email, password } = values;

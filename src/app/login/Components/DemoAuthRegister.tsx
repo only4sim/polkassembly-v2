@@ -28,7 +28,9 @@ function DemoAuthRegister({ switchToLogin }: { switchToLogin: () => void }) {
 	const { register } = useDemoUser();
 	const router = useRouter();
 
-	const form = useForm<IFormFields>();
+	const form = useForm<IFormFields>({
+		defaultValues: { displayName: '', email: '', password: '', confirmPassword: '' }
+	});
 
 	const handleRegister = async (values: IFormFields) => {
 		const { displayName, email, password, confirmPassword } = values;
