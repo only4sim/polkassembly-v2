@@ -83,7 +83,6 @@ function ActivityStats() {
 							width={24}
 							height={24}
 							className='h-10 w-10'
-							style={{ width: 'auto', height: 'auto' }}
 						/>
 					</div>
 					<div className='flex flex-col'>

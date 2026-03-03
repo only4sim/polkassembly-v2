@@ -2,7 +2,7 @@
 // This software may be modified and distributed under the terms
 // of the Apache-2.0 license. See the LICENSE file for details.
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@ui/Dialog/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@ui/Dialog/Dialog';
 import { useChatLogic } from '@/app/_shared-components/Klara/hooks/useChatLogic';
 import { useKlara } from '@/hooks/useKlara';
 import ChatHeader from '@/app/_shared-components/Klara/components/ChatHeader';
@@ -89,7 +89,6 @@ export default function ExpandedChatModal({ open, chat }: { open: boolean; chat:
 								setChatState={setChatState}
 							/>
 						</DialogTitle>
-						<DialogDescription className='sr-only'>Klara AI assistant chat</DialogDescription>
 					</DialogHeader>
 					<div className='flex w-full flex-grow rounded-b-[10.5px] bg-bg_modal'>
 						<div className='w-1/4 border-r border-primary_border p-4'>
@@ -111,7 +110,6 @@ export default function ExpandedChatModal({ open, chat }: { open: boolean; chat:
 										alt='new chat'
 										width={24}
 										height={24}
-										style={{ width: 'auto', height: 'auto' }}
 									/>
 									New Chat
 								</button>
@@ -137,7 +135,6 @@ export default function ExpandedChatModal({ open, chat }: { open: boolean; chat:
 										alt='Empty HistoryBox'
 										width={160}
 										height={160}
-										style={{ width: 'auto', height: 'auto' }}
 									/>
 
 									{!user?.id && (

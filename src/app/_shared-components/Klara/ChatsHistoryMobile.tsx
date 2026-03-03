@@ -63,7 +63,7 @@ function ChatsHistoryMobile({ onClose }: { onClose: () => void }) {
 							alt='history'
 							width={24}
 							height={24}
-							style={{ width: 'auto', height: 'auto' }}
+							className='h-6 w-6'
 						/>
 						<p className='text-xl font-semibold text-text_primary'>Chat History</p>
 					</div>
@@ -100,7 +100,6 @@ function ChatsHistoryMobile({ onClose }: { onClose: () => void }) {
 								alt='Empty HistoryBox'
 								width={160}
 								height={160}
-								style={{ width: 'auto', height: 'auto' }}
 							/>
 						</div>
 						<div>
@@ -111,7 +110,6 @@ function ChatsHistoryMobile({ onClose }: { onClose: () => void }) {
 										alt='Klara Avatar'
 										width={36}
 										height={36}
-										style={{ width: 'auto', height: 'auto' }}
 									/>
 									<p className='text-left text-[11px] font-semibold text-text_primary'>Hi, I am Klara, ask me about your governance interests</p>
 								</div>

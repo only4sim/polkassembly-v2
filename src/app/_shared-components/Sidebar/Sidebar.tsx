@@ -267,10 +267,9 @@ const SidebarTrigger = forwardRef<ElementRef<typeof Button>, ComponentProps<type
 			<Image
 				src={isMobile ? RightIcon : state === 'expanded' ? LeftIcon : RightIcon}
 				alt={state === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar'}
-				className={cn(styles.darkIcon)}
+				className={cn('h-5 w-5', styles.darkIcon)}
 				width={20}
 				height={20}
-				style={{ width: 'auto', height: 'auto' }}
 				priority
 			/>
 			<span className='sr-only'>{state === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar'}</span>

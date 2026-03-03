@@ -16,7 +16,6 @@ function HeaderLabel() {
 				alt='login to polkassembly'
 				height={24}
 				width={24}
-				style={{ width: 'auto', height: 'auto' }}
 			/>
 			{t('Profile.loginToPolkassembly')}
 		</p>

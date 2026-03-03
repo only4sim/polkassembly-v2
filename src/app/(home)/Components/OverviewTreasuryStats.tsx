@@ -56,7 +56,6 @@ function AssetDisplay({ icon, value, symbol }: AssetDisplayProps) {
 				width={16}
 				height={16}
 				className='rounded-full'
-				style={{ width: 'auto', height: 'auto' }}
 			/>
 		</div>
 	);

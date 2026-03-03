@@ -47,7 +47,7 @@ function ChatHeader({ chatState, setChatState, openMobileHistory }: Props) {
 					alt='Klara AI Assistant'
 					width={24}
 					height={24}
-					style={{ width: 'auto', height: 'auto' }}
+					className='h-6 w-6'
 				/>
 				<p className='text-xl font-semibold text-text_primary'>Klara 1.5</p>
 				{stats && chatState === EChatState.EXPANDED && (
@@ -129,7 +129,7 @@ function ChatHeader({ chatState, setChatState, openMobileHistory }: Props) {
 						alt='history'
 						width={24}
 						height={24}
-						style={{ width: 'auto', height: 'auto' }}
+						className='size-6'
 					/>
 				</button>
 				<button

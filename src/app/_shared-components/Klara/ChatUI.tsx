@@ -102,7 +102,6 @@ function ChatUI({ setIsMobileHistoryOpen }: { setIsMobileHistoryOpen: (isOpen: b
 											alt='new chat'
 											width={24}
 											height={24}
-											style={{ width: 'auto', height: 'auto' }}
 										/>
 										Start a new chat
 									</button>

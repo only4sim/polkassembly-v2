@@ -33,8 +33,7 @@ function WelcomeMessage() {
 				alt='Klara'
 				width={48}
 				height={48}
-				className='mb-4 opacity-50'
-				style={{ width: 'auto', height: 'auto' }}
+				className='mb-4 h-12 w-12 opacity-50'
 			/>
 			<p className='text-lg font-medium text-text_primary'>Welcome to Klara!</p>
 			<p className='text-text_secondary text-sm'>Ask me anything about Polkadot governance.</p>
@@ -161,7 +160,6 @@ function ChatMessages({ messages, streamingMessage, mascotType, isLoadingMessage
 									alt='Klara Avatar'
 									width={120}
 									height={120}
-									style={{ width: 'auto', height: 'auto' }}
 								/>
 								<p className='text-center text-sm font-semibold text-text_primary'>Hi, I am Klara, ask me about your governance interests</p>
 							</div>

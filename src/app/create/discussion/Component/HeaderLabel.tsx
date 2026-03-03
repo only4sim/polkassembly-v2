@@ -17,7 +17,6 @@ function HeaderLabel() {
 				alt='Create discussion'
 				height={26}
 				width={26}
-				style={{ width: 'auto', height: 'auto' }}
 			/>
 			{t('Create.createDiscussionTitle')}
 		</p>

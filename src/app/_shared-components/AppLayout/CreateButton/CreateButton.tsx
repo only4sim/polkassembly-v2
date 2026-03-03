@@ -28,7 +28,6 @@ function CreateButton({ state }: { state: 'collapsed' | 'expanded' }) {
 					alt='Create Pencil Icon'
 					width={20}
 					height={20}
-					style={{ width: 'auto', height: 'auto' }}
 				/>
 				{state !== 'collapsed' && <span className={style.triggerText}>{t('CreateProposal.create')}</span>}
 			</Link>

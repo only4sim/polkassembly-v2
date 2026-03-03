@@ -31,24 +31,30 @@ const nextConfig = {
 					{ key: 'X-Content-Type-Options', value: 'nosniff' },
 					{ key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
 					{ key: 'Permissions-Policy', value: 'camera=self, microphone=(), geolocation=self' },
-					{
-						key: 'Content-Security-Policy',
-						value: [
-							"default-src 'self'",
-							"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.sentry-cdn.com",
-							"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-							"font-src 'self' https://fonts.gstatic.com",
-							"img-src 'self' data: blob: https:",
-							"media-src 'self' data: blob:",
-							"object-src 'none'",
-							"base-uri 'self'",
-							"form-action 'self'",
-							`connect-src 'self' https://api.github.com https://*.polkassembly.io https://*.polkassembly.network https://*.firebaseapp.com https://*.googleapis.com https://sentry.io https://o4504609384013824.ingest.sentry.io wss: https://www.google-analytics.com https://*.algolia.net https://*.algolianet.com https://*.algolia.io https://api.imgbb.com https://www.googletagmanager.com${isDev ? " http://localhost:*" : ""}`,
-							`frame-src 'self' ${ALLOWED_OUTBOUND_IFRAME_DOMAINS.join(' ')}`,
-							`frame-ancestors 'self' ${ALLOWED_OUTBOUND_IFRAME_DOMAINS.join(' ')}`,
-							...(isDev ? [] : ['upgrade-insecure-requests'])
-						].join('; ')
-					}
+					// CSP is only enforced in production — in development the strict policy
+					// interferes with Turbopack HMR, Firebase emulators, and inline scripts.
+					...(isDev
+						? []
+						: [
+								{
+									key: 'Content-Security-Policy',
+									value: [
+										"default-src 'self'",
+										"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.sentry-cdn.com",
+										"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+										"font-src 'self' https://fonts.gstatic.com",
+										"img-src 'self' data: blob: https:",
+										"media-src 'self' data: blob:",
+										"object-src 'none'",
+										"base-uri 'self'",
+										"form-action 'self'",
+										"connect-src 'self' https://api.github.com https://*.polkassembly.io https://*.polkassembly.network https://*.firebaseapp.com https://*.googleapis.com https://sentry.io https://o4504609384013824.ingest.sentry.io wss: https://www.google-analytics.com https://*.algolia.net https://*.algolianet.com https://*.algolia.io https://api.imgbb.com https://www.googletagmanager.com",
+										`frame-src 'self' ${ALLOWED_OUTBOUND_IFRAME_DOMAINS.join(' ')}`,
+										`frame-ancestors 'self' ${ALLOWED_OUTBOUND_IFRAME_DOMAINS.join(' ')}`,
+										'upgrade-insecure-requests'
+									].join('; ')
+								}
+							])
 				]
 			},
 			{
