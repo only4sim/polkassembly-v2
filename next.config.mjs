@@ -14,6 +14,8 @@ export const ALLOWED_OUTBOUND_IFRAME_DOMAINS = ['https://app.mimir.global'];
 const NETWORKS = ['polkadot', 'kusama'];
 const DOMAINS = ['polkassembly.io', 'polkassembly.network'];
 
+const isDev = process.env.NODE_ENV === 'development';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	// Enable standalone output for Docker deployments
@@ -41,10 +43,10 @@ const nextConfig = {
 							"object-src 'none'",
 							"base-uri 'self'",
 							"form-action 'self'",
-							"connect-src 'self' https://api.github.com https://*.polkassembly.io https://*.polkassembly.network https://*.firebaseapp.com https://*.googleapis.com https://sentry.io https://o4504609384013824.ingest.sentry.io wss: https://www.google-analytics.com https://*.algolia.net https://*.algolianet.com https://*.algolia.io https://api.imgbb.com https://www.googletagmanager.com",
+							`connect-src 'self' https://api.github.com https://*.polkassembly.io https://*.polkassembly.network https://*.firebaseapp.com https://*.googleapis.com https://sentry.io https://o4504609384013824.ingest.sentry.io wss: https://www.google-analytics.com https://*.algolia.net https://*.algolianet.com https://*.algolia.io https://api.imgbb.com https://www.googletagmanager.com${isDev ? " http://localhost:*" : ""}`,
 							`frame-src 'self' ${ALLOWED_OUTBOUND_IFRAME_DOMAINS.join(' ')}`,
 							`frame-ancestors 'self' ${ALLOWED_OUTBOUND_IFRAME_DOMAINS.join(' ')}`,
-							'upgrade-insecure-requests'
+							...(isDev ? [] : ['upgrade-insecure-requests'])
 						].join('; ')
 					}
 				]
