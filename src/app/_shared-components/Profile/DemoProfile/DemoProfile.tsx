@@ -14,6 +14,9 @@ import classes from '../Profile.module.scss';
 import DemoProfileHeader from './DemoProfileHeader';
 import DemoProfileOverview from './DemoProfileOverview';
 import DemoProfilePosts from './DemoProfilePosts';
+import DemoProfileActivity from './DemoProfileActivity';
+import DemoProfileAccounts from './DemoProfileAccounts';
+import DemoProfileSettings from './DemoProfileSettings';
 
 interface DemoProfileProps {
 	user: User;
@@ -22,7 +25,10 @@ interface DemoProfileProps {
 
 const DEMO_TABS = {
 	OVERVIEW: 'overview',
-	POSTS: 'posts'
+	POSTS: 'posts',
+	ACTIVITY: 'activity',
+	ACCOUNTS: 'accounts',
+	SETTINGS: 'settings'
 } as const;
 
 function DemoProfile({ user, isOwnProfile = false }: DemoProfileProps) {
@@ -57,7 +63,10 @@ function DemoProfile({ user, isOwnProfile = false }: DemoProfileProps) {
 				{/* Tab triggers */}
 				<TabsList className='mb-0 bg-transparent'>
 					<TabsTrigger value={DEMO_TABS.OVERVIEW}>{t('Profile.overview')}</TabsTrigger>
+					<TabsTrigger value={DEMO_TABS.ACTIVITY}>{t('Profile.activity')}</TabsTrigger>
 					<TabsTrigger value={DEMO_TABS.POSTS}>{t('Profile.posts')}</TabsTrigger>
+					<TabsTrigger value={DEMO_TABS.ACCOUNTS}>{t('Profile.accounts')}</TabsTrigger>
+					{isOwnProfile && <TabsTrigger value={DEMO_TABS.SETTINGS}>{t('Profile.settings')}</TabsTrigger>}
 				</TabsList>
 			</div>
 
@@ -66,9 +75,23 @@ function DemoProfile({ user, isOwnProfile = false }: DemoProfileProps) {
 				<TabsContent value={DEMO_TABS.OVERVIEW}>
 					<DemoProfileOverview user={profileData} />
 				</TabsContent>
+				<TabsContent value={DEMO_TABS.ACTIVITY}>
+					<DemoProfileActivity />
+				</TabsContent>
 				<TabsContent value={DEMO_TABS.POSTS}>
 					<DemoProfilePosts uid={profileData.uid} />
 				</TabsContent>
+				<TabsContent value={DEMO_TABS.ACCOUNTS}>
+					<DemoProfileAccounts user={profileData} />
+				</TabsContent>
+				{isOwnProfile && (
+					<TabsContent value={DEMO_TABS.SETTINGS}>
+						<DemoProfileSettings
+							user={profileData}
+							onDisplayNameUpdate={handleDisplayNameUpdate}
+						/>
+					</TabsContent>
+				)}
 			</div>
 		</Tabs>
 	);

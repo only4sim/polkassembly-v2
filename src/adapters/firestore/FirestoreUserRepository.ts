@@ -120,4 +120,13 @@ export class FirestoreUserRepository implements UserRepository {
 		const doc = await this.collection.doc(uid).get();
 		return doc.data()?.pointsBalance ?? 0;
 	}
+
+	/**
+	 * Delete a user profile
+	 *
+	 * - Remove document from Firestore at users/{uid}
+	 */
+	async deleteUser(uid: string): Promise<void> {
+		await this.collection.doc(uid).delete();
+	}
 }

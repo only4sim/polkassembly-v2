@@ -68,3 +68,18 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 
 	return NextResponse.json({ success: true });
 }
+
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+	const decoded = await getAuthedToken(req);
+	if (!decoded) {
+		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
+	}
+
+	try {
+		await userRepository.deleteUser(decoded.uid);
+	} catch {
+		// If Firestore doc doesn't exist, that's fine — Firebase Auth user deletion proceeds
+	}
+
+	return NextResponse.json({ success: true });
+}
