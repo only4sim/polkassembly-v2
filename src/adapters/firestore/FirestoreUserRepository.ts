@@ -23,8 +23,10 @@ if (!admin.apps.length) {
 			credential: admin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
 		});
 	} else {
+		// Use NEXT_PUBLIC_FIREBASE_PROJECT_ID if set; otherwise fall back to
+		// 'cbs-assembly' which matches the default project in .firebaserc.
 		admin.initializeApp({
-			projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project'
+			projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'cbs-assembly'
 		});
 	}
 }

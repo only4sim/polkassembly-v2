@@ -20,8 +20,12 @@ if (!firebaseAdmin.apps.length) {
 			credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
 		});
 	} else if (process.env.NODE_ENV === 'development') {
+		// Use NEXT_PUBLIC_FIREBASE_PROJECT_ID if set; otherwise fall back to
+		// 'cbs-assembly' which matches the default project in .firebaserc.
+		// This must match the project the Firebase Auth emulator is running under,
+		// otherwise verifyIdToken will fail (project ID mismatch).
 		firebaseAdmin.initializeApp({
-			projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project'
+			projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'cbs-assembly'
 		});
 	}
 }
@@ -57,10 +61,13 @@ export class DemoAuthService {
 				const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
 				const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8')) as Record<string, unknown>;
 
-				// Validate issuer — must be a Firebase securetoken URL for our project
-				const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
-				const expectedIss = `https://securetoken.google.com/${projectId}`;
-				if (typeof payload.iss !== 'string' || payload.iss !== expectedIss) return null;
+				// Validate issuer — must be a Firebase securetoken URL.
+				// NOTE: This entire fallback is only reachable in development (NODE_ENV check
+				// at the top of the catch block). We do NOT restrict to a specific project ID
+				// because the emulator's project (from .firebaserc, e.g. 'cbs-assembly') may
+				// differ from NEXT_PUBLIC_FIREBASE_PROJECT_ID. Expiry + uid checks below provide
+				// sufficient safety for a local-only dev environment.
+				if (typeof payload.iss !== 'string' || !payload.iss.startsWith('https://securetoken.google.com/')) return null;
 
 				// Reject expired tokens even in fallback mode
 				if (typeof payload.exp === 'number' && payload.exp < Date.now() / 1000) return null;
