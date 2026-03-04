@@ -34,7 +34,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 			// Fetch the latest user record from Firebase Auth so we get the correct
 			// displayName even when the ID token was issued before updateProfile() ran
 			// (which happens during registration when displayName is set after token issuance).
-			const authUser = await admin.auth().getUser(decoded.uid).catch(() => null);
+			const authUser = await admin
+				.auth()
+				.getUser(decoded.uid)
+				.catch((err) => {
+					console.warn('[demo/route] admin.auth().getUser() failed — falling back to token claims:', err);
+					return null;
+				});
 			user = await userRepository.createUser({
 				uid: decoded.uid,
 				email: decoded.email ?? '',
