@@ -6,26 +6,40 @@ import { DemoAuthService } from '@/app/api/_api-services/demoAuthService';
 import { FirestoreUserRepository } from '@/adapters/firestore/FirestoreUserRepository';
 import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
+import type firebaseAdmin from 'firebase-admin';
 
 const userRepository = new FirestoreUserRepository();
 
-async function getAuthedUid(req: NextRequest): Promise<string | null> {
+async function getAuthedToken(req: NextRequest): Promise<firebaseAdmin.auth.DecodedIdToken | null> {
 	const authHeader = req.headers.get('Authorization');
 	const idToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 	if (!idToken) return null;
-	const decoded = await DemoAuthService.verifyIdToken(idToken);
-	return decoded?.uid ?? null;
+	return DemoAuthService.verifyIdToken(idToken);
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-	const uid = await getAuthedUid(req);
-	if (!uid) {
+	const decoded = await getAuthedToken(req);
+	if (!decoded) {
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
-	const user = await userRepository.getUserByUid(uid);
+	let user = await userRepository.getUserByUid(decoded.uid);
+
+	// Lazily create the Firestore user document on first profile access.
+	// DemoAuthRegister only creates a Firebase Auth user; the Firestore document
+	// is created here on the first authenticated GET request.
 	if (!user) {
-		return NextResponse.json({ message: 'User not found' }, { status: StatusCodes.NOT_FOUND });
+		try {
+			user = await userRepository.createUser({
+				uid: decoded.uid,
+				email: decoded.email ?? '',
+				displayName: decoded.name ?? decoded.email ?? '',
+				role: 'user',
+				pointsBalance: 0
+			});
+		} catch {
+			return NextResponse.json({ message: 'Failed to initialise profile' }, { status: StatusCodes.INTERNAL_SERVER_ERROR });
+		}
 	}
 
 	return NextResponse.json({
@@ -40,8 +54,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
-	const uid = await getAuthedUid(req);
-	if (!uid) {
+	const decoded = await getAuthedToken(req);
+	if (!decoded) {
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
@@ -49,7 +63,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 	const { displayName } = body as { displayName?: string };
 
 	if (typeof displayName === 'string' && displayName.trim()) {
-		await userRepository.updateUser(uid, { displayName: displayName.trim() });
+		await userRepository.updateUser(decoded.uid, { displayName: displayName.trim() });
 	}
 
 	return NextResponse.json({ success: true });

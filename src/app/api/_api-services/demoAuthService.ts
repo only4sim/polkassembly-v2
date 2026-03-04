@@ -5,19 +5,24 @@
 import * as firebaseAdmin from 'firebase-admin';
 import { FIREBASE_SERVICE_ACC_CONFIG } from '@/app/api/_api-constants/apiEnvVars';
 
-if (FIREBASE_SERVICE_ACC_CONFIG && !firebaseAdmin.apps.length) {
-	firebaseAdmin.initializeApp({
-		credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
-	});
-} else if (process.env.NODE_ENV === 'development' && !firebaseAdmin.apps.length) {
-	if (!process.env.FIRESTORE_EMULATOR_HOST) {
-		process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+// In development, always ensure emulator env vars are set regardless of whether
+// firebase-admin has already been initialized by another module. These must be
+// present before the first admin.auth().verifyIdToken() call.
+if (process.env.NODE_ENV === 'development') {
+	process.env.FIREBASE_AUTH_EMULATOR_HOST ??= 'localhost:9099';
+	process.env.FIRESTORE_EMULATOR_HOST ??= 'localhost:8080';
+}
+
+if (!firebaseAdmin.apps.length) {
+	if (FIREBASE_SERVICE_ACC_CONFIG) {
+		firebaseAdmin.initializeApp({
+			credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
+		});
+	} else if (process.env.NODE_ENV === 'development') {
+		firebaseAdmin.initializeApp({
+			projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project'
+		});
 	}
-	if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-		process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
-	}
-	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
-	firebaseAdmin.initializeApp({ projectId });
 }
 
 export class DemoAuthService {

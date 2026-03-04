@@ -6,6 +6,13 @@ import * as Sentry from '@sentry/nextjs';
 
 export async function register() {
 	if (process.env.NEXT_RUNTIME === 'nodejs') {
+		// Set Firebase emulator env vars before any firebase-admin code runs.
+		// These must be set before admin.auth().verifyIdToken() is first called,
+		// or it will try to verify emulator tokens against real Firebase servers.
+		if (process.env.NODE_ENV === 'development') {
+			process.env.FIREBASE_AUTH_EMULATOR_HOST ??= 'localhost:9099';
+			process.env.FIRESTORE_EMULATOR_HOST ??= 'localhost:8080';
+		}
 		await import('../sentry.server.config');
 	}
 
