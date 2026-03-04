@@ -3,7 +3,7 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import { useCallback, useEffect, useState } from 'react';
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile, User } from 'firebase/auth';
+import { createUserWithEmailAndPassword, onIdTokenChanged, signInWithEmailAndPassword, signOut, updateProfile, User } from 'firebase/auth';
 import { clientAuth } from './firebaseClientApp';
 
 export interface IDemoUser {
@@ -17,7 +17,11 @@ export function useFirebaseAuth() {
 	const [loading, setLoading] = useState<boolean>(true);
 
 	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(clientAuth, (firebaseUser: User | null) => {
+		// Use onIdTokenChanged instead of onAuthStateChanged so that all hook instances
+		// receive the updated user (including displayName) when the token is force-refreshed
+		// after updateProfile() in register(). onAuthStateChanged does not fire on token
+		// refreshes, so the Navbar and other components would miss the displayName update.
+		const unsubscribe = onIdTokenChanged(clientAuth, (firebaseUser: User | null) => {
 			if (firebaseUser) {
 				setUser({
 					uid: firebaseUser.uid,
@@ -37,6 +41,10 @@ export function useFirebaseAuth() {
 		const userCredential = await createUserWithEmailAndPassword(clientAuth, email, password);
 		if (displayName) {
 			await updateProfile(userCredential.user, { displayName });
+			// Force-refresh the ID token so the next API call includes `name` in the claims.
+			// Without this, the cached token (issued before updateProfile) would be missing
+			// displayName, and the server's lazy Firestore doc creation would use email instead.
+			await userCredential.user.getIdToken(true);
 			setUser({
 				uid: userCredential.user.uid,
 				email: userCredential.user.email,

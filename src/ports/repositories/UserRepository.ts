@@ -45,4 +45,10 @@ export interface UserRepository {
 	 * @returns Points balance
 	 */
 	getPointsBalance(uid: string): Promise<number>;
+
+	/**
+	 * Delete a user profile
+	 * @param uid - Firebase Auth UID
+	 */
+	deleteUser(uid: string): Promise<void>;
 }
