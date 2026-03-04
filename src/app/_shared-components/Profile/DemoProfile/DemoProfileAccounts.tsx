@@ -7,10 +7,10 @@
 import { useTranslations } from 'next-intl';
 import { Separator } from '@/app/_shared-components/Separator';
 import { User } from '@/domain/entities/User';
-import classes from '../Settings/Settings.module.scss';
+import classes from '../Accounts/Accounts.module.scss';
 
 interface DemoProfileAccountsProps {
-	user: Pick<User, 'uid' | 'email' | 'createdAt'>;
+	user: Pick<User, 'uid' | 'email' | 'displayName' | 'createdAt'>;
 }
 
 function DemoProfileAccounts({ user }: DemoProfileAccountsProps) {
@@ -22,30 +22,30 @@ function DemoProfileAccounts({ user }: DemoProfileAccountsProps) {
 		day: 'numeric'
 	});
 
+	const firstLetter = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+
 	return (
 		<div className={classes.accountsWrapper}>
 			<div className={classes.accountsHeader}>
 				<p className={classes.accountsHeaderText}>{t('accounts')}</p>
 			</div>
 			<Separator className='mb-4' />
-			<div className={classes.settingsContent}>
-				<div className='flex flex-col gap-y-3 rounded-2xl border border-border_grey p-6'>
-					<p className='text-sm font-semibold text-text_primary'>Firebase Account</p>
-					<Separator />
-					<div className='flex flex-col gap-y-4'>
-						<div>
-							<p className='mb-1 text-xs text-wallet_btn_text'>Account ID</p>
-							<p className='break-all font-mono text-sm text-text_primary'>{user.uid}</p>
-						</div>
-						{user.email && (
-							<div>
-								<p className='mb-1 text-xs text-wallet_btn_text'>{t('Settings.email')}</p>
-								<p className='text-sm text-text_primary'>{user.email}</p>
+			<div className={classes.accountsList}>
+				{/* Firebase account card — styled to match blockchain Account card layout */}
+				<div className='flex items-start gap-x-4 rounded-xl border border-border_grey p-4'>
+					{/* First-letter avatar replaces Polkadot Identicon */}
+					<div className='flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-text_pink text-2xl font-bold text-white'>{firstLetter}</div>
+
+					<div className='flex flex-col gap-y-2'>
+						<p className='text-lg font-semibold text-text_primary lg:text-xl'>{user.displayName || user.email || 'User'}</p>
+						{user.email && <p className='text-sm text-wallet_btn_text'>{user.email}</p>}
+
+						{/* Balance-row equivalent — shows join date */}
+						<div className='flex items-center gap-x-2'>
+							<div className='flex flex-col items-center gap-y-1'>
+								<p className='text-xs text-wallet_btn_text'>Member since</p>
+								<p className='font-semibold text-text_primary'>{joinDate}</p>
 							</div>
-						)}
-						<div>
-							<p className='mb-1 text-xs text-wallet_btn_text'>Member Since</p>
-							<p className='text-sm text-text_primary'>{joinDate}</p>
 						</div>
 					</div>
 				</div>

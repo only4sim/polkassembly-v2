@@ -18,7 +18,7 @@ import { Separator } from '@/app/_shared-components/Separator';
 import { Button } from '@/app/_shared-components/Button';
 import { Input } from '@/app/_shared-components/Input';
 import { Label } from '@/app/_shared-components/Label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/_shared-components/Dialog/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/app/_shared-components/Dialog/Dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/app/_shared-components/Collapsible';
 import classes from '../Settings/Settings.module.scss';
 
@@ -33,14 +33,14 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 	const t = useTranslations('Profile');
 	const router = useRouter();
 
-	// Edit display name state
-	const [editOpen, setEditOpen] = useState(false);
+	// Edit display name dialog state
+	const [openEditDisplayNameDialog, setOpenEditDisplayNameDialog] = useState(false);
 	const [displayNameInput, setDisplayNameInput] = useState(user.displayName || '');
 	const [savingName, setSavingName] = useState(false);
 	const [nameError, setNameError] = useState<string | null>(null);
 
-	// Delete account state
-	const [deleteOpen, setDeleteOpen] = useState(false);
+	// Delete account dialog state
+	const [openDeleteAccountDialog, setOpenDeleteAccountDialog] = useState(false);
 	const [deleteInput, setDeleteInput] = useState('');
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -63,7 +63,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 				throw new Error((body as { message?: string }).message || 'Failed to update display name');
 			}
 			onDisplayNameUpdate?.(displayNameInput.trim());
-			setEditOpen(false);
+			setOpenEditDisplayNameDialog(false);
 		} catch (e) {
 			setNameError((e as Error).message);
 		} finally {
@@ -94,7 +94,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 			// Then delete the Firebase Auth user
 			await currentUser.delete();
 
-			setDeleteOpen(false);
+			setOpenDeleteAccountDialog(false);
 			router.replace('/');
 		} catch (e) {
 			const msg = (e as Error).message;
@@ -138,34 +138,35 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 							{/* Display Name */}
 							<div className={classes.collapsibleContentItem}>
 								<div className='text-sm'>
-									<p className='mb-1 text-wallet_btn_text'>Display Name</p>
+									<p className='mb-1 text-wallet_btn_text'>{t('Settings.username')}</p>
 									<p className='font-medium text-text_primary'>{user.displayName || '—'}</p>
 								</div>
 								<Dialog
-									open={editOpen}
-									onOpenChange={setEditOpen}
+									open={openEditDisplayNameDialog}
+									onOpenChange={setOpenEditDisplayNameDialog}
 								>
-									<Button
-										variant='ghost'
-										leftIcon={
-											<Pencil
-												size={16}
-												fill={THEME_COLORS.light.text_pink}
-											/>
-										}
-										className='text-sm font-medium text-text_pink'
-										onClick={() => setEditOpen(true)}
-									>
-										{t('Settings.edit')}
-									</Button>
+									<DialogTrigger>
+										<Button
+											variant='ghost'
+											leftIcon={
+												<Pencil
+													size={16}
+													fill={THEME_COLORS.light.text_pink}
+												/>
+											}
+											className='text-sm font-medium text-text_pink'
+										>
+											{t('Settings.edit')}
+										</Button>
+									</DialogTrigger>
 									<DialogContent className='max-w-xl p-3 sm:p-6'>
 										<DialogHeader>
-											<DialogTitle>Edit Display Name</DialogTitle>
+											<DialogTitle>{t('Settings.editUsername')}</DialogTitle>
 											<DialogDescription className='sr-only'>Update your display name</DialogDescription>
 										</DialogHeader>
 										<div className='flex flex-col gap-y-4'>
 											<div>
-												<Label htmlFor='old-display-name'>Current Display Name</Label>
+												<Label htmlFor='old-display-name'>{t('Settings.oldUsername')}</Label>
 												<Input
 													id='old-display-name'
 													defaultValue={user.displayName || ''}
@@ -173,7 +174,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 												/>
 											</div>
 											<div>
-												<Label htmlFor='new-display-name'>New Display Name</Label>
+												<Label htmlFor='new-display-name'>{t('Settings.newUsername')}</Label>
 												<Input
 													id='new-display-name'
 													placeholder='Enter new display name'
@@ -225,50 +226,49 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 						<Separator />
 						<div className={classes.collapsibleContent}>
 							<p className='font-medium text-text_primary'>{t('Settings.deleteAccountDescription')}</p>
-							<Dialog
-								open={deleteOpen}
-								onOpenChange={(open) => {
-									setDeleteOpen(open);
-									if (!open) {
-										setDeleteInput('');
-										setDeleteError(null);
-									}
-								}}
-							>
-								<Button
-									variant='destructive'
-									onClick={() => setDeleteOpen(true)}
+							<div className='flex'>
+								<Dialog
+									open={openDeleteAccountDialog}
+									onOpenChange={(open) => {
+										setOpenDeleteAccountDialog(open);
+										if (!open) {
+											setDeleteInput('');
+											setDeleteError(null);
+										}
+									}}
 								>
-									{t('Settings.deleteMyAccount')}
-								</Button>
-								<DialogContent className='max-w-xl p-3 sm:p-6'>
-									<DialogHeader>
-										<DialogTitle>{t('Settings.deleteAccount')}</DialogTitle>
-										<DialogDescription className='sr-only'>Confirm account deletion</DialogDescription>
-									</DialogHeader>
-									<div>
-										<p className='text-text_secondary mb-4 text-sm'>{t('Settings.deleteAccountDescription')}</p>
-										<div className='mb-4'>
-											<p className='mb-1 text-sm text-text_primary'>
-												{t('Settings.type')} &quot;{DELETE_CONFIRMATION_TEXT}&quot; {t('Settings.belowToConfirm')}
-											</p>
-											<Input
-												value={deleteInput}
-												onChange={(e) => setDeleteInput(e.target.value)}
-											/>
+									<DialogTrigger>
+										<Button variant='destructive'>{t('Settings.deleteMyAccount')}</Button>
+									</DialogTrigger>
+									<DialogContent className='max-w-xl p-3 sm:p-6'>
+										<DialogHeader>
+											<DialogTitle>{t('Settings.deleteAccount')}</DialogTitle>
+											<DialogDescription className='sr-only'>Confirm account deletion</DialogDescription>
+										</DialogHeader>
+										<div>
+											<p className='mb-4 text-sm text-text_secondary'>{t('Settings.deleteAccountDescription')}</p>
+											<div className='mb-4'>
+												<p className='mb-1 text-sm text-text_primary'>
+													{t('Settings.type')} &quot;{DELETE_CONFIRMATION_TEXT}&quot; {t('Settings.belowToConfirm')}
+												</p>
+												<Input
+													value={deleteInput}
+													onChange={(e) => setDeleteInput(e.target.value)}
+												/>
+											</div>
+											{deleteError && <p className='mb-2 text-xs text-red-500'>{deleteError}</p>}
+											<Button
+												variant='destructive'
+												onClick={handleDeleteAccount}
+												isLoading={deleting}
+												disabled={deleteInput !== DELETE_CONFIRMATION_TEXT}
+											>
+												{t('Settings.deleteMyAccount')}
+											</Button>
 										</div>
-										{deleteError && <p className='mb-2 text-xs text-red-500'>{deleteError}</p>}
-										<Button
-											variant='destructive'
-											onClick={handleDeleteAccount}
-											isLoading={deleting}
-											disabled={deleteInput !== DELETE_CONFIRMATION_TEXT}
-										>
-											{t('Settings.deleteMyAccount')}
-										</Button>
-									</div>
-								</DialogContent>
-							</Dialog>
+									</DialogContent>
+								</Dialog>
+							</div>
 						</div>
 					</CollapsibleContent>
 				</Collapsible>
