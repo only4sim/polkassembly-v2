@@ -10,8 +10,10 @@ export async function register() {
 		// These must be set before admin.auth().verifyIdToken() is first called,
 		// or it will try to verify emulator tokens against real Firebase servers.
 		if (process.env.NODE_ENV === 'development') {
-			process.env.FIREBASE_AUTH_EMULATOR_HOST ??= 'localhost:9099';
-			process.env.FIRESTORE_EMULATOR_HOST ??= 'localhost:8080';
+			// Use ||= (not ??=) so an empty-string value (e.g. from a .env.local that
+			// copied FIREBASE_AUTH_EMULATOR_HOST='' literally) is also overridden.
+			process.env.FIREBASE_AUTH_EMULATOR_HOST ||= 'localhost:9099';
+			process.env.FIRESTORE_EMULATOR_HOST ||= 'localhost:8080';
 		}
 		await import('../sentry.server.config');
 	}

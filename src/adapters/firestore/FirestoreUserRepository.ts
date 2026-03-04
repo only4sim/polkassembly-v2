@@ -8,15 +8,12 @@ import { User } from '@/domain/entities/User';
 import { UserRepository } from '@/ports/repositories/UserRepository';
 
 // In development, always set emulator env vars so the Admin SDK routes to local
-// emulators. This is idempotent (only sets if not already set) and must happen
-// BEFORE the Admin SDK's Auth service is first used (admin.auth() call).
+// emulators. This is idempotent and must happen BEFORE the Admin SDK's Auth
+// service is first used (admin.auth() call).
+// Use ||= (not ??=) so an empty-string value is also overridden.
 if (process.env.NODE_ENV === 'development') {
-	if (!process.env.FIRESTORE_EMULATOR_HOST) {
-		process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
-	}
-	if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-		process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
-	}
+	process.env.FIRESTORE_EMULATOR_HOST ||= 'localhost:8080';
+	process.env.FIREBASE_AUTH_EMULATOR_HOST ||= 'localhost:9099';
 }
 
 // Initialize firebase-admin once across all modules.
