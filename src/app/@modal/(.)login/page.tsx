@@ -4,8 +4,9 @@
 
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@ui/Dialog/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@ui/Dialog/Dialog';
 import LoginComponent from '@/app/login/Components/Login';
+import DemoAuthLogin from '@/app/login/Components/DemoAuthLogin';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import HeaderLabel from '@/app/login/Components/HeaderLabel';
@@ -13,6 +14,7 @@ import classes from './Login.module.scss';
 
 function Login() {
 	const router = useRouter();
+	const isBlockchainEnabled = process.env.NEXT_PUBLIC_ENABLE_BLOCKCHAIN === 'true';
 
 	const handleOpenChange = () => {
 		router.back();
@@ -29,9 +31,10 @@ function Login() {
 					<DialogTitle>
 						<HeaderLabel />
 					</DialogTitle>
+					<DialogDescription className='sr-only'>Login or create an account</DialogDescription>
 				</DialogHeader>
 				<div className='sm:px-4'>
-					<LoginComponent isModal />
+					{isBlockchainEnabled ? <LoginComponent isModal /> : <DemoAuthLogin isModal />}
 				</div>
 			</DialogContent>
 		</Dialog>

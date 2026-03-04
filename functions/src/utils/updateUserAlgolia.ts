@@ -13,6 +13,7 @@ export const updateUserAlgolia = async (user?: DocumentData): Promise<void> => {
 	}
 
 	const client = initAlgoliaApi();
+	if (!client) return;
 
 	const algoliaUser: Omit<IV2User, 'password' | 'salt' | 'isEmailVerified' | 'isWeb3Signup' | 'createdAt' | 'updatedAt'> & {
 		objectID: string;

@@ -67,6 +67,7 @@ export const updatePostAlgolia = async (post?: DocumentData): Promise<void> => {
 	}
 
 	const client = initAlgoliaApi();
+	if (!client) return;
 
 	const parsedContent = markdownToPlainText(post.content);
 

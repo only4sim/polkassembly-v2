@@ -35,6 +35,7 @@ export const updateUserAddressesAlgolia = async (addressData?: DocumentData): Pr
 
 	// Update only the addresses field in Algolia
 	const client = initAlgoliaApi();
+	if (!client) return;
 
 	await client.partialUpdateObject({
 		indexName: 'polkassembly_v2_users',

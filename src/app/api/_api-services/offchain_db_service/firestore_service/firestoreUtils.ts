@@ -20,6 +20,18 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 		console.error('\nError in initialising firebase-admin: ', error, '\n');
 		throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'Error in initialising firebase-admin.');
 	}
+} else if (process.env.NODE_ENV === 'development' && !firebaseAdmin.apps.length) {
+	// Emulator mode: set emulator host env vars so the Admin SDK routes to local emulators
+	// instead of trying real GCP credentials via gRPC.
+	if (!process.env.FIRESTORE_EMULATOR_HOST) {
+		process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+	}
+	if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+		process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+	}
+	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
+	firebaseAdmin.initializeApp({ projectId });
+	console.log(`\n ℹ️ Firebase Admin initialised for project "${projectId}" (emulator / development mode).\n`);
 } else {
 	console.log('\n ℹ️ [disabled] FIREBASE_SERVICE_ACC_CONFIG is not set. Firestore operations will fail if called.\n');
 }
@@ -27,6 +39,7 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 export class FirestoreUtils {
 	private static _firestoreDb: firebaseAdmin.firestore.Firestore | null = null;
 
+	/* eslint-disable no-underscore-dangle */
 	protected static get firestoreDb(): firebaseAdmin.firestore.Firestore {
 		if (!this._firestoreDb) {
 			if (!firebaseAdmin.apps.length) {
@@ -36,13 +49,14 @@ export class FirestoreUtils {
 		}
 		return this._firestoreDb;
 	}
+	/* eslint-enable no-underscore-dangle */
 
 	protected static increment = firebaseAdmin.firestore.FieldValue.increment;
 
 	protected static serverTimestamp = firebaseAdmin.firestore.FieldValue.serverTimestamp;
 
 	// collection references
-	protected static usersCollectionRef = () => firebaseAdmin.firestore().collection('users');
+	protected static usersCollectionRef = () => this.firestoreDb.collection('users');
 
 	protected static addressesCollectionRef = () => this.firestoreDb.collection('addresses');
 

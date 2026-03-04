@@ -47,7 +47,12 @@ function Web2Login({
 
 	const router = useRouter();
 
-	const form = useForm<IFormFields>();
+	const form = useForm<IFormFields>({
+		defaultValues: {
+			emailOrUsername: '',
+			password: ''
+		}
+	});
 
 	const [errorMessage, setErrorMessage] = useState<string>('');
 

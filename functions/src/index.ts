@@ -140,32 +140,38 @@ export const onUserWritten = onDocumentWritten(
 				return;
 			}
 
-			const payloadUser: IV1User = {
-				id: userData.id,
-				custom_username: !userData.isWeb3Signup,
-				email: userData.email || '',
-				password: userData.password,
-				salt: userData.salt,
-				username: userData.username,
-				web3_signup: userData.isWeb3Signup || false
-			};
+			const { TOOLS_PASSPHRASE } = process.env;
 
-			const url = 'https://polkadot-old.polkassembly.io/api/v1/users/createUser';
+			if (!TOOLS_PASSPHRASE) {
+				logger.warn('TOOLS_PASSPHRASE is not set – skipping v1 user sync.');
+			} else {
+				const payloadUser: IV1User = {
+					id: userData.id,
+					custom_username: !userData.isWeb3Signup,
+					email: userData.email || '',
+					password: userData.password,
+					salt: userData.salt,
+					username: userData.username,
+					web3_signup: userData.isWeb3Signup || false
+				};
 
-			const response = await axios.post(url, payloadUser, {
-				headers: {
-					'Content-Type': 'application/json',
-					'x-tools-passphrase': process.env.TOOLS_PASSPHRASE || '',
-					'x-network': 'polkadot'
+				const url = 'https://polkadot-old.polkassembly.io/api/v1/users/createUser';
+
+				const response = await axios.post(url, payloadUser, {
+					headers: {
+						'Content-Type': 'application/json',
+						'x-tools-passphrase': TOOLS_PASSPHRASE,
+						'x-network': 'polkadot'
+					}
+				});
+
+				if (response.status !== 200) {
+					logger.error(`Error creating user: ${response.status} ${response.data}`);
+					return;
 				}
-			});
 
-			if (response.status !== 200) {
-				logger.error(`Error creating user: ${response.status} ${response.data}`);
-				return;
+				logger.info(`User successfully created with ID: ${event.data.after.id}`);
 			}
-
-			logger.info(`User successfully created with ID: ${event.data.after.id}`);
 		} catch (error) {
 			logger.error('Error in onUserWritten function:', error);
 		}
@@ -196,36 +202,42 @@ export const onAddressWritten = onDocumentWritten(
 				return;
 			}
 
-			const payloadAddress: IV1UserAddress = {
-				address: addressData.address,
-				default: addressData.default,
-				isMultisig: addressData.isMultisig || false,
-				is_erc20: addressData.address.startsWith('0x'),
-				network: addressData.network,
-				proxy_for: [],
-				public_key: '',
-				sign_message: '',
-				user_id: addressData.userId,
-				verified: true,
-				wallet: addressData.wallet || EWallet.OTHER
-			};
+			const { TOOLS_PASSPHRASE } = process.env;
 
-			const url = 'https://polkadot-old.polkassembly.io/api/v1/users/createAddress';
+			if (!TOOLS_PASSPHRASE) {
+				logger.warn('TOOLS_PASSPHRASE is not set – skipping v1 address sync.');
+			} else {
+				const payloadAddress: IV1UserAddress = {
+					address: addressData.address,
+					default: addressData.default,
+					isMultisig: addressData.isMultisig || false,
+					is_erc20: addressData.address.startsWith('0x'),
+					network: addressData.network,
+					proxy_for: [],
+					public_key: '',
+					sign_message: '',
+					user_id: addressData.userId,
+					verified: true,
+					wallet: addressData.wallet || EWallet.OTHER
+				};
 
-			const response = await axios.post(url, payloadAddress, {
-				headers: {
-					'Content-Type': 'application/json',
-					'x-tools-passphrase': process.env.TOOLS_PASSPHRASE || '',
-					'x-network': 'polkadot'
+				const url = 'https://polkadot-old.polkassembly.io/api/v1/users/createAddress';
+
+				const response = await axios.post(url, payloadAddress, {
+					headers: {
+						'Content-Type': 'application/json',
+						'x-tools-passphrase': TOOLS_PASSPHRASE,
+						'x-network': 'polkadot'
+					}
+				});
+
+				if (response.status !== 200) {
+					logger.error(`Error creating address: ${response.status} ${response.data}`);
+					return;
 				}
-			});
 
-			if (response.status !== 200) {
-				logger.error(`Error creating address: ${response.status} ${response.data}`);
-				return;
+				logger.info(`Address successfully created with ID: ${event.data.after.id}`);
 			}
-
-			logger.info(`Address successfully created with ID: ${event.data.after.id}`);
 		} catch (error) {
 			logger.error('Error in onAddressWritten function:', error);
 		}
