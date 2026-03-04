@@ -37,6 +37,10 @@ export function useFirebaseAuth() {
 		const userCredential = await createUserWithEmailAndPassword(clientAuth, email, password);
 		if (displayName) {
 			await updateProfile(userCredential.user, { displayName });
+			// Force-refresh the ID token so the next API call includes `name` in the claims.
+			// Without this, the cached token (issued before updateProfile) would be missing
+			// displayName, and the server's lazy Firestore doc creation would use email instead.
+			await userCredential.user.getIdToken(true);
 			setUser({
 				uid: userCredential.user.uid,
 				email: userCredential.user.email,

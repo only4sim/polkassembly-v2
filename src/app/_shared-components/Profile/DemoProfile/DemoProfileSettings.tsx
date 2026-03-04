@@ -145,7 +145,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 									open={openEditDisplayNameDialog}
 									onOpenChange={setOpenEditDisplayNameDialog}
 								>
-									<DialogTrigger>
+									<DialogTrigger asChild>
 										<Button
 											variant='ghost'
 											leftIcon={
@@ -237,7 +237,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 										}
 									}}
 								>
-									<DialogTrigger>
+									<DialogTrigger asChild>
 										<Button variant='destructive'>{t('Settings.deleteMyAccount')}</Button>
 									</DialogTrigger>
 									<DialogContent className='max-w-xl p-3 sm:p-6'>
