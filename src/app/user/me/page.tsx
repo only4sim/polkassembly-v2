@@ -6,37 +6,47 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirebaseAuth } from '@/app/_client-services/firebase/useFirebaseAuth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { User } from '@/domain/entities/User';
 import DemoProfile from '@/app/_shared-components/Profile/DemoProfile/DemoProfile';
 
 function MePageContent() {
-	const { user: firebaseUser, loading, getIdToken } = useFirebaseAuth();
 	const router = useRouter();
 	const [profileData, setProfileData] = useState<User | null>(null);
 	const [fetchError, setFetchError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		if (!loading && !firebaseUser) {
-			router.replace('/login');
-		}
-	}, [loading, firebaseUser, router]);
+		let cancelled = false;
 
-	useEffect(() => {
-		if (!firebaseUser) return;
+		const unsubscribe = onAuthStateChanged(clientAuth, async (firebaseUser: FirebaseUser | null) => {
+			if (cancelled) return;
 
-		(async () => {
+			if (!firebaseUser) {
+				setLoading(false);
+				router.replace('/login');
+				return;
+			}
+
 			try {
-				const token = await getIdToken();
+				// Get token directly from the Firebase User object to guarantee it is non-null
+				const token = await firebaseUser.getIdToken();
+				if (cancelled) return;
+
 				const res = await fetch('/api/v2/users/me/demo', {
 					headers: { Authorization: `Bearer ${token}` }
 				});
+				if (cancelled) return;
+
 				if (res.status === 404) {
 					setFetchError('User not found');
+					setLoading(false);
 					return;
 				}
 				if (!res.ok) {
 					setFetchError('Failed to load profile');
+					setLoading(false);
 					return;
 				}
 				const data = await res.json();
@@ -45,11 +55,20 @@ function MePageContent() {
 					createdAt: new Date(data.createdAt),
 					updatedAt: new Date(data.updatedAt)
 				});
+				setLoading(false);
 			} catch {
-				setFetchError('Failed to load profile');
+				if (!cancelled) {
+					setFetchError('Failed to load profile');
+					setLoading(false);
+				}
 			}
-		})();
-	}, [firebaseUser, getIdToken]);
+		});
+
+		return () => {
+			cancelled = true;
+			unsubscribe();
+		};
+	}, [router]);
 
 	if (loading) {
 		return <div className='p-8 text-text_primary'>Loading…</div>;

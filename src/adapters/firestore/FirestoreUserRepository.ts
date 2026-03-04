@@ -7,20 +7,29 @@ import { FIREBASE_SERVICE_ACC_CONFIG } from '@/app/api/_api-constants/apiEnvVars
 import { User } from '@/domain/entities/User';
 import { UserRepository } from '@/ports/repositories/UserRepository';
 
-// Reuse the same firebase-admin initialization pattern as demoAuthService.ts
-if (FIREBASE_SERVICE_ACC_CONFIG && !admin.apps.length) {
-	admin.initializeApp({
-		credential: admin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
-	});
-} else if (process.env.NODE_ENV === 'development' && !admin.apps.length) {
+// In development, always set emulator env vars so the Admin SDK routes to local
+// emulators. This is idempotent (only sets if not already set) and must happen
+// BEFORE the Admin SDK's Auth service is first used (admin.auth() call).
+if (process.env.NODE_ENV === 'development') {
 	if (!process.env.FIRESTORE_EMULATOR_HOST) {
 		process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
 	}
 	if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
 		process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
 	}
-	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
-	admin.initializeApp({ projectId });
+}
+
+// Initialize firebase-admin once across all modules.
+if (!admin.apps.length) {
+	if (FIREBASE_SERVICE_ACC_CONFIG) {
+		admin.initializeApp({
+			credential: admin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
+		});
+	} else {
+		admin.initializeApp({
+			projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project'
+		});
+	}
 }
 
 /**
