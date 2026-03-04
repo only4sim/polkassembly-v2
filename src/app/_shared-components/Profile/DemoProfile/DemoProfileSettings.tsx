@@ -85,10 +85,9 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 				method: 'DELETE',
 				headers: { Authorization: `Bearer ${token}` }
 			});
-			// Proceed even if the Firestore delete fails (doc may not exist),
-			// but surface unexpected server errors (not 404/500 is acceptable here).
-			if (!deleteRes.ok && deleteRes.status !== 404 && deleteRes.status !== 500) {
-				throw new Error(`Failed to remove account data (${deleteRes.status})`);
+			if (!deleteRes.ok) {
+				const body = await deleteRes.json().catch(() => ({}));
+				throw new Error((body as { message?: string }).message || `Failed to remove account data (${deleteRes.status})`);
 			}
 
 			// Then delete the Firebase Auth user

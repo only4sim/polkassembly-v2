@@ -20,14 +20,8 @@ if (!firebaseAdmin.apps.length) {
 			credential: firebaseAdmin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACC_CONFIG))
 		});
 	} else if (process.env.NODE_ENV === 'development') {
-		// Use FIREBASE_ADMIN_PROJECT_ID (server-only) if set; otherwise fall back to
-		// 'cbs-assembly' which matches the default project in .firebaserc.
-		// IMPORTANT: Do NOT use NEXT_PUBLIC_FIREBASE_PROJECT_ID here — that env var
-		// is intended for the client-side Firebase JS SDK and may be set to a
-		// different value (e.g. 'demo-project') that conflicts with the emulator's
-		// actual project ID ('cbs-assembly'), causing verifyIdToken aud-claim mismatches.
 		firebaseAdmin.initializeApp({
-			projectId: process.env.FIREBASE_ADMIN_PROJECT_ID || 'cbs-assembly'
+			projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'cbs-assembly'
 		});
 	}
 }

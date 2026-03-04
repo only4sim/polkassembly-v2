@@ -88,8 +88,9 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
 
 	try {
 		await userRepository.deleteUser(decoded.uid);
-	} catch {
-		// If Firestore doc doesn't exist, that's fine — Firebase Auth user deletion proceeds
+	} catch (err) {
+		console.error('[demo/route] Failed to delete Firestore user document:', err);
+		return NextResponse.json({ message: 'Failed to delete account data' }, { status: StatusCodes.INTERNAL_SERVER_ERROR });
 	}
 
 	return NextResponse.json({ success: true });
