@@ -40,18 +40,38 @@ async function DiscussionsPage({ searchParams }: { searchParams: Promise<{ page?
 	// DemoOS mode: fetch posts from Firestore `posts` collection via API
 	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
 		return (
-			<div className='mx-auto max-w-screen-lg p-4 sm:p-8'>
-				<div className='mb-4 flex items-center justify-between'>
-					<h1 className='text-2xl font-bold text-text_primary'>Discussions</h1>
-					<Link
-						href='/create/discussion'
-						className='rounded-md bg-text_pink px-4 py-2 text-sm font-medium text-white hover:opacity-90'
-					>
-						New Discussion
-					</Link>
+			<div>
+				<div className='bg-section_dark_overlay'>
+					<div className='mx-auto max-w-7xl bg-section_dark_overlay px-4 pt-8 lg:px-16'>
+						<div className='flex items-center justify-between gap-5 md:gap-0'>
+							<div>
+								<h1 className='text-lg font-bold text-btn_secondary_text lg:text-2xl'>Discussions</h1>
+								<p className='pt-2 text-sm text-gray-600'>Explore all Discussions on this forum</p>
+							</div>
+							<Link
+								href='/create/discussion'
+								className='hidden items-center gap-1.5 rounded-full bg-btn_primary_background px-3 py-1.5 text-white shadow lg:flex lg:px-6 lg:py-2'
+							>
+								<span className='text-xl'>+</span>
+								<span className='whitespace-nowrap text-sm'>Create Post</span>
+							</Link>
+						</div>
+						<div className='mt-5 flex justify-between'>
+							<div className='flex gap-x-2'>
+								<button
+									type='button'
+									className='border-b-2 border-text_pink px-4 py-3 text-sm font-semibold uppercase text-text_pink'
+								>
+									Polkassembly
+								</button>
+							</div>
+						</div>
+					</div>
 				</div>
-				<div className='rounded-lg border border-border_grey bg-bg_modal shadow-sm'>
-					<DemoPostList />
+				<div className='mx-auto min-h-[600px] max-w-7xl bg-page_background px-4 py-5 lg:px-16'>
+					<div className='overflow-hidden rounded-xl border border-border_grey bg-bg_modal shadow-sm'>
+						<DemoPostList />
+					</div>
 				</div>
 			</div>
 		);

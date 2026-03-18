@@ -4,40 +4,87 @@
 
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { useForm } from 'react-hook-form';
+import { EAllowedCommentor, ENotificationStatus, EOffChainPostTopic, IWritePostFormFields } from '@/_shared/types';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { Button } from '@/app/_shared-components/Button';
-import { Input } from '@/app/_shared-components/Input';
-import { Label } from '@/app/_shared-components/Label';
+import { Form } from '@/app/_shared-components/Form';
+import ErrorMessage from '@/app/_shared-components/ErrorMessage';
+import { useToast } from '@/hooks/useToast';
+import { useSuccessModal } from '@/hooks/useSuccessModal';
+import { LoadingSpinner } from '@/app/_shared-components/LoadingSpinner';
+import { useDemoUser } from '@/hooks/useDemoUser';
+import WritePost from '../Create/WritePost/WritePost';
+import HeaderLabel from '@/app/create/discussion/Component/HeaderLabel';
+
+function SuccessModalContent({ postId }: { postId: string }) {
+	return (
+		<div className='flex flex-col items-center gap-y-4'>
+			<p className='text-xl font-semibold text-text_primary'>Congratulations!</p>
+			<p className='flex items-center gap-x-2 text-sm font-medium text-wallet_btn_text'>
+				<Link
+					href={`/discussions/${postId}`}
+					className='text-base font-semibold text-text_pink underline'
+				>
+					Discussion
+				</Link>{' '}
+				created successfully.
+			</p>
+			<div className='flex items-center gap-x-2'>
+				<p className='text-sm font-medium text-wallet_btn_text'>Redirecting to post</p>
+				<LoadingSpinner size='small' />
+			</div>
+		</div>
+	);
+}
 
 function DemoCreateDiscussion() {
-	const router = useRouter();
-	const [title, setTitle] = useState('');
-	const [content, setContent] = useState('');
+	const { user } = useDemoUser();
+	const formData = useForm<IWritePostFormFields>({
+		defaultValues: {
+			title: '',
+			description: '',
+			tags: [],
+			topic: EOffChainPostTopic.GENERAL,
+			allowedCommentor: EAllowedCommentor.ALL,
+			isAddingPoll: false
+		}
+	});
+
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const router = useRouter();
+	const { toast } = useToast();
+	const { setOpenSuccessModal, setSuccessModalContent } = useSuccessModal();
 
-	const { currentUser } = clientAuth;
+	const handleSubmit = async (values: IWritePostFormFields) => {
+		const { title, description, tags, topic, allowedCommentor } = values;
+		if (!title || !description) return;
 
-	const handleSubmit = async (e: FormEvent) => {
-		e.preventDefault();
-		if (!title.trim() || !content.trim()) return;
+		const { currentUser } = clientAuth;
 		if (!currentUser) {
-			setError('You must be logged in to create a post.');
+			setErrorMessage('You must be logged in to create a post.');
 			return;
 		}
 
 		setLoading(true);
-		setError(null);
+		setErrorMessage(null);
 
 		try {
 			const token = await currentUser.getIdToken();
 			const res = await fetch('/api/v2/posts', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ title: title.trim(), content: content.trim() })
+				body: JSON.stringify({
+					title: title.trim(),
+					content: description.trim(),
+					topic,
+					tags: tags?.map((t) => t.value) ?? [],
+					allowedCommentor
+				})
 			});
 
 			if (!res.ok) {
@@ -46,71 +93,67 @@ function DemoCreateDiscussion() {
 			}
 
 			const { post } = (await res.json()) as { post: { id: string } };
+			formData.reset();
+
+			toast({ title: 'Discussion created successfully', status: ENotificationStatus.SUCCESS });
+
+			setSuccessModalContent(<SuccessModalContent postId={post.id} />);
+			setOpenSuccessModal(true);
+
 			router.push(`/discussions/${post.id}`);
 		} catch (err) {
-			setError((err as Error).message);
+			const msg = (err as Error).message;
+			setErrorMessage(msg);
+			toast({ title: 'Failed to create discussion', description: msg, status: ENotificationStatus.ERROR });
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	if (!currentUser) {
-		return (
-			<p className='flex items-center gap-x-1 text-sm text-text_primary'>
-				Please{' '}
-				<Link
-					href='/login'
-					className='text-text_pink'
-				>
-					log in
-				</Link>{' '}
-				to create a discussion.
-			</p>
-		);
-	}
-
 	return (
-		<form
-			onSubmit={handleSubmit}
-			className='flex flex-col gap-y-4'
-		>
-			<div>
-				<Label htmlFor='demo-post-title'>Title</Label>
-				<Input
-					id='demo-post-title'
-					placeholder='Enter a descriptive title'
-					value={title}
-					onChange={(e) => setTitle(e.target.value)}
-					disabled={loading}
-					required
-				/>
+		<div>
+			<div className='border-b border-border_grey px-4 pb-4 sm:px-6'>
+				<HeaderLabel />
 			</div>
-			<div>
-				<Label htmlFor='demo-post-content'>Content</Label>
-				<textarea
-					id='demo-post-content'
-					placeholder='Share your thoughts...'
-					value={content}
-					onChange={(e) => setContent(e.target.value)}
-					disabled={loading}
-					required
-					rows={8}
-					className='w-full rounded-md border border-border_grey bg-bg_modal px-3 py-2 text-sm text-text_primary placeholder:text-wallet_btn_text focus:outline-none focus:ring-2 focus:ring-text_pink disabled:opacity-50'
-				/>
+			<div className='px-4 py-4 sm:px-12'>
+				<div className='relative flex flex-col gap-y-4'>
+					{!user ? (
+						<p className='flex items-center gap-x-1 text-center text-sm text-text_primary'>
+							Please{' '}
+							<Link
+								href='/login'
+								className='text-text_pink'
+							>
+								log in
+							</Link>{' '}
+							to create a discussion.
+						</p>
+					) : (
+						<>
+							{errorMessage && <ErrorMessage errorMessage={errorMessage} />}
+							<Form {...formData}>
+								<form onSubmit={formData.handleSubmit(handleSubmit)}>
+									<WritePost
+										disabled={loading}
+										formData={formData}
+									/>
+									<div className='mt-4 flex justify-end'>
+										<Button
+											size='lg'
+											className='px-12'
+											type='submit'
+											isLoading={loading}
+										>
+											Create
+										</Button>
+									</div>
+								</form>
+							</Form>
+						</>
+					)}
+				</div>
 			</div>
-			{error && <p className='text-sm text-red-500'>{error}</p>}
-			<div className='flex justify-end'>
-				<Button
-					type='submit'
-					size='lg'
-					className='px-12'
-					isLoading={loading}
-					disabled={!title.trim() || !content.trim()}
-				>
-					Create
-				</Button>
-			</div>
-		</form>
+		</div>
 	);
 }
 

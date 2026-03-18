@@ -14,6 +14,12 @@ export interface DemoPost {
 	content: string;
 	authorUid: string;
 	authorName: string;
+	/** Topic category for the post (e.g. 'general', 'governance', 'treasury'). */
+	topic?: string;
+	/** Tag values attached to this post. */
+	tags?: string[];
+	/** Who is allowed to comment: 'all', 'onchain_verified', or 'none'. */
+	allowedCommentor?: string;
 	createdAt: Date;
 	updatedAt: Date;
 }

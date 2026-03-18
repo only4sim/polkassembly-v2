@@ -34,6 +34,9 @@ function docToPost(id: string, data: admin.firestore.DocumentData): DemoPost {
 		content: data.content ?? '',
 		authorUid: data.authorUid ?? '',
 		authorName: data.authorName ?? '',
+		topic: data.topic ?? undefined,
+		tags: Array.isArray(data.tags) ? data.tags : undefined,
+		allowedCommentor: data.allowedCommentor ?? undefined,
 		createdAt: data.createdAt?.toDate() ?? new Date(),
 		updatedAt: data.updatedAt?.toDate() ?? new Date()
 	};
@@ -44,6 +47,9 @@ export interface CreateDemoPostInput {
 	content: string;
 	authorUid: string;
 	authorName: string;
+	topic?: string;
+	tags?: string[];
+	allowedCommentor?: string;
 }
 
 export class DemoPostService {
@@ -63,6 +69,9 @@ export class DemoPostService {
 			content: input.content.trim(),
 			authorUid: input.authorUid,
 			authorName: input.authorName,
+			...(input.topic ? { topic: input.topic } : {}),
+			...(input.tags ? { tags: input.tags } : {}),
+			...(input.allowedCommentor ? { allowedCommentor: input.allowedCommentor } : {}),
 			createdAt: ts,
 			updatedAt: ts
 		});
@@ -72,6 +81,9 @@ export class DemoPostService {
 			content: input.content.trim(),
 			authorUid: input.authorUid,
 			authorName: input.authorName,
+			topic: input.topic,
+			tags: input.tags,
+			allowedCommentor: input.allowedCommentor,
 			createdAt: now,
 			updatedAt: now
 		};

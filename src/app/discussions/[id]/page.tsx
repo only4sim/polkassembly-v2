@@ -42,7 +42,7 @@ async function DemoDiscussionDetailPage({ params }: { params: Promise<{ id: stri
 	if (!post) notFound();
 
 	return (
-		<div className='flex h-full w-full items-start justify-center p-4 sm:p-8'>
+		<div className='w-full'>
 			<DemoPostDetail post={post} />
 		</div>
 	);

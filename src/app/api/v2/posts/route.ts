@@ -49,8 +49,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
-	const body = (await req.json().catch(() => ({}))) as { title?: string; content?: string };
-	const { title, content } = body;
+	const body = (await req.json().catch(() => ({}))) as { title?: string; content?: string; topic?: string; tags?: string[]; allowedCommentor?: string };
+	const { title, content, topic, tags, allowedCommentor } = body;
 
 	if (!title || typeof title !== 'string' || !title.trim()) {
 		return NextResponse.json({ message: 'Title is required' }, { status: StatusCodes.BAD_REQUEST });
@@ -64,7 +64,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 			title,
 			content,
 			authorUid: decoded.uid,
-			authorName: decoded.name ?? decoded.email ?? 'Anonymous'
+			authorName: decoded.name ?? decoded.email ?? 'Anonymous',
+			topic: typeof topic === 'string' ? topic : undefined,
+			tags: Array.isArray(tags) ? tags.filter((t) => typeof t === 'string') : undefined,
+			allowedCommentor: typeof allowedCommentor === 'string' ? allowedCommentor : undefined
 		});
 		return NextResponse.json({ post }, { status: StatusCodes.CREATED });
 	} catch (err) {
