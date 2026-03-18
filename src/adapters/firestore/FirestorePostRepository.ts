@@ -100,7 +100,10 @@ export class FirestorePostRepository implements PostRepository {
 			userId: input.userId,
 			tags: input.tags ?? [],
 			topic: input.topic ?? undefined,
-			metrics: { comments: 0, reactions: { [EReaction.like]: 0, [EReaction.dislike]: 0 } as Record<EReaction, number> },
+			metrics: {
+				comments: 0,
+				reactions: Object.values(EReaction).reduce<Record<EReaction, number>>((acc, r) => ({ ...acc, [r]: 0 }), {} as Record<EReaction, number>)
+			},
 			createdAt: ts,
 			updatedAt: ts
 		};

@@ -17,8 +17,10 @@ import { DemoPostService } from '@/app/api/_api-services/demoPostService';
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
 	const { searchParams } = req.nextUrl;
-	const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
-	const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
+	const limitParam = parseInt(searchParams.get('limit') || '20', 10);
+	const offsetParam = parseInt(searchParams.get('offset') || '0', 10);
+	const limit = Math.min(Number.isNaN(limitParam) ? 20 : limitParam, 100);
+	const offset = Math.max(Number.isNaN(offsetParam) ? 0 : offsetParam, 0);
 
 	try {
 		const posts = await DemoPostService.listPosts(limit, offset);

@@ -23,7 +23,9 @@ function DemoPostList({ initialPosts = [] }: DemoPostListProps) {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (initialPosts.length > 0) return undefined;
+		if (initialPosts.length > 0) {
+			return undefined;
+		}
 
 		let cancelled = false;
 		(async () => {
