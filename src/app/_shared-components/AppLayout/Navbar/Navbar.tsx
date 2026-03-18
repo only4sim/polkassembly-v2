@@ -172,6 +172,24 @@ function Navbar() {
 											asChild
 											className='hover:bg-sidebar_menu_hover'
 										>
+											<Link
+												className={classes.dropdownMenuContent}
+												href='/user/me'
+											>
+												<Image
+													src={ProfileIcon}
+													alt='profile'
+													width={24}
+													height={24}
+												/>
+												{/* eslint-disable-next-line sonarjs/no-duplicate-string */}
+												{t('Profile.profile')}
+											</Link>
+										</DropdownMenuItem>
+										<DropdownMenuItem
+											asChild
+											className='hover:bg-sidebar_menu_hover'
+										>
 											<Button
 												variant='ghost'
 												className='flex w-full justify-start p-0 px-2 text-sm text-basic_text'
@@ -184,6 +202,7 @@ function Navbar() {
 													width={24}
 													height={24}
 												/>
+												{/* eslint-disable-next-line sonarjs/no-duplicate-string */}
 												{t('Profile.logout')}
 											</Button>
 										</DropdownMenuItem>
@@ -191,6 +210,7 @@ function Navbar() {
 								</DropdownMenu>
 							) : (
 								<Link href='/login'>
+									{/* eslint-disable-next-line sonarjs/no-duplicate-string */}
 									<Button>{t('Profile.login')}</Button>
 								</Link>
 							)
@@ -287,6 +307,7 @@ function Navbar() {
 												width={24}
 												height={24}
 											/>
+											{/* eslint-disable-next-line sonarjs/no-duplicate-string */}
 											{t('Profile.logout')}
 										</Button>
 									</DropdownMenuItem>
@@ -294,6 +315,7 @@ function Navbar() {
 							</DropdownMenu>
 						) : (
 							<Link href='/login'>
+								{/* eslint-disable-next-line sonarjs/no-duplicate-string */}
 								<Button>{t('Profile.login')}</Button>
 							</Link>
 						)}
@@ -363,6 +385,14 @@ function Navbar() {
 												<p>{demoUser.displayName || demoUser.email}</p>
 											</DropdownMenuTrigger>
 											<DropdownMenuContent>
+												<DropdownMenuItem>
+													<Link
+														className='w-full'
+														href='/user/me'
+													>
+														{t('Profile.profile')}
+													</Link>
+												</DropdownMenuItem>
 												<DropdownMenuItem>
 													<Button
 														variant='ghost'
