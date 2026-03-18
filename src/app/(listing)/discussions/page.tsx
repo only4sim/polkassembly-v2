@@ -12,8 +12,13 @@ import { Metadata } from 'next';
 import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
+import DemoPostList from '@/app/_shared-components/DemoPost/DemoPostList';
+import Link from 'next/link';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'Discussions' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -32,17 +37,22 @@ const zodQuerySchema = z.object({
 });
 
 async function DiscussionsPage({ searchParams }: { searchParams: Promise<{ page?: string; status?: string }> }) {
-	// Guard: when blockchain is disabled and Firestore Admin is not configured,
-	// show empty listing to avoid runtime crash
+	// DemoOS mode: fetch posts from Firestore `posts` collection via API
 	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
 		return (
-			<div>
-				<ListingPage
-					proposalType={EProposalType.DISCUSSION}
-					initialData={{ items: [], totalCount: 0 }}
-					statuses={[]}
-					page={1}
-				/>
+			<div className='mx-auto max-w-screen-lg p-4 sm:p-8'>
+				<div className='mb-4 flex items-center justify-between'>
+					<h1 className='text-2xl font-bold text-text_primary'>Discussions</h1>
+					<Link
+						href='/create/discussion'
+						className='rounded-md bg-text_pink px-4 py-2 text-sm font-medium text-white hover:opacity-90'
+					>
+						New Discussion
+					</Link>
+				</div>
+				<div className='rounded-lg border border-border_grey bg-bg_modal shadow-sm'>
+					<DemoPostList />
+				</div>
 			</div>
 		);
 	}

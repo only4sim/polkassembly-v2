@@ -7,31 +7,28 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DemoPost } from '@/domain/entities/Post';
-import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 
-interface DemoProfilePostsProps {
-	uid: string;
+interface DemoPostListProps {
+	/** Initial posts pre-fetched on the server (SSR). May be empty for client-only render. */
+	initialPosts?: DemoPost[];
 }
 
 function formatDate(date: Date | string) {
 	return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function DemoProfilePosts({ uid }: DemoProfilePostsProps) {
-	const [posts, setPosts] = useState<DemoPost[]>([]);
-	const [loading, setLoading] = useState(true);
+function DemoPostList({ initialPosts = [] }: DemoPostListProps) {
+	const [posts, setPosts] = useState<DemoPost[]>(initialPosts);
+	const [loading, setLoading] = useState(initialPosts.length === 0);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
+		if (initialPosts.length > 0) return undefined;
+
 		let cancelled = false;
 		(async () => {
 			try {
-				// Use the current user's token if available, otherwise fetch without auth
-				const { currentUser } = clientAuth;
-				const token = currentUser ? await currentUser.getIdToken() : null;
-				const res = await fetch(`/api/v2/posts/by-author/${uid}`, {
-					headers: token ? { Authorization: `Bearer ${token}` } : {}
-				});
+				const res = await fetch('/api/v2/posts');
 				if (!res.ok) throw new Error('Failed to fetch posts');
 				const data = (await res.json()) as { posts: DemoPost[] };
 				if (!cancelled) setPosts(data.posts);
@@ -41,22 +38,23 @@ function DemoProfilePosts({ uid }: DemoProfilePostsProps) {
 				if (!cancelled) setLoading(false);
 			}
 		})();
+
 		return () => {
 			cancelled = true;
 		};
-	}, [uid]);
+	}, [initialPosts.length]);
 
 	if (loading) {
 		return (
-			<div className='flex items-center justify-center py-12 text-wallet_btn_text'>
-				<span>Loading posts…</span>
+			<div className='flex items-center justify-center py-16 text-wallet_btn_text'>
+				<span>Loading discussions…</span>
 			</div>
 		);
 	}
 
 	if (error) {
 		return (
-			<div className='flex items-center justify-center py-12 text-red-500'>
+			<div className='flex items-center justify-center py-16 text-red-500'>
 				<span>{error}</span>
 			</div>
 		);
@@ -64,8 +62,18 @@ function DemoProfilePosts({ uid }: DemoProfilePostsProps) {
 
 	if (posts.length === 0) {
 		return (
-			<div className='flex flex-col items-center justify-center py-12 text-wallet_btn_text'>
-				<p>No posts yet.</p>
+			<div className='flex flex-col items-center justify-center py-16 text-wallet_btn_text'>
+				<p className='mb-2 text-lg font-medium'>No discussions yet</p>
+				<p className='text-sm'>
+					Be the first to{' '}
+					<Link
+						href='/create/discussion'
+						className='text-text_pink underline'
+					>
+						start a discussion
+					</Link>
+					.
+				</p>
 			</div>
 		);
 	}
@@ -76,15 +84,19 @@ function DemoProfilePosts({ uid }: DemoProfilePostsProps) {
 				<Link
 					key={post.id}
 					href={`/discussions/${post.id}`}
-					className='flex flex-col gap-y-1 px-2 py-4 transition-colors hover:bg-bg_modal'
+					className='flex flex-col gap-y-1 px-4 py-4 transition-colors hover:bg-bg_modal sm:px-6'
 				>
 					<p className='line-clamp-2 text-base font-semibold text-text_primary'>{post.title}</p>
 					<p className='line-clamp-2 text-sm text-wallet_btn_text'>{post.content}</p>
-					<p className='mt-1 text-xs text-wallet_btn_text'>{formatDate(post.createdAt)}</p>
+					<div className='mt-1 flex items-center gap-x-2 text-xs text-wallet_btn_text'>
+						<span className='font-medium text-text_primary'>{post.authorName}</span>
+						<span>·</span>
+						<span>{formatDate(post.createdAt)}</span>
+					</div>
 				</Link>
 			))}
 		</div>
 	);
 }
 
-export default DemoProfilePosts;
+export default DemoPostList;
