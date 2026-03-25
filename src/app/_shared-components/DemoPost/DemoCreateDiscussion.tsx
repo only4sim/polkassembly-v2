@@ -50,7 +50,10 @@ function DemoCreateDiscussion() {
 			tags: [],
 			topic: EOffChainPostTopic.GENERAL,
 			allowedCommentor: EAllowedCommentor.ALL,
-			isAddingPoll: false
+			isAddingPoll: false,
+			pollTitle: '',
+			pollOptions: ['', ''],
+			pollVoteTypes: []
 		}
 	});
 
