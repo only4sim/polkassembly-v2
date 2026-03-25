@@ -57,7 +57,8 @@ import { debounce, throttle } from '@/_shared/_utils/debounceThrottle';
 import ImageUploadDialog from './ImageUploadDialog';
 
 const { NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY, NEXT_PUBLIC_IMBB_KEY } = getSharedEnvVars();
-const algoliaClient = algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY);
+const algoliaClient =
+	NEXT_PUBLIC_ALGOLIA_APP_ID && NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY ? algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY) : null;
 const MAX_MENTION_SUGGESTIONS = 5;
 const RECT_ELLIPSIS_WIDTH = 25;
 
@@ -224,6 +225,7 @@ export default function InitializedMDXEditor({ editorRef, ...props }: { editorRe
 					];
 
 					// Using any type for algolia response as the types don't match the actual structure
+					if (!algoliaClient) return;
 					algoliaClient.search(queries as any).then((response: any) => {
 						const userHits = response.results[0]?.hits || [];
 
