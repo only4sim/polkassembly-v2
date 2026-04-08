@@ -164,6 +164,8 @@ export enum EPostOrigin {
 
 export interface IAlgoliaPost extends Record<string, unknown> {
 	objectID: string;
+	documentId?: string;
+	firestoreId?: string;
 	title: string;
 	createdAtTimestamp?: number;
 	updatedAtTimestamp?: number;

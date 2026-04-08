@@ -106,6 +106,8 @@ export const updatePostAlgolia = async (post?: DocumentData): Promise<void> => {
 
 	const algoliaPost: IAlgoliaPost = {
 		objectID: post.id,
+		documentId: post.id,
+		firestoreId: post.id,
 		title: post.title,
 		...(post.createdAt && { createdAtTimestamp: dayjs(post.createdAt.toDate()).unix() }),
 		...(post.updatedAt && { updatedAtTimestamp: dayjs(post.updatedAt.toDate()).unix() }),
@@ -116,7 +118,7 @@ export const updatePostAlgolia = async (post?: DocumentData): Promise<void> => {
 		topic: post.topic,
 		...(post.lastCommentAt && { lastCommentAtTimestamp: dayjs(post.lastCommentAt.toDate()).unix() }),
 		userId: post.userId,
-		hash: post.hash,
+		hash: post.hash || post.id,
 		index: post.index,
 		parsedContent,
 		titleAndContentHash: '',

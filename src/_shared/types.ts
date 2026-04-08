@@ -1604,6 +1604,8 @@ export interface IGovAnalyticsCategoryCounts {
 // please make sure this is updated with the latest changes in the functions/src/types.ts file
 export interface IAlgoliaPost extends Record<string, unknown> {
 	objectID: string;
+	documentId?: string;
+	firestoreId?: string;
 	title: string;
 	createdAtTimestamp?: number;
 	updatedAtTimestamp?: number;

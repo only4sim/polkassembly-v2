@@ -37,6 +37,8 @@ function docToPost(id: string, data: admin.firestore.DocumentData): DemoPost {
 		topic: data.topic ?? undefined,
 		tags: Array.isArray(data.tags) ? data.tags : undefined,
 		allowedCommentor: data.allowedCommentor ?? undefined,
+		proposalType: data.proposalType ?? undefined,
+		network: data.network ?? undefined,
 		createdAt: data.createdAt?.toDate() ?? new Date(),
 		updatedAt: data.updatedAt?.toDate() ?? new Date()
 	};
@@ -50,6 +52,8 @@ export interface CreateDemoPostInput {
 	topic?: string;
 	tags?: string[];
 	allowedCommentor?: string;
+	proposalType?: string;
+	network?: string;
 }
 
 export class DemoPostService {
@@ -72,6 +76,8 @@ export class DemoPostService {
 			...(input.topic ? { topic: input.topic } : {}),
 			...(input.tags ? { tags: input.tags } : {}),
 			...(input.allowedCommentor ? { allowedCommentor: input.allowedCommentor } : {}),
+			...(input.proposalType ? { proposalType: input.proposalType } : {}),
+			...(input.network ? { network: input.network } : {}),
 			createdAt: ts,
 			updatedAt: ts
 		});
@@ -84,6 +90,8 @@ export class DemoPostService {
 			topic: input.topic,
 			tags: input.tags,
 			allowedCommentor: input.allowedCommentor,
+			proposalType: input.proposalType,
+			network: input.network,
 			createdAt: now,
 			updatedAt: now
 		};

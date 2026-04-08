@@ -32,8 +32,11 @@ import Tags from './Tags';
 import styles from './Search.module.scss';
 
 interface Post {
-	index: string;
+	index?: string;
 	objectID: string;
+	documentId?: string;
+	firestoreId?: string;
+	hash?: string;
 	title: string;
 	content: string;
 	proposer_address: string;
@@ -57,8 +60,16 @@ interface Post {
 
 interface User {
 	objectID: string;
-	username: string;
+	uid?: string;
+	username?: string;
+	displayName?: string;
+	email?: string;
 	profile?: {
+		bio?: string;
+		title?: string;
+		image?: string;
+	};
+	profileDetails?: {
 		bio?: string;
 		title?: string;
 		image?: string;
@@ -70,12 +81,20 @@ function PostHit({ hit }: { hit: Post }) {
 	const position = hit.__position;
 	const topic = hit.topic_id ? Object.entries(POST_TOPIC_MAP).find(([, value]) => value === hit.topic_id)?.[0] : null;
 	const backgroundColor = position ? (position % 2 !== 0 ? 'bg-listing_card1' : 'bg-section_dark_overlay') : '';
+	const isDemoDiscussion = hit.proposalType === EProposalType.DISCUSSION && process.env.ENABLE_BLOCKCHAIN !== 'true';
 
-	const postUrl = getPostTypeUrl({
-		proposalType: hit.proposalType,
-		indexOrHash: hit.index,
-		network: hit.network as ENetwork
-	});
+	const postIdentifier = hit.index || hit.objectID;
+	const postDocumentId = hit.documentId || hit.firestoreId || hit.hash;
+
+	const postUrl = isDemoDiscussion
+		? postDocumentId
+			? `/discussions/${postDocumentId}`
+			: '/discussions'
+		: getPostTypeUrl({
+				proposalType: hit.proposalType,
+				indexOrHash: postIdentifier,
+				network: hit.network as ENetwork
+			});
 
 	return (
 		<Link
@@ -94,7 +113,8 @@ function PostHit({ hit }: { hit: Post }) {
 				</div>
 				<h2 className='text-lg font-medium'>
 					<p className='text-sm font-medium'>
-						#{hit.index} {hit.title?.length > 90 ? `${hit.title?.slice(0, 90)}...` : hit?.title}
+						{isDemoDiscussion ? '' : `#${postIdentifier} `}
+						{hit.title?.length > 90 ? `${hit.title?.slice(0, 90)}...` : hit?.title}
 					</p>
 				</h2>
 				<div className={styles.post_content}>
@@ -171,23 +191,28 @@ function PostHit({ hit }: { hit: Post }) {
 }
 function UserHit({ hit }: { hit: User }) {
 	const t = useTranslations();
+	const displayName = hit.username || hit.displayName || (hit.email?.includes('@') ? hit.email.split('@')[0] : '') || 'Unknown user';
+	const bio = hit.profile?.bio || hit.profileDetails?.bio || t('Search.noBio');
+
+	// Prefer the canonical uid route, then username, then legacy objectID.
+	const userUrl = hit.uid ? `/user/uid/${hit.uid}` : hit.username ? `/user/username/${hit.username}` : `/user/uid/${hit.objectID}`;
 
 	return (
 		<Link
-			href={hit.username && `/user/username/${hit.username}`}
+			href={userUrl}
 			target='_blank'
 		>
 			<div className='flex gap-2 rounded-lg p-4 hover:bg-bg_pink/10'>
 				<Image
 					src={userIcon}
-					alt={hit.username}
+					alt={displayName}
 					width={60}
 					height={60}
 					className='rounded-full'
 				/>
 				<div>
-					<h2 className={styles.user_name}>{hit.username}</h2>
-					<p className='mt-2 text-sm text-text_primary'>{hit.profile?.bio || t('Search.noBio')}</p>
+					<h2 className={styles.user_name}>{displayName}</h2>
+					<p className='mt-2 text-sm text-text_primary'>{bio}</p>
 				</div>
 			</div>
 		</Link>
@@ -217,8 +242,7 @@ function useAddressSearch(query: string, activeIndex: ESearchType | null) {
 			try {
 				const { data } = await UserProfileClientService.fetchPublicUserByAddress({ address: query });
 				setUser(data ?? null);
-			} catch (error) {
-				console.error('Error fetching user by address:', error);
+			} catch {
 				setUser(null);
 			} finally {
 				setLoading(false);

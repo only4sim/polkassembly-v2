@@ -6,6 +6,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { StatusCodes } from 'http-status-codes';
 import { DemoAuthService } from '@/app/api/_api-services/demoAuthService';
 import { DemoPostService } from '@/app/api/_api-services/demoPostService';
+import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
+import { EProposalType } from '@/_shared/types';
+import { getSharedEnvVars } from '@/_shared/_utils/getSharedEnvVars';
+import { ALGOLIA_WRITE_API_KEY } from '@/app/api/_api-constants/apiEnvVars';
+import { algoliasearch } from 'algoliasearch';
 
 /**
  * GET /api/v2/posts
@@ -60,6 +65,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 	}
 
 	try {
+		const network = await getNetworkFromHeaders();
+		const { NEXT_PUBLIC_ALGOLIA_APP_ID } = getSharedEnvVars();
+
 		const post = await DemoPostService.createPost({
 			title,
 			content,
@@ -67,8 +75,50 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 			authorName: decoded.name ?? decoded.email ?? 'Anonymous',
 			topic: typeof topic === 'string' ? topic : undefined,
 			tags: Array.isArray(tags) ? tags.filter((t) => typeof t === 'string') : undefined,
-			allowedCommentor: typeof allowedCommentor === 'string' ? allowedCommentor : undefined
+			allowedCommentor: typeof allowedCommentor === 'string' ? allowedCommentor : undefined,
+			proposalType: EProposalType.DISCUSSION,
+			network
 		});
+
+		// Sync to Algolia after creation
+		if (NEXT_PUBLIC_ALGOLIA_APP_ID && ALGOLIA_WRITE_API_KEY) {
+			try {
+				const client = algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, ALGOLIA_WRITE_API_KEY);
+				const algoliaPost = {
+					objectID: post.id,
+					documentId: post.id,
+					firestoreId: post.id,
+					title: post.title,
+					content: post.content,
+					proposalType: EProposalType.DISCUSSION,
+					network,
+					topic: post.topic || '',
+					tags: post.tags || [],
+					dataSource: 'polkassembly',
+					userId: 0,
+					hash: post.id,
+					index: 0,
+					parsedContent: post.content,
+					titleAndContentHash: '',
+					proposer: '',
+					origin: '',
+					createdAtTimestamp: Math.floor(post.createdAt.getTime() / 1000),
+					updatedAtTimestamp: Math.floor(post.updatedAt.getTime() / 1000),
+					allowedCommentor: post.allowedCommentor || 'all'
+				};
+
+				await client.saveObject({
+					indexName: 'polkassembly_v2_posts',
+					body: algoliaPost
+				});
+
+				console.log(`[POST /api/v2/posts] Synced post ${post.id} to Algolia`);
+			} catch (algoliaError) {
+				console.warn('[POST /api/v2/posts] Failed to sync post to Algolia:', algoliaError);
+				// Don't fail the request if Algolia sync fails
+			}
+		}
+
 		return NextResponse.json({ post }, { status: StatusCodes.CREATED });
 	} catch (err) {
 		console.error('[POST /api/v2/posts] Failed to create post:', err);

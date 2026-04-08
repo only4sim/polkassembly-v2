@@ -27,6 +27,12 @@ export const updateUserAddressesAlgolia = async (addressData?: DocumentData): Pr
 		return;
 	}
 
+	const userIdentifier = (userData as DocumentData).id ?? (userData as DocumentData).uid ?? userDoc.id;
+	if (userIdentifier === undefined || userIdentifier === null) {
+		logger.error('User identifier is missing (id/uid/docId) - skipping Algolia address sync');
+		return;
+	}
+
 	// Get all addresses for this user
 	const addressesSnapshot = await db.collection('addresses').where('userId', '==', addressData.userId).get();
 
@@ -39,7 +45,7 @@ export const updateUserAddressesAlgolia = async (addressData?: DocumentData): Pr
 
 	await client.partialUpdateObject({
 		indexName: 'polkassembly_v2_users',
-		objectID: userData.id.toString(),
+		objectID: userIdentifier.toString(),
 		attributesToUpdate: {
 			addresses
 		}

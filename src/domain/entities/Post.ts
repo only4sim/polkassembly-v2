@@ -20,6 +20,10 @@ export interface DemoPost {
 	tags?: string[];
 	/** Who is allowed to comment: 'all', 'onchain_verified', or 'none'. */
 	allowedCommentor?: string;
+	/** Proposal type for Algolia indexing (e.g. 'Discussion'). */
+	proposalType?: string;
+	/** Network for the post (e.g. 'polkadot'). */
+	network?: string;
 	createdAt: Date;
 	updatedAt: Date;
 }
