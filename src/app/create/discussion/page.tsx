@@ -6,9 +6,13 @@ import { OPENGRAPH_METADATA } from '@/_shared/_constants/opengraphMetadata';
 import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import CreateDiscussionComponent from '@/app/create/discussion/Component/CreateDiscussion/CreateDiscussion';
+import DemoCreateDiscussion from '@/app/_shared-components/DemoPost/DemoCreateDiscussion';
 import { Metadata } from 'next';
 
 export async function generateMetadata(): Promise<Metadata> {
+	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
+		return { title: 'Create Discussion' };
+	}
 	const network = await getNetworkFromHeaders();
 	const { title } = OPENGRAPH_METADATA;
 
@@ -25,7 +29,7 @@ async function Discussion() {
 	return (
 		<div className='flex h-full w-full items-start justify-center p-8 sm:p-10'>
 			<div className='mx-auto w-full max-w-screen-lg rounded-lg bg-bg_modal p-4 shadow-lg sm:p-6'>
-				<CreateDiscussionComponent />
+				{process.env.ENABLE_BLOCKCHAIN !== 'true' ? <DemoCreateDiscussion /> : <CreateDiscussionComponent />}
 			</div>
 		</div>
 	);

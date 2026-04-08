@@ -22,6 +22,49 @@ npm install -g firebase-tools
 firebase --version
 ```
 
+## Environment Setup (.env)
+
+Create root env file:
+
+```bash
+cp .env.example .env.local 2>/dev/null || touch .env.local
+```
+
+Use at least the following values in `.env.local`:
+
+```bash
+# DemoOS feature flags
+ENABLE_BLOCKCHAIN=false
+
+# App defaults
+NEXT_PUBLIC_APP_ENV=development
+NEXT_PUBLIC_DEFAULT_NETWORK=polkadot
+
+# Algolia (used by browser + Next.js API routes)
+NEXT_PUBLIC_ALGOLIA_APP_ID=YOUR_ALGOLIA_APP_ID
+NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY=YOUR_ALGOLIA_SEARCH_ONLY_KEY
+ALGOLIA_WRITE_API_KEY=YOUR_ALGOLIA_WRITE_API_KEY
+```
+
+Create Functions env file:
+
+```bash
+touch functions/.env
+```
+
+Use at least the following values in `functions/.env`:
+
+```bash
+# Algolia (used by Firebase Functions)
+ALGOLIA_APP_ID=YOUR_ALGOLIA_APP_ID
+ALGOLIA_WRITE_API_KEY=YOUR_ALGOLIA_WRITE_API_KEY
+```
+
+Notes:
+
+- `NEXT_PUBLIC_ALGOLIA_APP_ID` and `ALGOLIA_APP_ID` should normally be the same value.
+- Restart both Next.js dev server and Firebase emulators after changing env files.
+
 Then, login Firebase:
 
 ```bash
@@ -73,6 +116,40 @@ npm run dev
 # or
 yarn dev
 ```
+
+## Algolia Setup Guide
+
+This project uses:
+
+- `polkassembly_v2_posts` index for posts/discussions
+- `polkassembly_v2_users` index for users
+
+For `polkassembly_v2_posts`, configure these facet/filter attributes in Algolia Dashboard:
+
+- `network` (required for network-level filtering)
+- `proposalType` (required for tabs: referenda/discussions/bounties/other)
+- `topic` (used by topic filter)
+- `tags` (used by tag filter)
+- `origin` (used by track filter)
+
+Recommended searchable fields:
+
+- `title`
+- `parsedContent`
+
+Discussion navigation requirement:
+
+- Post records must include `documentId` (Firestore Document ID).
+- Search result click uses this `documentId` to open `/discussions/{documentId}`.
+
+If old records were indexed before `documentId` was added, reindex posts so search results can route correctly.
+
+Quick verification checklist:
+
+1. Create a new discussion in local app.
+2. Confirm a record appears in `polkassembly_v2_posts` with `documentId` populated.
+3. Search for the discussion title.
+4. Click result and verify it opens `/discussions/{documentId}` (not numeric index).
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

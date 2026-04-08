@@ -15,6 +15,7 @@ import { ECacheRefreshType, EWallet, IV1User, IV1UserAddress, IV2User, IV2UserAd
 import { updatePostAlgolia } from './utils/updatePostAlgolia';
 import { updateUserAlgolia } from './utils/updateUserAlgolia';
 import { updateUserAddressesAlgolia } from './utils/updateUserAddressesAlgolia';
+
 export { onAuthUserCreated } from './onAuthUserCreated';
 
 // Load environment variables
@@ -127,7 +128,7 @@ export const onUserWritten = onDocumentWritten(
 				return;
 			}
 
-			await updateUserAlgolia(event.data.after.data());
+			await updateUserAlgolia(event.data.after.data(), event.data.after.id);
 
 			if (event?.data?.before?.exists) {
 				logger.info('User document was updated, no action needed');
@@ -257,7 +258,10 @@ export const onPostWritten = onDocumentWritten(
 				return;
 			}
 
-			await updatePostAlgolia(event.data.after.data());
+			await updatePostAlgolia({
+				id: event.data.after.id,
+				...event.data.after.data()
+			});
 		} catch (error) {
 			logger.error('Error in onPostWritten function:', error);
 		}

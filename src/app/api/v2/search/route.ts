@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { algoliasearch } from 'algoliasearch';
-import { ESearchType, IPublicUser } from '@/_shared/types';
+import { EProposalType, ESearchType, IPublicUser } from '@/_shared/types';
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
 import { getSharedEnvVars } from '@/_shared/_utils/getSharedEnvVars';
@@ -83,11 +83,11 @@ export const GET = withErrorHandling(async (req: NextRequest): Promise<NextRespo
 	switch (type) {
 		case ESearchType.POSTS:
 			indexName = 'polkassembly_v2_posts';
-			filters = `network:${network} AND (NOT proposalType:DISCUSSION AND NOT proposalType:GRANTS)`;
+			filters = `network:${network} AND (NOT proposalType:${EProposalType.DISCUSSION} AND NOT proposalType:${EProposalType.GRANT})`;
 			break;
 		case ESearchType.DISCUSSIONS:
 			indexName = 'polkassembly_v2_posts';
-			filters = `network:${network} AND (proposalType:DISCUSSION OR proposalType:GRANTS)`;
+			filters = `network:${network} AND (proposalType:${EProposalType.DISCUSSION} OR proposalType:${EProposalType.GRANT})`;
 			break;
 		case ESearchType.USERS:
 			indexName = 'polkassembly_v2_users';

@@ -3,7 +3,7 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import { useMemo } from 'react';
-import { ESearchType } from '@/_shared/types';
+import { EProposalType, ESearchType } from '@/_shared/types';
 
 export const useSearchConfig = ({ network, activeIndex, proposalTypeFilter }: { network: string; activeIndex: ESearchType | null; proposalTypeFilter?: ESearchType }) => {
 	const networkFilterQuery = useMemo(() => {
@@ -32,11 +32,11 @@ export const useSearchConfig = ({ network, activeIndex, proposalTypeFilter }: { 
 				break;
 			case ESearchType.OTHER:
 				filters.push(
-					'(NOT proposalType:DISCUSSION AND NOT proposalType:GRANTS AND NOT proposalType:Referendum AND NOT proposalType:ReferendumV2 AND NOT proposalType:Bounty AND NOT proposalType:ChildBounty)'
+					`(NOT proposalType:${EProposalType.DISCUSSION} AND NOT proposalType:${EProposalType.GRANT} AND NOT proposalType:Referendum AND NOT proposalType:ReferendumV2 AND NOT proposalType:Bounty AND NOT proposalType:ChildBounty)`
 				);
 				break;
 			case ESearchType.DISCUSSIONS:
-				filters.push('(proposalType:DISCUSSION OR proposalType:GRANTS)');
+				filters.push(`(proposalType:${EProposalType.DISCUSSION} OR proposalType:${EProposalType.GRANT})`);
 				break;
 			default:
 				break;
