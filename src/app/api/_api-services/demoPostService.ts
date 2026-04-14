@@ -28,6 +28,16 @@ if (!admin.apps.length) {
 const POSTS_COLLECTION = 'posts';
 
 function docToPost(id: string, data: admin.firestore.DocumentData): DemoPost {
+	// Deserialise the optional poll sub-document
+	let poll: DemoPost['poll'];
+	if (data.poll && typeof data.poll === 'object') {
+		poll = {
+			question: data.poll.question ?? '',
+			options: Array.isArray(data.poll.options) ? data.poll.options : [],
+			endDate: data.poll.endDate?.toDate ? data.poll.endDate.toDate() : undefined
+		};
+	}
+
 	return {
 		id,
 		title: data.title ?? '',
@@ -40,6 +50,7 @@ function docToPost(id: string, data: admin.firestore.DocumentData): DemoPost {
 		proposalType: data.proposalType ?? undefined,
 		network: data.network ?? undefined,
 		reactions: data.reactions ?? undefined,
+		poll,
 		createdAt: data.createdAt?.toDate() ?? new Date(),
 		updatedAt: data.updatedAt?.toDate() ?? new Date()
 	};
@@ -55,6 +66,11 @@ export interface CreateDemoPostInput {
 	allowedCommentor?: string;
 	proposalType?: string;
 	network?: string;
+	poll?: {
+		question: string;
+		options: string[];
+		endDate?: Date;
+	};
 }
 
 export class DemoPostService {
@@ -69,6 +85,17 @@ export class DemoPostService {
 	static async createPost(input: CreateDemoPostInput): Promise<DemoPost> {
 		const now = new Date();
 		const ts = admin.firestore.Timestamp.fromDate(now);
+
+		// Serialise the poll sub-document when provided
+		let pollPayload: Record<string, unknown> | undefined;
+		if (input.poll) {
+			pollPayload = {
+				question: input.poll.question,
+				options: input.poll.options,
+				...(input.poll.endDate ? { endDate: admin.firestore.Timestamp.fromDate(input.poll.endDate) } : {})
+			};
+		}
+
 		const ref = await DemoPostService.collection().add({
 			title: input.title.trim(),
 			content: input.content.trim(),
@@ -79,6 +106,7 @@ export class DemoPostService {
 			...(input.allowedCommentor ? { allowedCommentor: input.allowedCommentor } : {}),
 			...(input.proposalType ? { proposalType: input.proposalType } : {}),
 			...(input.network ? { network: input.network } : {}),
+			...(pollPayload ? { poll: pollPayload } : {}),
 			createdAt: ts,
 			updatedAt: ts
 		});
@@ -93,6 +121,7 @@ export class DemoPostService {
 			allowedCommentor: input.allowedCommentor,
 			proposalType: input.proposalType,
 			network: input.network,
+			poll: input.poll,
 			createdAt: now,
 			updatedAt: now
 		};

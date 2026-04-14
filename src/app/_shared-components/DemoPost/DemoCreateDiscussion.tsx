@@ -64,7 +64,7 @@ function DemoCreateDiscussion() {
 	const { setOpenSuccessModal, setSuccessModalContent } = useSuccessModal();
 
 	const handleSubmit = async (values: IWritePostFormFields) => {
-		const { title, description, tags, topic, allowedCommentor } = values;
+		const { title, description, tags, topic, allowedCommentor, isAddingPoll, pollTitle, pollOptions, pollEndDate } = values;
 		if (!title || !description) return;
 
 		const { currentUser } = clientAuth;
@@ -78,6 +78,20 @@ function DemoCreateDiscussion() {
 
 		try {
 			const token = await currentUser.getIdToken();
+
+			// Build optional poll payload
+			let pollPayload: { question: string; options: string[]; endDate?: string } | undefined;
+			if (isAddingPoll && pollTitle && pollTitle.trim()) {
+				const validOptions = (pollOptions ?? []).map((o) => o.trim()).filter(Boolean);
+				if (validOptions.length >= 2) {
+					pollPayload = {
+						question: pollTitle.trim(),
+						options: validOptions,
+						...(pollEndDate ? { endDate: pollEndDate.toISOString() } : {})
+					};
+				}
+			}
+
 			const res = await fetch('/api/v2/posts', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -86,7 +100,8 @@ function DemoCreateDiscussion() {
 					content: description.trim(),
 					topic,
 					tags: tags?.map((t) => t.value) ?? [],
-					allowedCommentor
+					allowedCommentor,
+					...(pollPayload ? { poll: pollPayload } : {})
 				})
 			});
 
