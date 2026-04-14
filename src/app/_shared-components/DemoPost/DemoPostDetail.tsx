@@ -110,7 +110,7 @@ function DemoPostBody({ post }: DemoPostBodyProps) {
 				if (!token) return;
 				const res = await fetch(`/api/v2/posts/${post.id}/reactions`, {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json', Authorization: `****** },
+					headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
 					body: JSON.stringify({ reaction })
 				});
 				if (!res.ok) throw new Error('Failed to react');
