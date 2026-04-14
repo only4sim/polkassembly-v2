@@ -332,3 +332,5 @@ export const onCommentWritten = onDocumentWritten(
 		}
 	}
 );
+
+export { castVote } from './castVote';

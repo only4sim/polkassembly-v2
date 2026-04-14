@@ -2,6 +2,8 @@
 // This software may be modified and distributed under the terms
 // of the Apache-2.0 license. See the LICENSE file for details.
 
+import { Poll } from './Poll';
+
 /**
  * DemoPost entity for DemoOS discussion posts.
  *
@@ -26,6 +28,8 @@ export interface DemoPost {
 	network?: string;
 	/** Map of authorUid → reaction type for post-level reactions. */
 	reactions?: Record<string, 'like' | 'dislike'>;
+	/** Optional poll attached to this post. */
+	poll?: Poll;
 	createdAt: Date;
 	updatedAt: Date;
 }

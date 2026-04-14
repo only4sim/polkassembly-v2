@@ -24,6 +24,7 @@ import { useDemoUser } from '@/hooks/useDemoUser';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 import DemoCommentSection from './DemoCommentSection';
+import DemoVoteSection from './DemoVoteSection';
 
 // MarkdownViewer is dynamically loaded to avoid SSR hydration issues
 const MarkdownViewer = dynamic(() => import('@ui/MarkdownViewer/MarkdownViewer').then((m) => m.MarkdownViewer), {
@@ -317,6 +318,14 @@ function DemoPostDetail({ post }: DemoPostDetailProps) {
 			{/* Main content */}
 			<div className='mx-auto max-w-7xl px-4 py-6 lg:px-16'>
 				<DemoPostBody post={post} />
+
+				{/* Poll / Vote section */}
+				{post.poll && (
+					<DemoVoteSection
+						postId={post.id}
+						poll={post.poll}
+					/>
+				)}
 
 				{/* Comments */}
 				<div className='mt-6 rounded-xl border border-primary_border bg-bg_modal'>

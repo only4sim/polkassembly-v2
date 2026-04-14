@@ -54,14 +54,41 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
-	const body = (await req.json().catch(() => ({}))) as { title?: string; content?: string; topic?: string; tags?: string[]; allowedCommentor?: string };
-	const { title, content, topic, tags, allowedCommentor } = body;
+	const body = (await req.json().catch(() => ({}))) as {
+		title?: string;
+		content?: string;
+		topic?: string;
+		tags?: string[];
+		allowedCommentor?: string;
+		poll?: { question?: string; options?: string[]; endDate?: string };
+	};
+	const { title, content, topic, tags, allowedCommentor, poll } = body;
 
 	if (!title || typeof title !== 'string' || !title.trim()) {
 		return NextResponse.json({ message: 'Title is required' }, { status: StatusCodes.BAD_REQUEST });
 	}
 	if (!content || typeof content !== 'string' || !content.trim()) {
 		return NextResponse.json({ message: 'Content is required' }, { status: StatusCodes.BAD_REQUEST });
+	}
+
+	// Validate poll if provided
+	let pollInput: { question: string; options: string[]; endDate?: Date } | undefined;
+	if (poll) {
+		if (!poll.question || typeof poll.question !== 'string' || !poll.question.trim()) {
+			return NextResponse.json({ message: 'Poll question is required' }, { status: StatusCodes.BAD_REQUEST });
+		}
+		if (!Array.isArray(poll.options) || poll.options.length < 2) {
+			return NextResponse.json({ message: 'Poll requires at least 2 options' }, { status: StatusCodes.BAD_REQUEST });
+		}
+		const filteredOptions = poll.options.filter((o) => typeof o === 'string' && o.trim());
+		if (filteredOptions.length < 2) {
+			return NextResponse.json({ message: 'Poll requires at least 2 non-empty options' }, { status: StatusCodes.BAD_REQUEST });
+		}
+		pollInput = {
+			question: poll.question.trim(),
+			options: filteredOptions.map((o) => o.trim()),
+			endDate: poll.endDate ? new Date(poll.endDate) : undefined
+		};
 	}
 
 	try {
@@ -77,7 +104,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 			tags: Array.isArray(tags) ? tags.filter((t) => typeof t === 'string') : undefined,
 			allowedCommentor: typeof allowedCommentor === 'string' ? allowedCommentor : undefined,
 			proposalType: EProposalType.DISCUSSION,
-			network
+			network,
+			poll: pollInput
 		});
 
 		// Sync to Algolia after creation
