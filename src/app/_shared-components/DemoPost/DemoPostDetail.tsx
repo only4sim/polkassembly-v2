@@ -11,6 +11,7 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { Separator } from '@ui/Separator';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@ui/Skeleton';
+import DemoCommentSection from './DemoCommentSection';
 
 const MarkdownViewer = dynamic(() => import('@ui/MarkdownViewer/MarkdownViewer').then((m) => m.MarkdownViewer), {
 	ssr: false,
@@ -121,6 +122,11 @@ function DemoPostDetail({ post }: DemoPostDetailProps) {
 			<div className='mx-auto max-w-7xl px-4 py-6 lg:px-16'>
 				<div className='rounded-xl border border-primary_border bg-bg_modal p-4 lg:p-6'>
 					<MarkdownViewer markdown={post.content} />
+				</div>
+
+				{/* Comments */}
+				<div className='mt-6 rounded-xl border border-primary_border bg-bg_modal'>
+					<DemoCommentSection postId={post.id} />
 				</div>
 			</div>
 		</div>
