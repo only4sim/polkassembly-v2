@@ -65,8 +65,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 		return NextResponse.json({ message: 'Post not found' }, { status: StatusCodes.NOT_FOUND });
 	}
 
-	const body = (await req.json().catch(() => ({}))) as { content?: string };
-	const { content } = body;
+	const body = (await req.json().catch(() => ({}))) as { content?: string; parentCommentId?: string };
+	const { content, parentCommentId } = body;
 
 	if (!content || typeof content !== 'string' || !content.trim()) {
 		return NextResponse.json({ message: 'Content is required' }, { status: StatusCodes.BAD_REQUEST });
@@ -75,6 +75,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 	try {
 		const comment = await DemoCommentService.addComment({
 			postId,
+			parentCommentId: typeof parentCommentId === 'string' ? parentCommentId : undefined,
 			authorUid: decoded.uid,
 			authorDisplayName: decoded.name ?? decoded.email ?? 'Anonymous',
 			content

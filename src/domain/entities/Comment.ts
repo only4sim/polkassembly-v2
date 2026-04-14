@@ -11,9 +11,13 @@
 export interface DemoComment {
 	id: string;
 	postId: string;
+	/** Set when this comment is a reply to another top-level comment. */
+	parentCommentId?: string;
 	authorUid: string;
 	authorDisplayName: string;
 	content: string;
+	/** Map of authorUid → reaction type. Stored directly on the comment document. */
+	reactions?: Record<string, 'like' | 'dislike'>;
 	createdAt: Date;
 	updatedAt: Date;
 }

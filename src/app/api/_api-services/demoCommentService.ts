@@ -30,9 +30,11 @@ function docToComment(id: string, data: admin.firestore.DocumentData, postId: st
 	return {
 		id,
 		postId,
+		parentCommentId: data.parentCommentId ?? undefined,
 		authorUid: data.authorUid ?? '',
 		authorDisplayName: data.authorDisplayName ?? '',
 		content: data.content ?? '',
+		reactions: data.reactions ?? undefined,
 		createdAt: data.createdAt?.toDate() ?? new Date(),
 		updatedAt: data.updatedAt?.toDate() ?? new Date()
 	};
@@ -40,6 +42,7 @@ function docToComment(id: string, data: admin.firestore.DocumentData, postId: st
 
 export interface CreateDemoCommentInput {
 	postId: string;
+	parentCommentId?: string;
 	authorUid: string;
 	authorDisplayName: string;
 	content: string;
@@ -53,7 +56,7 @@ export class DemoCommentService {
 	/**
 	 * List comments for a post, ordered by createdAt ascending.
 	 */
-	static async listComments(postId: string, limit = 100, cursor?: string): Promise<DemoComment[]> {
+	static async listComments(postId: string, limit = 200, cursor?: string): Promise<DemoComment[]> {
 		let query: admin.firestore.Query = DemoCommentService.commentsRef(postId).orderBy('createdAt', 'asc');
 
 		if (cursor) {
@@ -69,14 +72,14 @@ export class DemoCommentService {
 	}
 
 	/**
-	 * Add a new comment to a post.
+	 * Add a new comment to a post (or a reply to an existing comment).
 	 * The `commentCount` on the parent post is updated by the `onCommentWritten`
 	 * Cloud Function trigger to avoid double-counting.
 	 */
 	static async addComment(input: CreateDemoCommentInput): Promise<DemoComment> {
 		const now = new Date();
 		const ts = admin.firestore.Timestamp.fromDate(now);
-		const data = {
+		const data: admin.firestore.DocumentData = {
 			postId: input.postId,
 			authorUid: input.authorUid,
 			authorDisplayName: input.authorDisplayName,
@@ -85,11 +88,16 @@ export class DemoCommentService {
 			updatedAt: ts
 		};
 
+		if (input.parentCommentId) {
+			data.parentCommentId = input.parentCommentId;
+		}
+
 		const ref = await DemoCommentService.commentsRef(input.postId).add(data);
 
 		return {
 			id: ref.id,
 			postId: input.postId,
+			parentCommentId: input.parentCommentId,
 			authorUid: input.authorUid,
 			authorDisplayName: input.authorDisplayName,
 			content: input.content.trim(),
@@ -132,5 +140,39 @@ export class DemoCommentService {
 		if (data.authorUid !== callerUid) throw new Error('Forbidden');
 
 		await ref.delete();
+	}
+
+	/**
+	 * Toggle a like or dislike reaction on a comment.
+	 * - If the caller already has the same reaction, it is removed (toggle off).
+	 * - If the caller has a different reaction, it is replaced.
+	 * - Otherwise the reaction is added.
+	 *
+	 * Reactions are stored as a map field on the comment document:
+	 * `reactions: { [authorUid]: 'like' | 'dislike' }`
+	 */
+	static async toggleReaction(postId: string, commentId: string, callerUid: string, reaction: 'like' | 'dislike'): Promise<Record<string, 'like' | 'dislike'>> {
+		const ref = DemoCommentService.commentsRef(postId).doc(commentId);
+		const doc = await ref.get();
+		if (!doc.exists) throw new Error('Comment not found');
+
+		const data = doc.data()!;
+		const currentReactions = (data.reactions as Record<string, 'like' | 'dislike'>) ?? {};
+		const existingReaction = currentReactions[callerUid];
+
+		let updatedReactions: Record<string, 'like' | 'dislike'>;
+		if (existingReaction === reaction) {
+			// Same reaction — remove it (toggle off)
+			const { [callerUid]: _removed, ...rest } = currentReactions;
+			updatedReactions = rest as Record<string, 'like' | 'dislike'>;
+		} else {
+			// Different or no reaction — set new one
+			updatedReactions = { ...currentReactions, [callerUid]: reaction };
+		}
+
+		const ts = admin.firestore.Timestamp.fromDate(new Date());
+		await ref.update({ reactions: updatedReactions, updatedAt: ts });
+
+		return updatedReactions;
 	}
 }

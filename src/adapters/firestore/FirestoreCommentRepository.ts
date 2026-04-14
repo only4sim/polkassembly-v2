@@ -31,9 +31,11 @@ function docToComment(id: string, data: admin.firestore.DocumentData, postId: st
 	return {
 		id,
 		postId,
+		parentCommentId: data.parentCommentId ?? undefined,
 		authorUid: data.authorUid ?? '',
 		authorDisplayName: data.authorDisplayName ?? '',
 		content: data.content ?? '',
+		reactions: data.reactions ?? undefined,
 		createdAt: data.createdAt?.toDate() ?? new Date(),
 		updatedAt: data.updatedAt?.toDate() ?? new Date()
 	};
