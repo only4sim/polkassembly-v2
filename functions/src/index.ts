@@ -289,3 +289,46 @@ export const onUserAddressWritten = onDocumentWritten(
 		}
 	}
 );
+
+/**
+ * onCommentWritten — keeps the `commentCount` field on a DemoOS post in sync
+ * whenever a comment document is created or deleted under
+ * `posts/{postId}/comments/{commentId}`.
+ *
+ * The Next.js API routes already increment/decrement `commentCount` atomically,
+ * so this trigger acts as a safety net for any out-of-band writes (e.g. admin
+ * console edits, direct SDK calls) and makes the count eventually consistent.
+ */
+export const onCommentWritten = onDocumentWritten(
+	{
+		document: 'posts/{postId}/comments/{commentId}',
+		maxInstances: 10,
+		timeoutSeconds: 60
+	},
+	async (event) => {
+		try {
+			const { postId } = event.params;
+
+			const wasCreated = !event.data?.before?.exists && event.data?.after?.exists;
+			const wasDeleted = event.data?.before?.exists && !event.data?.after?.exists;
+
+			if (!wasCreated && !wasDeleted) {
+				// Update only — no count change needed
+				return;
+			}
+
+			const delta = wasCreated ? 1 : -1;
+
+			const { getFirestore, FieldValue } = await import('firebase-admin/firestore');
+			const db = getFirestore();
+
+			await db.collection('posts').doc(postId).update({
+				commentCount: FieldValue.increment(delta)
+			});
+
+			logger.info(`onCommentWritten: updated commentCount by ${delta} for post ${postId}`);
+		} catch (error) {
+			logger.error('Error in onCommentWritten function:', error);
+		}
+	}
+);
