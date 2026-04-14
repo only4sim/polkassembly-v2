@@ -152,7 +152,7 @@ function DemoPostBody({ post }: DemoPostBodyProps) {
 
 				{/* Gradient fade + Show More */}
 				{contentTall && !isExpanded && (
-					<div className='absolute bottom-10 left-0 right-0 h-16 bg-gradient-to-t from-bg_modal to-transparent' />
+					<div className='absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-bg_modal to-transparent' />
 				)}
 			</div>
 
