@@ -75,10 +75,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 	try {
 		await db.runTransaction(async (tx) => {
-			// Fetch the post
+			// --- All reads first (Firestore requirement) ---
 			const postRef = db.collection('posts').doc(postId);
-			const postDoc = await tx.get(postRef);
+			const voteRef = postRef.collection('votes').doc(uid);
+			const userRef = db.collection('users').doc(uid);
+			const statsRef = postRef.collection('stats').doc('votes');
 
+			const [postDoc, voteDoc, userDoc, statsDoc] = await Promise.all([tx.get(postRef), tx.get(voteRef), tx.get(userRef), tx.get(statsRef)]);
+
+			// Validate post exists and has a poll
 			if (!postDoc.exists) {
 				throw Object.assign(new Error('Post not found'), { code: 'not-found' });
 			}
@@ -97,22 +102,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 			}
 
 			// Check if user already voted
-			const voteRef = postRef.collection('votes').doc(uid);
-			const voteDoc = await tx.get(voteRef);
 			if (voteDoc.exists) {
 				throw Object.assign(new Error('You have already voted on this post'), { code: 'already-voted' });
 			}
 
 			// Check pointsBalance >= 1
-			const userRef = db.collection('users').doc(uid);
-			const userDoc = await tx.get(userRef);
 			const pointsBalance = (userDoc.data()?.pointsBalance as number) ?? 0;
 			if (pointsBalance < 1) {
 				throw Object.assign(new Error('You need at least 1 point to vote'), { code: 'insufficient-points' });
 			}
 
-			// Write vote
+			// --- All writes after all reads ---
 			const now = admin.firestore.Timestamp.now();
+
+			// Write vote
 			tx.set(voteRef, {
 				uid,
 				selectedOptions: options,
@@ -120,9 +123,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 			});
 
 			// Update aggregated stats
-			const statsRef = postRef.collection('stats').doc('votes');
-			const statsDoc = await tx.get(statsRef);
-
 			if (!statsDoc.exists) {
 				const optionCounts = new Array(poll.options.length).fill(0) as number[];
 				options.forEach((idx) => {

@@ -48,10 +48,15 @@ export const castVote = onCall(
 
 		try {
 			await db.runTransaction(async (tx) => {
-				// 3. Fetch the post document
+				// 3–6. Perform ALL reads before any writes (Firestore requirement)
 				const postRef = db.collection('posts').doc(postId);
-				const postDoc = await tx.get(postRef);
+				const voteRef = postRef.collection('votes').doc(uid);
+				const userRef = db.collection('users').doc(uid);
+				const statsRef = postRef.collection('stats').doc('votes');
 
+				const [postDoc, voteDoc, userDoc, statsDoc] = await Promise.all([tx.get(postRef), tx.get(voteRef), tx.get(userRef), tx.get(statsRef)]);
+
+				// 3. Validate post and poll
 				if (!postDoc.exists) {
 					throw new HttpsError('not-found', 'Post not found.');
 				}
@@ -70,23 +75,17 @@ export const castVote = onCall(
 				}
 
 				// 5. Check if the user has already voted
-				const voteRef = postRef.collection('votes').doc(uid);
-				const voteDoc = await tx.get(voteRef);
-
 				if (voteDoc.exists) {
 					throw new HttpsError('already-exists', 'You have already voted on this post.');
 				}
 
 				// 6. Check pointsBalance >= 1
-				const userRef = db.collection('users').doc(uid);
-				const userDoc = await tx.get(userRef);
-
 				const pointsBalance = (userDoc.data()?.pointsBalance as number) ?? 0;
 				if (pointsBalance < 1) {
 					throw new HttpsError('permission-denied', 'You need at least 1 point to vote.');
 				}
 
-				// 7. Write the vote document
+				// 7. Write the vote document (all writes come after all reads)
 				const now = Timestamp.now();
 				tx.set(voteRef, {
 					uid,
@@ -95,8 +94,6 @@ export const castVote = onCall(
 				});
 
 				// 8. Update aggregated stats
-				const statsRef = postRef.collection('stats').doc('votes');
-				const statsDoc = await tx.get(statsRef);
 
 				if (!statsDoc.exists) {
 					// Initialise stats document
