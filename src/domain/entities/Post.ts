@@ -24,6 +24,8 @@ export interface DemoPost {
 	proposalType?: string;
 	/** Network for the post (e.g. 'polkadot'). */
 	network?: string;
+	/** Map of authorUid → reaction type for post-level reactions. */
+	reactions?: Record<string, 'like' | 'dislike'>;
 	createdAt: Date;
 	updatedAt: Date;
 }

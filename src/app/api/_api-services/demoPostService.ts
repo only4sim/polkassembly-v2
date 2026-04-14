@@ -39,6 +39,7 @@ function docToPost(id: string, data: admin.firestore.DocumentData): DemoPost {
 		allowedCommentor: data.allowedCommentor ?? undefined,
 		proposalType: data.proposalType ?? undefined,
 		network: data.network ?? undefined,
+		reactions: data.reactions ?? undefined,
 		createdAt: data.createdAt?.toDate() ?? new Date(),
 		updatedAt: data.updatedAt?.toDate() ?? new Date()
 	};
@@ -124,5 +125,36 @@ export class DemoPostService {
 		const doc = await DemoPostService.collection().doc(id).get();
 		if (!doc.exists) return null;
 		return docToPost(doc.id, doc.data()!);
+	}
+
+	/**
+	 * Toggle a like or dislike reaction on a post.
+	 * - If the caller already has the same reaction, it is removed (toggle off).
+	 * - If the caller has a different reaction, it is replaced.
+	 * - Otherwise the reaction is added.
+	 *
+	 * Returns the updated reactions map.
+	 */
+	static async togglePostReaction(postId: string, callerUid: string, reaction: 'like' | 'dislike'): Promise<Record<string, 'like' | 'dislike'>> {
+		const ref = DemoPostService.collection().doc(postId);
+		const doc = await ref.get();
+		if (!doc.exists) throw new Error('Post not found');
+
+		const data = doc.data()!;
+		const currentReactions = (data.reactions as Record<string, 'like' | 'dislike'>) ?? {};
+		const existingReaction = currentReactions[callerUid];
+
+		let updatedReactions: Record<string, 'like' | 'dislike'>;
+		if (existingReaction === reaction) {
+			const { [callerUid]: _removed, ...rest } = currentReactions;
+			updatedReactions = rest as Record<string, 'like' | 'dislike'>;
+		} else {
+			updatedReactions = { ...currentReactions, [callerUid]: reaction };
+		}
+
+		const ts = admin.firestore.Timestamp.fromDate(new Date());
+		await ref.update({ reactions: updatedReactions, updatedAt: ts });
+
+		return updatedReactions;
 	}
 }
