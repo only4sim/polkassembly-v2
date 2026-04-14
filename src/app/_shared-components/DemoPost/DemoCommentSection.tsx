@@ -309,7 +309,7 @@ function DemoCommentSection({ postId }: DemoCommentSectionProps) {
 	}, []);
 
 	return (
-		<div className='mt-6'>
+		<div className='pt-6'>
 			{/* Section header */}
 			<div className='mb-4 flex items-center gap-x-2 px-6'>
 				<MessageSquare

@@ -70,7 +70,8 @@ export class DemoCommentService {
 
 	/**
 	 * Add a new comment to a post.
-	 * Also atomically increments the `commentCount` field on the parent post document.
+	 * The `commentCount` on the parent post is updated by the `onCommentWritten`
+	 * Cloud Function trigger to avoid double-counting.
 	 */
 	static async addComment(input: CreateDemoCommentInput): Promise<DemoComment> {
 		const now = new Date();
@@ -85,13 +86,6 @@ export class DemoCommentService {
 		};
 
 		const ref = await DemoCommentService.commentsRef(input.postId).add(data);
-
-		// Atomically increment the comment count on the parent post
-		await admin
-			.firestore()
-			.collection(POSTS_COLLECTION)
-			.doc(input.postId)
-			.update({ commentCount: admin.firestore.FieldValue.increment(1), updatedAt: ts });
 
 		return {
 			id: ref.id,
@@ -126,7 +120,8 @@ export class DemoCommentService {
 	/**
 	 * Delete a comment.
 	 * Verifies the caller owns the comment before deleting.
-	 * Also atomically decrements the `commentCount` field on the parent post.
+	 * The `commentCount` on the parent post is updated by the `onCommentWritten`
+	 * Cloud Function trigger to avoid double-counting.
 	 */
 	static async deleteComment(postId: string, commentId: string, callerUid: string): Promise<void> {
 		const ref = DemoCommentService.commentsRef(postId).doc(commentId);
@@ -136,14 +131,6 @@ export class DemoCommentService {
 		const data = doc.data()!;
 		if (data.authorUid !== callerUid) throw new Error('Forbidden');
 
-		const ts = admin.firestore.Timestamp.fromDate(new Date());
 		await ref.delete();
-
-		// Atomically decrement the comment count on the parent post
-		await admin
-			.firestore()
-			.collection(POSTS_COLLECTION)
-			.doc(postId)
-			.update({ commentCount: admin.firestore.FieldValue.increment(-1), updatedAt: ts });
 	}
 }

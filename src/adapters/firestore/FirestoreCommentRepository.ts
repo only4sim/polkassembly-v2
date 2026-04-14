@@ -79,12 +79,6 @@ export class FirestoreCommentRepository implements CommentRepository {
 		};
 		const ref = await this.commentsRef(input.postId).add(data);
 
-		// Atomically increment the comment count on the parent post
-		await this.db
-			.collection('posts')
-			.doc(input.postId)
-			.update({ commentCount: admin.firestore.FieldValue.increment(1), updatedAt: ts });
-
 		return {
 			id: ref.id,
 			postId: input.postId,
@@ -99,21 +93,17 @@ export class FirestoreCommentRepository implements CommentRepository {
 	async updateComment(postId: string, commentId: string, updates: UpdateCommentInput): Promise<DemoComment> {
 		const ts = admin.firestore.Timestamp.fromDate(new Date());
 		const ref = this.commentsRef(postId).doc(commentId);
-		await ref.update({ content: updates.content.trim(), updatedAt: ts });
+
+		// Check existence before attempting update
 		const doc = await ref.get();
 		if (!doc.exists) throw new Error('Comment not found');
-		return docToComment(doc.id, doc.data()!, postId);
+
+		await ref.update({ content: updates.content.trim(), updatedAt: ts });
+		return docToComment(commentId, { ...doc.data()!, content: updates.content.trim(), updatedAt: ts }, postId);
 	}
 
 	async deleteComment(postId: string, commentId: string): Promise<void> {
-		const ts = admin.firestore.Timestamp.fromDate(new Date());
 		await this.commentsRef(postId).doc(commentId).delete();
-
-		// Atomically decrement the comment count on the parent post
-		await this.db
-			.collection('posts')
-			.doc(postId)
-			.update({ commentCount: admin.firestore.FieldValue.increment(-1), updatedAt: ts });
 	}
 
 	async countComments(postId: string): Promise<number> {
