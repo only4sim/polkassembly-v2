@@ -56,7 +56,7 @@ export class DemoCommentService {
 	/**
 	 * List comments for a post, ordered by createdAt ascending.
 	 */
-	static async listComments(postId: string, limit = 200, cursor?: string): Promise<DemoComment[]> {
+	static async listComments(postId: string, limit = 100, cursor?: string): Promise<DemoComment[]> {
 		let query: admin.firestore.Query = DemoCommentService.commentsRef(postId).orderBy('createdAt', 'asc');
 
 		if (cursor) {

@@ -223,7 +223,7 @@ const DemoSingleComment = memo(function DemoSingleComment({ comment, replies, cu
 	}, [comment.id, toast]);
 
 	const visibleReplies = showAllReplies ? (replies ?? []) : (replies ?? []).slice(0, 1);
-	const hiddenRepliesCount = (replies?.length ?? 0) - 1;
+	const hiddenRepliesCount = Math.max(0, (replies?.length ?? 0) - 1);
 
 	return (
 		<div
@@ -413,8 +413,8 @@ const DemoSingleComment = memo(function DemoSingleComment({ comment, replies, cu
 					</div>
 				)}
 
-				{/* Replies */}
-				{(replies?.length ?? 0) > 0 && (
+				{/* Replies — only one level of nesting is supported */}
+				{!isReply && (replies?.length ?? 0) > 0 && (
 					<div className='mt-3 flex flex-col gap-y-3 border-l border-border_grey pl-4'>
 						{visibleReplies.map((reply) => (
 							<DemoSingleComment
