@@ -6,6 +6,9 @@ import * as admin from 'firebase-admin';
 import { FIREBASE_SERVICE_ACC_CONFIG } from '@/app/api/_api-constants/apiEnvVars';
 import { DemoComment } from '@/domain/entities/Comment';
 
+const COMMENT_NOT_FOUND_ERROR = 'Comment not found';
+const FORBIDDEN_ERROR = 'Forbidden';
+
 if (process.env.NODE_ENV === 'development') {
 	process.env.FIREBASE_AUTH_EMULATOR_HOST ||= 'localhost:9099';
 	process.env.FIRESTORE_EMULATOR_HOST ||= 'localhost:8080';
@@ -56,7 +59,8 @@ export class DemoCommentService {
 	/**
 	 * List comments for a post, ordered by createdAt ascending.
 	 */
-	static async listComments(postId: string, limit = 100, cursor?: string): Promise<DemoComment[]> {
+	static async listComments(postId: string, limit?: number, cursor?: string): Promise<DemoComment[]> {
+		const finalLimit = limit ?? 100;
 		let query: admin.firestore.Query = DemoCommentService.commentsRef(postId).orderBy('createdAt', 'asc');
 
 		if (cursor) {
@@ -66,7 +70,7 @@ export class DemoCommentService {
 			}
 		}
 
-		query = query.limit(limit);
+		query = query.limit(finalLimit);
 		const snapshot = await query.get();
 		return snapshot.docs.map((doc) => docToComment(doc.id, doc.data(), postId));
 	}
@@ -114,10 +118,10 @@ export class DemoCommentService {
 	static async updateComment(postId: string, commentId: string, callerUid: string, content: string): Promise<DemoComment> {
 		const ref = DemoCommentService.commentsRef(postId).doc(commentId);
 		const doc = await ref.get();
-		if (!doc.exists) throw new Error('Comment not found');
+		if (!doc.exists) throw new Error(COMMENT_NOT_FOUND_ERROR);
 
 		const data = doc.data()!;
-		if (data.authorUid !== callerUid) throw new Error('Forbidden');
+		if (data.authorUid !== callerUid) throw new Error(FORBIDDEN_ERROR);
 
 		const ts = admin.firestore.Timestamp.fromDate(new Date());
 		await ref.update({ content: content.trim(), updatedAt: ts });
@@ -134,10 +138,10 @@ export class DemoCommentService {
 	static async deleteComment(postId: string, commentId: string, callerUid: string): Promise<void> {
 		const ref = DemoCommentService.commentsRef(postId).doc(commentId);
 		const doc = await ref.get();
-		if (!doc.exists) throw new Error('Comment not found');
+		if (!doc.exists) throw new Error(COMMENT_NOT_FOUND_ERROR);
 
 		const data = doc.data()!;
-		if (data.authorUid !== callerUid) throw new Error('Forbidden');
+		if (data.authorUid !== callerUid) throw new Error(FORBIDDEN_ERROR);
 
 		await ref.delete();
 	}
@@ -162,9 +166,9 @@ export class DemoCommentService {
 
 		let updatedReactions: Record<string, 'like' | 'dislike'>;
 		if (existingReaction === reaction) {
-			// Same reaction — remove it (toggle off)
-			const { [callerUid]: _removed, ...rest } = currentReactions;
-			updatedReactions = rest as Record<string, 'like' | 'dislike'>;
+			const updatedReactionsCopy = { ...currentReactions };
+			delete updatedReactionsCopy[callerUid];
+			updatedReactions = updatedReactionsCopy;
 		} else {
 			// Different or no reaction — set new one
 			updatedReactions = { ...currentReactions, [callerUid]: reaction };

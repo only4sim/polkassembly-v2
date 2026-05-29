@@ -5,7 +5,6 @@ import { ESocial, IPublicUser } from '@/_shared/types';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ValidatorService } from '@/_shared/_services/validator_service';
-import { getSharedEnvVars } from '@/_shared/_utils/getSharedEnvVars';
 import Image from 'next/image';
 import ProfileRect from '@assets/profile/profile-rect.png';
 import UserIcon from '@assets/profile/user-icon.svg';
@@ -61,7 +60,6 @@ function EditProfile({ onSuccess, userProfileData, onClose }: { userProfileData:
 	const t = useTranslations();
 	const { user } = useUser();
 	const formData = useForm<z.infer<typeof zodFormSchema>>();
-	const { NEXT_PUBLIC_IMBB_KEY } = getSharedEnvVars();
 	const [isLoading, setIsLoading] = useState(false);
 	const [coverImageUploading, setCoverImageUploading] = useState(false);
 	const [profileImageUploading, setProfileImageUploading] = useState(false);
@@ -69,24 +67,38 @@ function EditProfile({ onSuccess, userProfileData, onClose }: { userProfileData:
 	const [coverImage, setCoverImage] = useState<string | null>(userProfileData.profileDetails.coverImage || null);
 	const [profileImage, setProfileImage] = useState<string | null>(userProfileData.profileDetails.image || null);
 
-	const imgbbUrl = `https://api.imgbb.com/1/upload?key=${NEXT_PUBLIC_IMBB_KEY}`;
-
 	const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (file) {
 			const form = new FormData();
 			form.append('image', file, file.name);
 			setCoverImageUploading(true);
-			const res = await fetch(imgbbUrl, {
-				body: form,
-				method: 'POST'
-			});
-			const uploadData = await res.json();
-			if (uploadData?.success) {
-				formData.setValue('coverImage', uploadData.data.url);
-				setCoverImage(uploadData.data.url);
+			try {
+				const res = await fetch('/api/v2/upload', {
+					body: form,
+					method: 'POST'
+				});
+				const uploadData = await res.json();
+
+				if (!res.ok) {
+					console.error('Cover image upload failed - HTTP error:', {
+						status: res.status,
+						data: uploadData
+					});
+					return;
+				}
+
+				if (uploadData?.success) {
+					formData.setValue('coverImage', uploadData.data.url);
+					setCoverImage(uploadData.data.url);
+				} else {
+					console.error('Cover image upload failed - API error:', uploadData);
+				}
+			} catch (error) {
+				console.error('Cover image upload error:', error);
+			} finally {
+				setCoverImageUploading(false);
 			}
-			setCoverImageUploading(false);
 		}
 	};
 
@@ -96,16 +108,32 @@ function EditProfile({ onSuccess, userProfileData, onClose }: { userProfileData:
 			const form = new FormData();
 			form.append('image', file, file.name);
 			setProfileImageUploading(true);
-			const res = await fetch(imgbbUrl, {
-				body: form,
-				method: 'POST'
-			});
-			const uploadData = await res.json();
-			if (uploadData?.success) {
-				formData.setValue('image', uploadData.data.url);
-				setProfileImage(uploadData.data.url);
+			try {
+				const res = await fetch('/api/v2/upload', {
+					body: form,
+					method: 'POST'
+				});
+				const uploadData = await res.json();
+
+				if (!res.ok) {
+					console.error('Profile image upload failed - HTTP error:', {
+						status: res.status,
+						data: uploadData
+					});
+					return;
+				}
+
+				if (uploadData?.success) {
+					formData.setValue('image', uploadData.data.url);
+					setProfileImage(uploadData.data.url);
+				} else {
+					console.error('Profile image upload failed - API error:', uploadData);
+				}
+			} catch (error) {
+				console.error('Profile image upload error:', error);
+			} finally {
+				setProfileImageUploading(false);
 			}
-			setProfileImageUploading(false);
 		}
 	};
 

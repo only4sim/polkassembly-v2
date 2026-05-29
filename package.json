@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "next dev --turbopack",
 		"dev:classic": "next dev",
-		"build": "next build",
+		"build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
 		"start": "next start",
 		"lint": "next lint",
 		"lint:fix": "next lint --fix",
@@ -158,13 +158,8 @@
 		"typescript": "5.4.5"
 	},
 	"lint-staged": {
-		"**/*.(ts|tsx|js|jsx)": [
-			"yarn eslint --fix",
-			"yarn prettier --write"
-		],
-		"**/*.(md|css|scss|html)": [
-			"yarn prettier --write"
-		]
+		"**/*.(ts|tsx|js|jsx)": ["yarn eslint --fix", "yarn prettier --write"],
+		"**/*.(md|css|scss|html)": ["yarn prettier --write"]
 	},
 	"resolutions": {
 		"@types/react": "^19.0.1",

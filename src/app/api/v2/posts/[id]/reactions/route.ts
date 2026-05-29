@@ -29,6 +29,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
+	const { uid } = decoded;
+
 	const body = (await req.json().catch(() => ({}))) as { reaction?: string };
 	const { reaction } = body;
 
@@ -37,10 +39,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 	}
 
 	try {
-		const reactions = await DemoPostService.togglePostReaction(postId, decoded.uid, reaction);
+		const reactions = await DemoPostService.togglePostReaction(postId, uid, reaction);
 		return NextResponse.json({ reactions });
 	} catch (err) {
-		const message = (err as Error).message;
+		const { message } = err as Error;
 		if (message === 'Post not found') {
 			return NextResponse.json({ message: 'Post not found' }, { status: StatusCodes.NOT_FOUND });
 		}

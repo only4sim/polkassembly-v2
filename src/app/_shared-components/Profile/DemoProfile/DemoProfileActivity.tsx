@@ -32,7 +32,7 @@ function DemoProfileActivity() {
 					height={300}
 					priority
 				/>
-				<p className='mb-2 mt-0 text-text_secondary'>{t('Votes.noData')}</p>
+				<p className='text-text_secondary mb-2 mt-0'>{t('Votes.noData')}</p>
 			</div>
 		</div>
 	);

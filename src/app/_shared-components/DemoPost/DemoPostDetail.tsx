@@ -111,7 +111,7 @@ function DemoPostBody({ post }: DemoPostBodyProps) {
 				if (!token) return;
 				const res = await fetch(`/api/v2/posts/${post.id}/reactions`, {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+					headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ reaction })
 				});
 				if (!res.ok) throw new Error('Failed to react');
@@ -152,9 +152,7 @@ function DemoPostBody({ post }: DemoPostBodyProps) {
 				</div>
 
 				{/* Gradient fade + Show More */}
-				{contentTall && !isExpanded && (
-					<div className='absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-bg_modal to-transparent' />
-				)}
+				{contentTall && !isExpanded && <div className='absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-bg_modal to-transparent' />}
 			</div>
 
 			{contentTall && (

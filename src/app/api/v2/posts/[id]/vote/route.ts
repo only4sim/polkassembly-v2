@@ -56,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
-	const uid = decoded.uid;
+	const { uid } = decoded;
 
 	// Parse body
 	const body = (await req.json().catch(() => ({}))) as { selectedOptions?: unknown };

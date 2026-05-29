@@ -56,9 +56,8 @@ import { useUser } from '@/hooks/useUser';
 import { debounce, throttle } from '@/_shared/_utils/debounceThrottle';
 import ImageUploadDialog from './ImageUploadDialog';
 
-const { NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY, NEXT_PUBLIC_IMBB_KEY } = getSharedEnvVars();
-const algoliaClient =
-	NEXT_PUBLIC_ALGOLIA_APP_ID && NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY ? algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY) : null;
+const { NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY } = getSharedEnvVars();
+const algoliaClient = NEXT_PUBLIC_ALGOLIA_APP_ID && NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY ? algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY) : null;
 const MAX_MENTION_SUGGESTIONS = 5;
 const RECT_ELLIPSIS_WIDTH = 25;
 
@@ -388,15 +387,32 @@ export default function InitializedMDXEditor({ editorRef, ...props }: { editorRe
 	const imageUploadHandler = useCallback(async (file: File) => {
 		const form = new FormData();
 		form.append('image', file, file.name);
-		const res = await fetch(`https://api.imgbb.com/1/upload?key=${NEXT_PUBLIC_IMBB_KEY}`, {
-			body: form,
-			method: 'POST'
-		});
-		const uploadData = await res.json();
-		if (uploadData?.success) {
-			return uploadData.data.url;
+		try {
+			const res = await fetch('/api/v2/upload', {
+				body: form,
+				method: 'POST'
+			});
+			const uploadData = await res.json();
+
+			// Check both response status and success flag
+			if (!res.ok) {
+				console.error('Image upload failed - HTTP error:', {
+					status: res.status,
+					data: uploadData
+				});
+				return undefined;
+			}
+
+			if (uploadData?.success) {
+				return uploadData.data.url;
+			}
+
+			console.error('Image upload failed - API error:', uploadData);
+			return undefined;
+		} catch (error) {
+			console.error('Image upload error:', error);
+			return undefined;
 		}
-		return undefined;
 	}, []);
 
 	// Memoize YouTube directive to prevent recreation on every render

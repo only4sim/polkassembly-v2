@@ -33,5 +33,29 @@
       "host": "0.0.0.0"
     },
     "singleProjectMode": true
-  }
+  },
+  "apphosting": [
+    {
+      "backendId": "cbs-demoos-app",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ]
+    },
+    {
+      "backendId": "cbs-demoos-app",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ]
+    }
+  ]
 }

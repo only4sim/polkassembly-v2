@@ -33,9 +33,7 @@ function Login() {
 					</DialogTitle>
 					<DialogDescription className='sr-only'>Login or create an account</DialogDescription>
 				</DialogHeader>
-				<div className='sm:px-4'>
-					{isBlockchainEnabled ? <LoginComponent isModal /> : <DemoAuthLogin isModal />}
-				</div>
+				<div className='sm:px-4'>{isBlockchainEnabled ? <LoginComponent isModal /> : <DemoAuthLogin isModal />}</div>
 			</DialogContent>
 		</Dialog>
 	);

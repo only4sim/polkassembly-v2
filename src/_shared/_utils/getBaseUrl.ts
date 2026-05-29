@@ -7,11 +7,31 @@
 import { headers } from 'next/headers';
 
 export async function getBaseUrl(): Promise<string> {
-	if (global?.window) return `${global.window.location.origin}/api/v2`;
+	// 1. 如果在浏览器端运行，直接使用当前窗口域名
+	if (typeof window !== 'undefined') return `${window.location.origin}/api/v2`;
 
-	const headersList = await headers();
-	const domain = headersList.get('host') || '';
-	const protocol = headersList.get('x-forwarded-proto') || 'https';
+	// 2. 优先读取我们手动锁定的环境变量（绝对安全，不会被代理层篡改）
+	if (process.env.NEXT_PUBLIC_SITE_URL) {
+		// 移除可能存在的末尾斜杠，保证拼接正确
+		const baseUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
+		return `${baseUrl}/api/v2`;
+	}
 
-	return `${protocol}://${domain}/api/v2`;
+	// 3. 作为后备，从服务端请求头中智能提取
+	try {
+		const headersList = await headers();
+
+		// 💡 核心修复：优先读取 x-forwarded-host，它通常保存了用户在浏览器里输入的原始域名
+		const domain = headersList.get('x-forwarded-host') || headersList.get('host') || '';
+		const protocol = headersList.get('x-forwarded-proto') || 'https';
+
+		if (domain) {
+			return `${protocol}://${domain}/api/v2`;
+		}
+	} catch {
+		// 在 next build 静态打包期间调用 headers() 会报错，这里做个静默兜底
+	}
+
+	// 4. 本地环境/构建时的绝对兜底
+	return 'http://localhost:3000/api/v2';
 }

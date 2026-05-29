@@ -521,10 +521,7 @@ function DemoCommentSection({ postId }: DemoCommentSectionProps) {
 		<div className='pt-6'>
 			{/* Section header */}
 			<div className='mb-4 flex items-center gap-x-2 px-6'>
-				<p className='text-xl font-semibold text-text_primary'>
-					Comments{' '}
-					{!fetchLoading && <span className='text-base font-normal'>({topLevelComments.length})</span>}
-				</p>
+				<p className='text-xl font-semibold text-text_primary'>Comments {!fetchLoading && <span className='text-base font-normal'>({topLevelComments.length})</span>}</p>
 			</div>
 
 			{/* Comments list */}

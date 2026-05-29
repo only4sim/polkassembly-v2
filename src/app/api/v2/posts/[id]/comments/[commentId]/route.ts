@@ -7,6 +7,8 @@ import { StatusCodes } from 'http-status-codes';
 import { DemoCommentService } from '@/app/api/_api-services/demoCommentService';
 import { DemoAuthService } from '@/app/api/_api-services/demoAuthService';
 
+const COMMENT_NOT_FOUND_MESSAGE = 'Comment not found';
+
 /**
  * PATCH /api/v2/posts/[id]/comments/[commentId]
  * Update the content of a comment. Caller must own the comment.
@@ -27,6 +29,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
+	const { uid } = decoded;
+
 	const body = (await req.json().catch(() => ({}))) as { content?: string };
 	const { content } = body;
 
@@ -35,12 +39,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 	}
 
 	try {
-		const comment = await DemoCommentService.updateComment(postId, commentId, decoded.uid, content);
+		const comment = await DemoCommentService.updateComment(postId, commentId, uid, content);
 		return NextResponse.json({ comment });
 	} catch (err) {
-		const message = (err as Error).message;
-		if (message === 'Comment not found') {
-			return NextResponse.json({ message: 'Comment not found' }, { status: StatusCodes.NOT_FOUND });
+		const { message } = err as Error;
+		if (message === COMMENT_NOT_FOUND_MESSAGE) {
+			return NextResponse.json({ message: COMMENT_NOT_FOUND_MESSAGE }, { status: StatusCodes.NOT_FOUND });
 		}
 		if (message === 'Forbidden') {
 			return NextResponse.json({ message: 'Forbidden' }, { status: StatusCodes.FORBIDDEN });
@@ -68,13 +72,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
+	const { uid } = decoded;
+
 	try {
-		await DemoCommentService.deleteComment(postId, commentId, decoded.uid);
+		await DemoCommentService.deleteComment(postId, commentId, uid);
 		return NextResponse.json({ message: 'Comment deleted' });
 	} catch (err) {
-		const message = (err as Error).message;
-		if (message === 'Comment not found') {
-			return NextResponse.json({ message: 'Comment not found' }, { status: StatusCodes.NOT_FOUND });
+		const { message } = err as Error;
+		if (message === COMMENT_NOT_FOUND_MESSAGE) {
+			return NextResponse.json({ message: COMMENT_NOT_FOUND_MESSAGE }, { status: StatusCodes.NOT_FOUND });
 		}
 		if (message === 'Forbidden') {
 			return NextResponse.json({ message: 'Forbidden' }, { status: StatusCodes.FORBIDDEN });

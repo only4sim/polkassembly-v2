@@ -29,7 +29,7 @@ export const castVote = onCall(
 			throw new HttpsError('unauthenticated', 'You must be logged in to vote.');
 		}
 
-		const uid = request.auth.uid;
+		const { uid } = request.auth;
 		const { postId, selectedOptions } = request.data as { postId?: string; selectedOptions?: unknown };
 
 		// 2. Input validation

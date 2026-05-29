@@ -23,9 +23,7 @@ import { OnChainDbService } from '../onchain_db_service';
 import { OffChainDbService } from '../offchain_db_service';
 import { AlgoliaService } from '../algolia_service';
 
-if (!TOOLS_PASSPHRASE) {
-	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'TOOLS_PASSPHRASE is not set');
-}
+const isWebhookServiceConfigured = Boolean(TOOLS_PASSPHRASE);
 
 // TODO: add hooks for user creation and settings update
 
@@ -132,6 +130,10 @@ export class WebhookService {
 	} as const;
 
 	static async handleIncomingEvent({ event, body, network }: { event: string; body: unknown; network: ENetwork }) {
+		if (!isWebhookServiceConfigured) {
+			throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'TOOLS_PASSPHRASE is not set');
+		}
+
 		const { webhookEvent } = this.zodParamsSchema.parse({ webhookEvent: event });
 		const params = this.zodEventBodySchemas[webhookEvent as EWebhookEvent].parse(body);
 

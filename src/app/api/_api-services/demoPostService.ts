@@ -175,8 +175,9 @@ export class DemoPostService {
 
 		let updatedReactions: Record<string, 'like' | 'dislike'>;
 		if (existingReaction === reaction) {
-			const { [callerUid]: _removed, ...rest } = currentReactions;
-			updatedReactions = rest as Record<string, 'like' | 'dislike'>;
+			const updatedReactionsCopy = { ...currentReactions };
+			delete updatedReactionsCopy[callerUid];
+			updatedReactions = updatedReactionsCopy;
 		} else {
 			updatedReactions = { ...currentReactions, [callerUid]: reaction };
 		}

@@ -9,9 +9,7 @@ import { ERROR_CODES } from '@shared/_constants/errorLiterals';
 import { ENetwork, ENotificationTrigger, ESocial, IUser } from '@shared/types';
 import { StatusCodes } from 'http-status-codes';
 
-if (IS_NOTIFICATION_SERVICE_ENABLED && !NOTIFICATION_ENGINE_API_KEY) {
-	throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'IS_NOTIFICATION_SERVICE_ENABLED is true but NOTIFICATION_ENGINE_API_KEY is not set');
-}
+const isNotificationServiceConfigured = IS_NOTIFICATION_SERVICE_ENABLED && Boolean(NOTIFICATION_ENGINE_API_KEY);
 
 export class NotificationService {
 	private static NOTIFICATION_ENGINE_URL = 'https://us-central1-notification-engine-672e0.cloudfunctions.net/notify';
@@ -35,8 +33,8 @@ export class NotificationService {
 		trigger: ENotificationTrigger;
 		args: Record<string, string>;
 	}) {
-		if (!IS_NOTIFICATION_SERVICE_ENABLED || !NOTIFICATION_ENGINE_API_KEY) {
-			throw new APIError(ERROR_CODES.INTERNAL_SERVER_ERROR, StatusCodes.INTERNAL_SERVER_ERROR, 'IS_NOTIFICATION_SERVICE_ENABLED or NOTIFICATION_ENGINE_API_KEY not found');
+		if (!isNotificationServiceConfigured) {
+			return;
 		}
 
 		try {

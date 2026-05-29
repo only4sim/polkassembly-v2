@@ -53,7 +53,8 @@ export class FirestoreCommentRepository implements CommentRepository {
 		return this.db.collection('posts').doc(postId).collection('comments');
 	}
 
-	async getCommentsByPostId(postId: string, limit = 100, cursor?: string): Promise<DemoComment[]> {
+	async getCommentsByPostId(postId: string, limit?: number, cursor?: string): Promise<DemoComment[]> {
+		const finalLimit = limit ?? 100;
 		let query: admin.firestore.Query = this.commentsRef(postId).orderBy('createdAt', 'asc');
 
 		if (cursor) {
@@ -63,7 +64,7 @@ export class FirestoreCommentRepository implements CommentRepository {
 			}
 		}
 
-		query = query.limit(limit);
+		query = query.limit(finalLimit);
 		const snapshot = await query.get();
 		return snapshot.docs.map((doc) => docToComment(doc.id, doc.data(), postId));
 	}

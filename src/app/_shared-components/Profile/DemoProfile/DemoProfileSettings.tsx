@@ -50,7 +50,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 		setSavingName(true);
 		setNameError(null);
 		try {
-			const currentUser = clientAuth.currentUser;
+			const { currentUser } = clientAuth;
 			if (!currentUser) throw new Error('Not authenticated');
 			const token = await currentUser.getIdToken();
 			const res = await fetch('/api/v2/users/me/demo', {
@@ -76,7 +76,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 		setDeleting(true);
 		setDeleteError(null);
 		try {
-			const currentUser = clientAuth.currentUser;
+			const { currentUser } = clientAuth;
 			if (!currentUser) throw new Error('Not authenticated');
 
 			// Delete Firestore document first via API
@@ -245,7 +245,7 @@ function DemoProfileSettings({ user, onDisplayNameUpdate }: DemoProfileSettingsP
 											<DialogDescription className='sr-only'>Confirm account deletion</DialogDescription>
 										</DialogHeader>
 										<div>
-											<p className='mb-4 text-sm text-text_secondary'>{t('Settings.deleteAccountDescription')}</p>
+											<p className='text-text_secondary mb-4 text-sm'>{t('Settings.deleteAccountDescription')}</p>
 											<div className='mb-4'>
 												<p className='mb-1 text-sm text-text_primary'>
 													{t('Settings.type')} &quot;{DELETE_CONFIRMATION_TEXT}&quot; {t('Settings.belowToConfirm')}

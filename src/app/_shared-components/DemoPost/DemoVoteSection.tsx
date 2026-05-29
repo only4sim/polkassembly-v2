@@ -108,10 +108,12 @@ function DemoVoteSection({ postId, poll }: DemoVoteSectionProps) {
 					<div className='flex flex-col gap-2'>
 						{poll.options.map((option, idx) => (
 							<label
-								key={idx}
+								key={option}
+								htmlFor={`poll-option-${idx}`}
 								className='flex cursor-pointer items-center gap-3 rounded-lg border border-border_grey px-4 py-3 text-sm transition-colors hover:border-text_pink hover:bg-grey_bg'
 							>
 								<input
+									id={`poll-option-${idx}`}
 									type='checkbox'
 									className='h-4 w-4 rounded accent-text_pink'
 									checked={selected.includes(idx)}
@@ -125,11 +127,7 @@ function DemoVoteSection({ postId, poll }: DemoVoteSectionProps) {
 
 					{/* Eligibility / status message */}
 					<div className='mt-3'>
-						{!user ? (
-							<p className='text-xs text-wallet_btn_text'>Please log in to vote.</p>
-						) : (
-							<p className='text-xs text-wallet_btn_text'>You need at least 1 point to vote.</p>
-						)}
+						{!user ? <p className='text-xs text-wallet_btn_text'>Please log in to vote.</p> : <p className='text-xs text-wallet_btn_text'>You need at least 1 point to vote.</p>}
 					</div>
 
 					{/* Cast vote button */}

@@ -322,9 +322,12 @@ export const onCommentWritten = onDocumentWritten(
 			const { getFirestore, FieldValue } = await import('firebase-admin/firestore');
 			const db = getFirestore();
 
-			await db.collection('posts').doc(postId).update({
-				commentCount: FieldValue.increment(delta)
-			});
+			await db
+				.collection('posts')
+				.doc(postId)
+				.update({
+					commentCount: FieldValue.increment(delta)
+				});
 
 			logger.info(`onCommentWritten: updated commentCount by ${delta} for post ${postId}`);
 		} catch (error) {

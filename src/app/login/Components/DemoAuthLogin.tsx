@@ -58,7 +58,12 @@ function DemoAuthLogin({ isModal }: { isModal?: boolean }) {
 	};
 
 	if (showRegister) {
-		return <DemoAuthRegister switchToLogin={() => setShowRegister(false)} isModal={isModal} />;
+		return (
+			<DemoAuthRegister
+				switchToLogin={() => setShowRegister(false)}
+				isModal={isModal}
+			/>
+		);
 	}
 
 	return (

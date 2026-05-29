@@ -69,13 +69,14 @@ export class DemoAuthService {
 				if (typeof payload.exp === 'number' && payload.exp < Date.now() / 1000) return null;
 
 				// Explicitly map only the fields we use (uid/sub, email, name)
-				const uid = (typeof payload.uid === 'string' ? payload.uid : typeof payload.sub === 'string' ? payload.sub : null);
+				const uid = typeof payload.uid === 'string' ? payload.uid : typeof payload.sub === 'string' ? payload.sub : null;
 				if (!uid) return null;
 
 				return {
 					uid,
 					sub: uid,
 					iss: payload.iss as string,
+					auth_time: Math.floor(Date.now() / 1000),
 					aud: payload.aud as string,
 					iat: payload.iat as number,
 					exp: payload.exp as number,

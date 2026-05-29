@@ -42,8 +42,7 @@ if (!NEXT_PUBLIC_ALGOLIA_APP_ID || !NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY) {
 	console.error('Algolia credentials are missing from environment variables');
 }
 
-const algoliaClient = algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY);
-
+const algoliaClient = NEXT_PUBLIC_ALGOLIA_APP_ID && NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY ? algoliasearch(NEXT_PUBLIC_ALGOLIA_APP_ID, NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY) : null;
 /**
  * GET /api/v2/search
  *
@@ -98,6 +97,9 @@ export const GET = withErrorHandling(async (req: NextRequest): Promise<NextRespo
 	}
 
 	try {
+		if (!algoliaClient) {
+			return NextResponse.json({ error: 'Search service is currently unavailable.' }, { status: 503 });
+		}
 		// Perform Algolia search using the searchSingleIndex method
 		const searchResults = await algoliaClient.searchSingleIndex({
 			indexName,

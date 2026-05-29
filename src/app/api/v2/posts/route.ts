@@ -12,6 +12,64 @@ import { getSharedEnvVars } from '@/_shared/_utils/getSharedEnvVars';
 import { ALGOLIA_WRITE_API_KEY } from '@/app/api/_api-constants/apiEnvVars';
 import { algoliasearch } from 'algoliasearch';
 
+type CreatePostBody = {
+	title?: string;
+	content?: string;
+	topic?: string;
+	tags?: string[];
+	allowedCommentor?: string;
+	poll?: { question?: string; options?: string[]; endDate?: string };
+};
+
+type ValidatedCreatePostBody = {
+	title: string;
+	content: string;
+	topic?: string;
+	tags?: string[];
+	allowedCommentor?: string;
+	pollInput?: { question: string; options: string[]; endDate?: Date };
+};
+
+function validateCreatePostBody(body: CreatePostBody): { error?: string } & Partial<ValidatedCreatePostBody> {
+	const { title, content, topic, tags, allowedCommentor, poll } = body;
+
+	if (!title || typeof title !== 'string' || !title.trim()) {
+		return { error: 'Title is required' };
+	}
+	if (!content || typeof content !== 'string' || !content.trim()) {
+		return { error: 'Content is required' };
+	}
+
+	if (!poll) {
+		return { title, content, topic, tags, allowedCommentor };
+	}
+
+	if (!poll.question || typeof poll.question !== 'string' || !poll.question.trim()) {
+		return { error: 'Poll question is required' };
+	}
+	if (!Array.isArray(poll.options) || poll.options.length < 2) {
+		return { error: 'Poll requires at least 2 options' };
+	}
+
+	const filteredOptions = poll.options.filter((option) => typeof option === 'string' && option.trim());
+	if (filteredOptions.length < 2) {
+		return { error: 'Poll requires at least 2 non-empty options' };
+	}
+
+	return {
+		title,
+		content,
+		topic,
+		tags,
+		allowedCommentor,
+		pollInput: {
+			question: poll.question.trim(),
+			options: filteredOptions.map((option) => option.trim()),
+			endDate: poll.endDate ? new Date(poll.endDate) : undefined
+		}
+	};
+}
+
 /**
  * GET /api/v2/posts
  * Returns a paginated list of all discussion posts, ordered by createdAt desc.
@@ -54,42 +112,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 		return NextResponse.json({ message: 'Unauthorized' }, { status: StatusCodes.UNAUTHORIZED });
 	}
 
-	const body = (await req.json().catch(() => ({}))) as {
-		title?: string;
-		content?: string;
-		topic?: string;
-		tags?: string[];
-		allowedCommentor?: string;
-		poll?: { question?: string; options?: string[]; endDate?: string };
-	};
-	const { title, content, topic, tags, allowedCommentor, poll } = body;
-
-	if (!title || typeof title !== 'string' || !title.trim()) {
-		return NextResponse.json({ message: 'Title is required' }, { status: StatusCodes.BAD_REQUEST });
-	}
-	if (!content || typeof content !== 'string' || !content.trim()) {
-		return NextResponse.json({ message: 'Content is required' }, { status: StatusCodes.BAD_REQUEST });
+	const body = (await req.json().catch(() => ({}))) as CreatePostBody;
+	const validatedBody = validateCreatePostBody(body);
+	if (validatedBody.error) {
+		return NextResponse.json({ message: validatedBody.error }, { status: StatusCodes.BAD_REQUEST });
 	}
 
-	// Validate poll if provided
-	let pollInput: { question: string; options: string[]; endDate?: Date } | undefined;
-	if (poll) {
-		if (!poll.question || typeof poll.question !== 'string' || !poll.question.trim()) {
-			return NextResponse.json({ message: 'Poll question is required' }, { status: StatusCodes.BAD_REQUEST });
-		}
-		if (!Array.isArray(poll.options) || poll.options.length < 2) {
-			return NextResponse.json({ message: 'Poll requires at least 2 options' }, { status: StatusCodes.BAD_REQUEST });
-		}
-		const filteredOptions = poll.options.filter((o) => typeof o === 'string' && o.trim());
-		if (filteredOptions.length < 2) {
-			return NextResponse.json({ message: 'Poll requires at least 2 non-empty options' }, { status: StatusCodes.BAD_REQUEST });
-		}
-		pollInput = {
-			question: poll.question.trim(),
-			options: filteredOptions.map((o) => o.trim()),
-			endDate: poll.endDate ? new Date(poll.endDate) : undefined
-		};
-	}
+	const { title, content, topic, tags, allowedCommentor, pollInput } = validatedBody as ValidatedCreatePostBody;
 
 	try {
 		const network = await getNetworkFromHeaders();

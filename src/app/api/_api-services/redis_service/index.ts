@@ -232,6 +232,10 @@ export class RedisService {
 
 		try {
 			return new Promise((resolve, reject) => {
+				if (!this.client) {
+					reject(new Error('Redis client is not initialized'));
+					return;
+				}
 				const stream = this.client.scanStream({
 					count: 200,
 					match: pattern
@@ -240,7 +244,7 @@ export class RedisService {
 				let hasError = false;
 
 				stream.on('data', async (keys) => {
-					if (keys.length && !hasError) {
+					if (keys.length && !hasError && this.client) {
 						try {
 							const pipeline = this.client.pipeline();
 							// eslint-disable-next-line @typescript-eslint/no-explicit-any

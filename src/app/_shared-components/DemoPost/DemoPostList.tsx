@@ -142,9 +142,7 @@ function DemoPostList({ initialPosts = [] }: DemoPostListProps) {
 
 					{/* Right: topic badge + tags */}
 					<div className='flex flex-row items-center gap-2 lg:flex-col lg:items-end'>
-						{post.topic && (
-							<span className={`rounded-md px-2 py-0.5 text-xs font-medium ${getTopicStyle(post.topic)}`}>{formatTopic(post.topic)}</span>
-						)}
+						{post.topic && <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${getTopicStyle(post.topic)}`}>{formatTopic(post.topic)}</span>}
 						{post.tags && post.tags.length > 0 && (
 							<div className='flex flex-wrap gap-1'>
 								{post.tags.slice(0, 3).map((tag) => (

@@ -64,7 +64,7 @@ function DemoVoteResults({ postId, poll }: DemoVoteResultsProps) {
 					const count = optionCounts[idx] ?? 0;
 					const percentage = totalVoters > 0 ? Math.round((count / totalVoters) * 100) : 0;
 					return (
-						<div key={idx}>
+						<div key={option}>
 							<div className='mb-1 flex items-center justify-between text-xs'>
 								<span className='font-medium text-text_primary'>{option}</span>
 								<span className='text-wallet_btn_text'>

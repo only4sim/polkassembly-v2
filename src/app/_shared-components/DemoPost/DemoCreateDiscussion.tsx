@@ -17,8 +17,8 @@ import { useToast } from '@/hooks/useToast';
 import { useSuccessModal } from '@/hooks/useSuccessModal';
 import { LoadingSpinner } from '@/app/_shared-components/LoadingSpinner';
 import { useDemoUser } from '@/hooks/useDemoUser';
-import WritePost from '../Create/WritePost/WritePost';
 import HeaderLabel from '@/app/create/discussion/Component/HeaderLabel';
+import WritePost from '../Create/WritePost/WritePost';
 
 function SuccessModalContent({ postId }: { postId: string }) {
 	return (
