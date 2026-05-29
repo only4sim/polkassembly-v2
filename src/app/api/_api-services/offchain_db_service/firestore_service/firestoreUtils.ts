@@ -32,8 +32,16 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
 	firebaseAdmin.initializeApp({ projectId });
 	console.log(`\n ℹ️ Firebase Admin initialised for project "${projectId}" (emulator / development mode).\n`);
-} else {
-	console.log('\n ℹ️ [disabled] FIREBASE_SERVICE_ACC_CONFIG is not set. Firestore operations will fail if called.\n');
+} else if (!firebaseAdmin.apps.length) {
+	// 🎉 核心改造点：生产环境兜底方案
+	// 如果没有配置私钥 JSON，则依赖 Google Cloud 的 Application Default Credentials (ADC)
+	// Firebase App Hosting 底层会自动分配最高权限给这个实例
+	try {
+		firebaseAdmin.initializeApp(); // 不传任何参数，触发原生魔法
+		console.log('\n ℹ️ Firebase Admin initialised using Application Default Credentials (ADC).\n');
+	} catch (error: unknown) {
+		console.error('\nError in initialising firebase-admin with ADC: ', error, '\n');
+	}
 }
 
 export class FirestoreUtils {
