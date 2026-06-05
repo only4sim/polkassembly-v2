@@ -78,6 +78,18 @@ export class DemoPostService {
 		return admin.firestore().collection(POSTS_COLLECTION);
 	}
 
+	private static ensureOwner(post: DemoPost | null, callerUid: string) {
+		if (!post) {
+			throw new Error('Post not found');
+		}
+
+		if (post.authorUid !== callerUid) {
+			throw new Error('You are not authorized to modify this post');
+		}
+
+		return post;
+	}
+
 	/**
 	 * Create a new discussion post in the `posts` Firestore collection.
 	 * Returns the created DemoPost with its auto-generated Firestore document ID.
@@ -157,6 +169,52 @@ export class DemoPostService {
 	}
 
 	/**
+	 * Update an existing discussion post.
+	 */
+	static async updatePost(
+		id: string,
+		callerUid: string,
+		input: {
+			title?: string;
+			content?: string;
+			topic?: string;
+			tags?: string[];
+			allowedCommentor?: string;
+		}
+	): Promise<DemoPost> {
+		const existingPost = DemoPostService.ensureOwner(await DemoPostService.getPostById(id), callerUid);
+
+		const updates: Record<string, unknown> = {
+			updatedAt: admin.firestore.Timestamp.fromDate(new Date())
+		};
+
+		if (typeof input.title === 'string') updates.title = input.title.trim();
+		if (typeof input.content === 'string') updates.content = input.content.trim();
+		if (typeof input.topic === 'string') updates.topic = input.topic.trim();
+		if (Array.isArray(input.tags)) updates.tags = input.tags;
+		if (typeof input.allowedCommentor === 'string') updates.allowedCommentor = input.allowedCommentor;
+
+		await DemoPostService.collection().doc(id).update(updates);
+		return {
+			...existingPost,
+			...(typeof input.title === 'string' ? { title: input.title.trim() } : {}),
+			...(typeof input.content === 'string' ? { content: input.content.trim() } : {}),
+			...(typeof input.topic === 'string' ? { topic: input.topic.trim() || undefined } : {}),
+			...(Array.isArray(input.tags) ? { tags: input.tags } : {}),
+			...(typeof input.allowedCommentor === 'string' ? { allowedCommentor: input.allowedCommentor } : {}),
+			updatedAt: new Date()
+		};
+	}
+
+	/**
+	 * Delete a discussion post.
+	 */
+	static async deletePost(id: string, callerUid: string): Promise<void> {
+		const existingPost = DemoPostService.ensureOwner(await DemoPostService.getPostById(id), callerUid);
+		await DemoPostService.collection().doc(existingPost.id).delete();
+	}
+
+	/**
 	 * Toggle a like or dislike reaction on a post.
 	 * - If the caller already has the same reaction, it is removed (toggle off).
 	 * - If the caller has a different reaction, it is replaced.
@@ -171,13 +229,11 @@ export class DemoPostService {
 
 		const data = doc.data()!;
 		const currentReactions = (data.reactions as Record<string, 'like' | 'dislike'>) ?? {};
-		const existingReaction = currentReactions[callerUid];
+		const existingReaction = Object.entries(currentReactions).find(([uid]) => uid === callerUid)?.[1];
 
 		let updatedReactions: Record<string, 'like' | 'dislike'>;
 		if (existingReaction === reaction) {
-			const updatedReactionsCopy = { ...currentReactions };
-			delete updatedReactionsCopy[callerUid];
-			updatedReactions = updatedReactionsCopy;
+			updatedReactions = Object.fromEntries(Object.entries(currentReactions).filter(([uid]) => uid !== callerUid)) as Record<string, 'like' | 'dislike'>;
 		} else {
 			updatedReactions = { ...currentReactions, [callerUid]: reaction };
 		}

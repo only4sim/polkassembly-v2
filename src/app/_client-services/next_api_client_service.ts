@@ -111,6 +111,7 @@ enum EApiRoute {
 	PUBLIC_USER_DATA_BY_ADDRESS = 'PUBLIC_USER_DATA_BY_ADDRESS',
 	PUBLIC_USER_DATA_BY_USERNAME = 'PUBLIC_USER_DATA_BY_USERNAME',
 	EDIT_PROPOSAL_DETAILS = 'EDIT_PROPOSAL_DETAILS',
+	DELETE_PROPOSAL_DETAILS = 'DELETE_PROPOSAL_DETAILS',
 	FETCH_USER_ACTIVITY = 'FETCH_USER_ACTIVITY',
 	GET_ON_CHAIN_METADATA_FOR_POST = 'GET_ON_CHAIN_METADATA_FOR_POST',
 	FETCH_PREIMAGES = 'FETCH_PREIMAGES',
@@ -391,6 +392,9 @@ export class NextApiClientService {
 			case EApiRoute.EDIT_PROPOSAL_DETAILS:
 			case EApiRoute.EDIT_COMMENT:
 				method = 'PATCH';
+				break;
+			case EApiRoute.DELETE_PROPOSAL_DETAILS:
+				method = 'DELETE';
 				break;
 
 			// delete routes
@@ -748,6 +752,11 @@ export class NextApiClientService {
 	}) {
 		const { url, method } = await this.getRouteConfig({ route: EApiRoute.EDIT_PROPOSAL_DETAILS, routeSegments: [proposalType, index] });
 		return this.nextApiClientFetch<{ message: string }>({ url, method, data });
+	}
+
+	static async deleteProposalDetails({ proposalType, index }: { proposalType: EProposalType; index: string }) {
+		const { url, method } = await this.getRouteConfig({ route: EApiRoute.DELETE_PROPOSAL_DETAILS, routeSegments: [proposalType, index] });
+		return this.nextApiClientFetch<{ message: string }>({ url, method });
 	}
 
 	static async getOnChainMetadataForPost(proposalType: EProposalType, index: string) {

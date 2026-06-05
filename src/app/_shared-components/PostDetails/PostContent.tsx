@@ -12,9 +12,8 @@ import { useUser } from '@/hooks/useUser';
 import { getSubstrateAddress } from '@/_shared/_utils/getSubstrateAddress';
 import dynamic from 'next/dynamic';
 import { Separator } from '../Separator';
-import EditPostButton from './EditPost/EditPostButton';
 import { MarkdownViewer } from '../MarkdownViewer/MarkdownViewer';
-import LinkPostButton from './LinkDiscussionPost/LinkPostButton';
+import PostActionsMenu from './PostActionsMenu';
 
 const PostActions = dynamic(() => import('./PostActions/PostActions'), { ssr: false });
 
@@ -34,14 +33,6 @@ function PostContent({ postData, isModalOpen }: { postData: IPost; isModalOpen: 
 						height={150}
 					/>
 					<p className='text-base font-semibold text-text_primary'>No context provided!</p>
-					<EditPostButton
-						postData={postData}
-						className='h-10 w-64 bg-bg_pink text-sm font-medium text-white'
-					/>
-					<LinkPostButton
-						postData={postData}
-						className='h-10 w-64 border border-navbar_border bg-bg_modal text-sm font-medium text-text_pink'
-					/>
 				</div>
 			) : (
 				<MarkdownViewer
@@ -55,12 +46,9 @@ function PostContent({ postData, isModalOpen }: { postData: IPost; isModalOpen: 
 			<Separator className='my-4 bg-border_grey' />
 			<div className='flex items-center gap-x-4'>
 				<PostActions postData={postData} />
-				{!postData.isDefaultContent && (
-					<div className='flex items-center gap-x-4'>
-						<EditPostButton postData={postData} />
-						<LinkPostButton postData={postData} />
-					</div>
-				)}
+				<div className='ml-auto'>
+					<PostActionsMenu postData={postData} />
+				</div>
 			</div>
 		</div>
 	);

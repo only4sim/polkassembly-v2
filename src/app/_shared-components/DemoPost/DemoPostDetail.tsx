@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { DemoPost } from '@/domain/entities/Post';
-import { ArrowLeftIcon, Share2 } from 'lucide-react';
+import { ArrowLeftIcon, Ellipsis, Share2, Pencil, Trash2 } from 'lucide-react';
 import { Separator } from '@ui/Separator';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@ui/Skeleton';
@@ -18,11 +18,17 @@ import { IoBookmark } from '@react-icons/all-files/io5/IoBookmark';
 import { IoBookmarkOutline } from '@react-icons/all-files/io5/IoBookmarkOutline';
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown';
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { useDemoUser } from '@/hooks/useDemoUser';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Button } from '@ui/Button';
+import { Input } from '@ui/Input';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@ui/Dialog/Dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/DropdownMenu';
+import { MarkdownEditor } from '@ui/MarkdownEditor/MarkdownEditor';
 import DemoCommentSection from './DemoCommentSection';
 import DemoVoteSection from './DemoVoteSection';
 
@@ -74,7 +80,20 @@ interface DemoPostBodyProps {
 
 function DemoPostBody({ post }: DemoPostBodyProps) {
 	const { user } = useDemoUser();
+	const router = useRouter();
 	const { toast } = useToast();
+	const isOwner = useMemo(() => !!user && user.uid === post.authorUid, [post.authorUid, user]);
+
+	const [isEditOpen, setIsEditOpen] = useState(false);
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+	const [isSaving, setIsSaving] = useState(false);
+	const [title, setTitle] = useState(post.title);
+	const [content, setContent] = useState(post.content);
+
+	useEffect(() => {
+		setTitle(post.title);
+		setContent(post.content);
+	}, [post.content, post.title]);
 
 	// Reactions state
 	const [reactions, setReactions] = useState<Record<string, 'like' | 'dislike'>>(post.reactions ?? {});
@@ -139,6 +158,51 @@ function DemoPostBody({ post }: DemoPostBodyProps) {
 		navigator.clipboard.writeText(window.location.href).catch(() => null);
 		toast({ title: 'Link copied to clipboard', status: ENotificationStatus.SUCCESS });
 	}, [toast]);
+
+	const handleEditPost = useCallback(async () => {
+		if (!user || user.uid !== post.authorUid || !title.trim() || !content.trim()) return;
+
+		setIsSaving(true);
+		try {
+			const token = await clientAuth.currentUser?.getIdToken();
+			if (!token) throw new Error('Unauthorized');
+			const res = await fetch(`/api/v2/posts/${post.id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ title: title.trim(), content: content.trim() })
+			});
+			if (!res.ok) throw new Error('Failed to update post');
+			setIsEditOpen(false);
+			toast({ title: 'Post updated', status: ENotificationStatus.SUCCESS });
+			router.refresh();
+		} catch (error) {
+			toast({ title: 'Failed to update post', description: error instanceof Error ? error.message : 'Please try again', status: ENotificationStatus.ERROR });
+		} finally {
+			setIsSaving(false);
+		}
+	}, [content, post.authorUid, post.id, router, title, toast, user]);
+
+	const handleDeletePost = useCallback(async () => {
+		if (!user || user.uid !== post.authorUid) return;
+
+		setIsSaving(true);
+		try {
+			const token = await clientAuth.currentUser?.getIdToken();
+			if (!token) throw new Error('Unauthorized');
+			const res = await fetch(`/api/v2/posts/${post.id}`, {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (!res.ok) throw new Error('Failed to delete post');
+			toast({ title: 'Post deleted', status: ENotificationStatus.SUCCESS });
+			router.push('/discussions');
+			router.refresh();
+		} catch (error) {
+			toast({ title: 'Failed to delete post', description: error instanceof Error ? error.message : 'Please try again', status: ENotificationStatus.ERROR });
+		} finally {
+			setIsSaving(false);
+		}
+	}, [post.authorUid, post.id, router, toast, user]);
 
 	return (
 		<div className='rounded-xl border border-primary_border bg-bg_modal'>
@@ -221,8 +285,110 @@ function DemoPostBody({ post }: DemoPostBodyProps) {
 					>
 						<Share2 className='h-4 w-4' />
 					</button>
+					{isOwner && (
+						<DropdownMenu>
+							<DropdownMenuTrigger
+								noArrow
+								className='h-8 w-8 border-none p-0 text-text_primary/[0.8]'
+							>
+								<Ellipsis size={16} />
+							</DropdownMenuTrigger>
+							<DropdownMenuContent
+								align='end'
+								className='w-44'
+							>
+								<DropdownMenuItem
+									className='hover:bg-bg_pink/10'
+									onSelect={() => setIsEditOpen(true)}
+								>
+									<Pencil size={16} />
+									<span>Edit</span>
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className='hover:bg-bg_pink/10'
+									onSelect={() => setIsDeleteOpen(true)}
+								>
+									<Trash2 size={16} />
+									<span>Delete</span>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
 				</div>
 			</div>
+
+			{isOwner && (
+				<>
+					<Dialog
+						open={isEditOpen}
+						onOpenChange={setIsEditOpen}
+					>
+						<DialogContent className='max-w-3xl p-4 sm:p-6'>
+							<DialogHeader>
+								<DialogTitle>Edit post</DialogTitle>
+							</DialogHeader>
+							<div className='flex flex-col gap-4'>
+								<div>
+									<p className='mb-1 text-sm font-medium text-text_primary'>Title</p>
+									<Input
+										value={title}
+										onChange={(e) => setTitle(e.target.value)}
+									/>
+								</div>
+								<div>
+									<p className='mb-1 text-sm font-medium text-text_primary'>Content</p>
+									<MarkdownEditor
+										markdown={content}
+										onChange={(value) => setContent(value)}
+									/>
+								</div>
+							</div>
+							<DialogFooter>
+								<Button
+									variant='outline'
+									onClick={() => setIsEditOpen(false)}
+								>
+									Cancel
+								</Button>
+								<Button
+									onClick={handleEditPost}
+									isLoading={isSaving}
+									disabled={!title.trim() || !content.trim()}
+								>
+									Save
+								</Button>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+
+					<Dialog
+						open={isDeleteOpen}
+						onOpenChange={setIsDeleteOpen}
+					>
+						<DialogContent className='max-w-xl p-6'>
+							<DialogHeader>
+								<DialogTitle>Delete post</DialogTitle>
+							</DialogHeader>
+							<DialogDescription className='text-text_primary'>This will permanently delete your discussion post.</DialogDescription>
+							<DialogFooter>
+								<Button
+									variant='outline'
+									onClick={() => setIsDeleteOpen(false)}
+								>
+									Cancel
+								</Button>
+								<Button
+									variant='destructive'
+									onClick={handleDeletePost}
+									isLoading={isSaving}
+								>
+									Delete
+								</Button>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+				</>
+			)}
 		</div>
 	);
 }
