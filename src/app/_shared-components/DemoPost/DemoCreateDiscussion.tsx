@@ -41,7 +41,7 @@ function SuccessModalContent({ postId }: { postId: string }) {
 	);
 }
 
-function DemoCreateDiscussion() {
+function DemoCreateDiscussion({ isModal }: { isModal?: boolean } = {}) {
 	const { user } = useDemoUser();
 	const formData = useForm<IWritePostFormFields>({
 		defaultValues: {
@@ -114,6 +114,13 @@ function DemoCreateDiscussion() {
 			formData.reset();
 
 			toast({ title: 'Discussion created successfully', status: ENotificationStatus.SUCCESS });
+
+			if (isModal) {
+				// Close the modal/page when used as a modal.
+				setOpenSuccessModal(false);
+				router.back();
+				return;
+			}
 
 			setSuccessModalContent(<SuccessModalContent postId={post.id} />);
 			setOpenSuccessModal(true);

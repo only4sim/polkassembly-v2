@@ -11,8 +11,13 @@ export async function getBaseUrl(): Promise<string> {
 	if (typeof window !== 'undefined') return `${window.location.origin}/api/v2`;
 
 	// 2. 优先读取我们手动锁定的环境变量（绝对安全，不会被代理层篡改）
+	// 优先使用 NEXT_PUBLIC_APP_URL（用于不同部署平台显式指定应用 URL），然后回退到 NEXT_PUBLIC_SITE_URL
+	if (process.env.NEXT_PUBLIC_APP_URL) {
+		const baseUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+		return `${baseUrl}/api/v2`;
+	}
+
 	if (process.env.NEXT_PUBLIC_SITE_URL) {
-		// 移除可能存在的末尾斜杠，保证拼接正确
 		const baseUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
 		return `${baseUrl}/api/v2`;
 	}

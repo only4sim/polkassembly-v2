@@ -25,11 +25,14 @@ export async function generateMetadata(): Promise<Metadata> {
 	});
 }
 
-async function Discussion() {
+async function Discussion({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
+	const resolvedSearchParams = searchParams ? await searchParams : undefined;
+	const isModal = Boolean(resolvedSearchParams && resolvedSearchParams.isModal === 'true');
+
 	return (
 		<div className='flex h-full w-full items-start justify-center p-8 sm:p-10'>
 			<div className='mx-auto w-full max-w-screen-lg rounded-lg bg-bg_modal p-4 shadow-lg sm:p-6'>
-				{process.env.ENABLE_BLOCKCHAIN !== 'true' ? <DemoCreateDiscussion /> : <CreateDiscussionComponent />}
+				{process.env.ENABLE_BLOCKCHAIN !== 'true' ? <DemoCreateDiscussion isModal={isModal} /> : <CreateDiscussionComponent isModal={isModal} />}
 			</div>
 		</div>
 	);

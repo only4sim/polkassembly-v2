@@ -192,7 +192,9 @@ const Create = forwardRef<CreateRef, { isModal?: boolean; onStepChange?: (step?:
 
 	const onProposalCreationSuccess = (proposalId: number) => {
 		if (isModal) {
+			setOpenSuccessModal(false);
 			router.back();
+			return;
 		}
 
 		setSuccessModalContent(<SuccessModalContent proposalId={proposalId} />);
@@ -268,7 +270,7 @@ const Create = forwardRef<CreateRef, { isModal?: boolean; onStepChange?: (step?:
 							<div className='flex flex-col gap-y-4'>
 								<p className='text-lg font-semibold leading-none text-text_primary'>{t('CreateProposal.trendingNow')}</p>
 								<CreateOption
-									href='/create/discussion'
+									href={isModal ? '/create/discussion?isModal=true' : '/create/discussion'}
 									label={t('CreateProposal.createDiscussion')}
 									icon={DiscussionIcon}
 									iconClassName='bg-create_discussion_bg/10'

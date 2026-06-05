@@ -10,8 +10,8 @@ const COMMENT_NOT_FOUND_ERROR = 'Comment not found';
 const FORBIDDEN_ERROR = 'Forbidden';
 
 if (process.env.NODE_ENV === 'development') {
-	process.env.FIREBASE_AUTH_EMULATOR_HOST ||= 'localhost:9099';
-	process.env.FIRESTORE_EMULATOR_HOST ||= 'localhost:8080';
+	process.env.FIREBASE_AUTH_EMULATOR_HOST ||= '127.0.0.1:9099';
+	process.env.FIRESTORE_EMULATOR_HOST ||= '127.0.0.1:8080';
 }
 
 if (!admin.apps.length) {

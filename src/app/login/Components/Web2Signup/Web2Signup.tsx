@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { ESignupSteps, EWallet, ENotificationStatus } from '@/_shared/types';
 import { useSearchParams } from 'next/navigation';
 import { AuthClientService } from '@/app/_client-services/auth_client_service';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@ui/Form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@ui/Form';
 import { useForm } from 'react-hook-form';
 import { PasswordInput } from '@ui/PasswordInput/PasswordInput';
 import WalletButtons from '@ui/WalletsUI/WalletButtons/WalletButtons';
@@ -27,6 +27,17 @@ interface IFormFields {
 	username: string;
 	password: string;
 	finalPassword: string;
+}
+
+const FIREBASE_PASSWORD_GUIDANCE = 'Firebase requires at least 6 characters. For better security, use 8+ characters with letters, numbers, and symbols.';
+
+function constantTimeCompare(a: string, b: string) {
+	if (a.length !== b.length) return false;
+	let diff = 0;
+	for (let i = 0; i < a.length; i += 1) {
+		diff += Math.abs(a.charCodeAt(i) - b.charCodeAt(i));
+	}
+	return diff === 0;
 }
 
 function Web2Signup({ switchToLogin, onWalletChange }: { switchToLogin: () => void; onWalletChange: (wallet: EWallet | null) => void }) {
@@ -75,7 +86,7 @@ function Web2Signup({ switchToLogin, onWalletChange }: { switchToLogin: () => vo
 				return;
 			}
 
-			if (email && username && password && password === finalPassword) {
+			if (email && username && password && constantTimeCompare(password, finalPassword)) {
 				setLoading(true);
 
 				const { data, error } = await AuthClientService.web2Signup({
@@ -203,7 +214,7 @@ function Web2Signup({ switchToLogin, onWalletChange }: { switchToLogin: () => vo
 							rules={{
 								validate: (value) => {
 									if (step !== ESignupSteps.PASSWORD) return true;
-									if (!ValidatorService.isValidPassword(value)) return 'Invalid Password';
+									if (!ValidatorService.isValidPassword(value)) return 'Password must be at least 6 characters.';
 									return true;
 								},
 								required: step === ESignupSteps.PASSWORD
@@ -218,6 +229,7 @@ function Web2Signup({ switchToLogin, onWalletChange }: { switchToLogin: () => vo
 											{...field}
 										/>
 									</FormControl>
+									<FormDescription>{FIREBASE_PASSWORD_GUIDANCE}</FormDescription>
 
 									<FormMessage />
 								</FormItem>
@@ -233,7 +245,9 @@ function Web2Signup({ switchToLogin, onWalletChange }: { switchToLogin: () => vo
 								required: step === ESignupSteps.PASSWORD,
 								validate: (value, allFields) => {
 									if (step !== ESignupSteps.PASSWORD) return true;
-									if (value !== allFields.password) return "Password don't match";
+									const a = value || '';
+									const b = (allFields && (allFields as unknown as Record<string, string | undefined>).password) || '';
+									if (!constantTimeCompare(a, b)) return "Password don't match";
 									return true;
 								}
 							}}

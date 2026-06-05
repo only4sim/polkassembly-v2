@@ -10,7 +10,7 @@ import DemoPostDetail from '@/app/_shared-components/DemoPost/DemoPostDetail';
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
 	const { id } = await params;
 	try {
-		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 		const res = await fetch(`${baseUrl}/api/v2/posts/${id}`, { cache: 'no-store' });
 		if (!res.ok) return { title: 'Discussion Not Found' };
 		const { post } = (await res.json()) as { post: DemoPost };
@@ -29,7 +29,7 @@ async function DemoDiscussionDetailPage({ params }: { params: Promise<{ id: stri
 	let post: DemoPost | null = null;
 
 	try {
-		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 		const res = await fetch(`${baseUrl}/api/v2/posts/${id}`, { cache: 'no-store' });
 		if (res.status === 404) notFound();
 		if (!res.ok) throw new Error('Failed to fetch post');

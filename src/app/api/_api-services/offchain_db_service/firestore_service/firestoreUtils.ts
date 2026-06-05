@@ -24,10 +24,10 @@ if (FIREBASE_SERVICE_ACC_CONFIG) {
 	// Emulator mode: set emulator host env vars so the Admin SDK routes to local emulators
 	// instead of trying real GCP credentials via gRPC.
 	if (!process.env.FIRESTORE_EMULATOR_HOST) {
-		process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+		process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
 	}
 	if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-		process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+		process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
 	}
 	const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project';
 	firebaseAdmin.initializeApp({ projectId });

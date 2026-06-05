@@ -5,12 +5,23 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import SuccessGif from '@assets/gifs/success.gif';
 import { Dialog, DialogContent, DialogHeader } from '../Dialog/Dialog';
 import { useSuccessModal } from '../../../hooks/useSuccessModal';
 
 function SuccessModal() {
 	const { open, content, setOpenSuccessModal } = useSuccessModal();
+	const pathname = usePathname();
+	const previousPathname = useRef(pathname);
+
+	useEffect(() => {
+		if (previousPathname.current !== pathname && open) {
+			setOpenSuccessModal(false);
+		}
+		previousPathname.current = pathname;
+	}, [open, pathname, setOpenSuccessModal]);
 
 	return (
 		<Dialog

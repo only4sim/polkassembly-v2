@@ -45,7 +45,7 @@ function SuccessModalContent({ proposalId }: { proposalId: number }) {
 	);
 }
 
-function CreateDiscussion() {
+function CreateDiscussion({ isModal }: { isModal?: boolean } = {}) {
 	const formData = useForm<IWritePostFormFields>();
 
 	const { user } = useUser();
@@ -99,6 +99,13 @@ function CreateDiscussion() {
 			title: t('Create.discussionCreatedSuccessfully'),
 			status: ENotificationStatus.SUCCESS
 		});
+
+		if (isModal) {
+			// Close modal when used as a modal.
+			setOpenSuccessModal(false);
+			router.back();
+			return;
+		}
 
 		setSuccessModalContent(<SuccessModalContent proposalId={data.data.index} />);
 		setOpenSuccessModal(true);

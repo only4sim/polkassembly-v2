@@ -8,7 +8,7 @@ import DemoProfile from '@/app/_shared-components/Profile/DemoProfile/DemoProfil
 
 async function fetchUserByUid(uid: string): Promise<User | null> {
 	try {
-		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 		const res = await fetch(`${baseUrl}/api/v2/users/uid/${uid}`, { cache: 'no-store' });
 		if (!res.ok) return null;
 		const data = await res.json();

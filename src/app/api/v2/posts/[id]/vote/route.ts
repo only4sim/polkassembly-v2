@@ -11,8 +11,8 @@ import { FIREBASE_SERVICE_ACC_CONFIG } from '@/app/api/_api-constants/apiEnvVars
 
 // Ensure the Admin SDK is initialised (mirrors demoPostService.ts pattern)
 if (process.env.NODE_ENV === 'development') {
-	process.env.FIREBASE_AUTH_EMULATOR_HOST ||= 'localhost:9099';
-	process.env.FIRESTORE_EMULATOR_HOST ||= 'localhost:8080';
+	process.env.FIREBASE_AUTH_EMULATOR_HOST ||= '127.0.0.1:9099';
+	process.env.FIRESTORE_EMULATOR_HOST ||= '127.0.0.1:8080';
 }
 
 if (!admin.apps.length) {
