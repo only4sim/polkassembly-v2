@@ -7,6 +7,8 @@ import { ENetwork } from './types';
 export const TREASURY_STATS_NETWORKS = [ENetwork.POLKADOT, ENetwork.KUSAMA, ENetwork.CERE];
 export const CACHE_REFRESH_NETWORKS = [ENetwork.POLKADOT, ENetwork.KUSAMA, ENetwork.CERE];
 
+export const INITIAL_USER_POINTS_BALANCE = 1000;
+
 export const ERROR_MESSAGES = {
 	TOOLS_PASSPHRASE_NOT_DEFINED: 'TOOLS_PASSPHRASE is not defined in environment variables',
 	INVALID_TOOLS_PASSPHRASE: 'Invalid tools password, please check the tools password in environment variables',

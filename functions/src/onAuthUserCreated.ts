@@ -4,8 +4,9 @@
 
 import * as logger from 'firebase-functions/logger';
 import { auth } from 'firebase-functions/v1';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
+import { createUserProfileDocument } from './utils/createUserProfile';
 
 // Ensure Firebase Admin is initialized
 if (getApps().length === 0) {
@@ -20,18 +21,7 @@ export const onAuthUserCreated = auth.user().onCreate(async (userRecord) => {
 	const db = getFirestore();
 
 	try {
-		await db
-			.collection('users')
-			.doc(userRecord.uid)
-			.set({
-				uid: userRecord.uid,
-				email: userRecord.email || '',
-				displayName: userRecord.displayName || userRecord.email?.split('@')[0] || '',
-				role: 'user',
-				pointsBalance: 0,
-				createdAt: FieldValue.serverTimestamp(),
-				updatedAt: FieldValue.serverTimestamp()
-			});
+		await db.collection('users').doc(userRecord.uid).set(createUserProfileDocument(userRecord));
 
 		logger.info(`User profile created for uid: ${userRecord.uid}`);
 	} catch (error) {
