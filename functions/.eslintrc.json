@@ -73,6 +73,13 @@
 			"rules": {
 				"import/no-default-export": "off"
 			}
+		},
+		{
+			"files": ["test/**/*.js"],
+			"rules": {
+				"@typescript-eslint/no-require-imports": "off",
+				"import/extensions": "off"
+			}
 		}
 	]
 }
