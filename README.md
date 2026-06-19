@@ -20,6 +20,7 @@ yarn install --frozen-lockfile
 
 npm install -g firebase-tools
 firebase --version
+
 ```
 
 ## Environment Setup (.env)
@@ -28,6 +29,7 @@ Create root env file:
 
 ```bash
 cp .env.example .env.local 2>/dev/null || touch .env.local
+
 ```
 
 Use at least the following values in `.env.local`:
@@ -44,12 +46,14 @@ NEXT_PUBLIC_DEFAULT_NETWORK=polkadot
 NEXT_PUBLIC_ALGOLIA_APP_ID=YOUR_ALGOLIA_APP_ID
 NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY=YOUR_ALGOLIA_SEARCH_ONLY_KEY
 ALGOLIA_WRITE_API_KEY=YOUR_ALGOLIA_WRITE_API_KEY
+
 ```
 
 Create Functions env file:
 
 ```bash
 touch functions/.env
+
 ```
 
 Use at least the following values in `functions/.env`:
@@ -58,6 +62,7 @@ Use at least the following values in `functions/.env`:
 # Algolia (used by Firebase Functions)
 ALGOLIA_APP_ID=YOUR_ALGOLIA_APP_ID
 ALGOLIA_WRITE_API_KEY=YOUR_ALGOLIA_WRITE_API_KEY
+
 ```
 
 Notes:
@@ -70,12 +75,14 @@ Then, login Firebase:
 ```bash
 firebase login
 firebase use --add
+
 ```
 
 Third, initiate Firebase emulator:
 
 ```bash
 firebase init emulators
+
 ```
 
 Choose at least the following emulators:
@@ -85,6 +92,7 @@ Choose at least the following emulators:
 - Functions Emulator
 - Auth Emulator
 - Emulator UI
+
 ```
 
 Fourth, build Firebase Functions (required before starting the emulator):
@@ -93,18 +101,21 @@ The Functions emulator loads `functions/lib/index.js`, which is compiled from Ty
 
 ```bash
 cd functions && npm install && npm run build && cd ..
+
 ```
 
 To automatically rebuild on every source change, run in a separate terminal:
 
 ```bash
 cd functions && npm run build:watch
+
 ```
 
 Start emulator:
 
 ```bash
 firebase emulators:start --only firestore,functions,auth
+
 ```
 
 > **Note:** If you see `functions/lib/index.js does not exist, can't deploy Cloud Functions`, run `cd functions && npm run build` to compile the TypeScript sources.
@@ -115,6 +126,7 @@ Use another bash terminal run the development server:
 npm run dev
 # or
 yarn dev
+
 ```
 
 ## Algolia Setup Guide
@@ -151,7 +163,7 @@ Quick verification checklist:
 3. Search for the discussion title.
 4. Click result and verify it opens `/discussions/{documentId}` (not numeric index).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `src/app/(home)/page.tsx`. The page auto-updates as you edit the file.
 
@@ -166,17 +178,21 @@ Below is a complete record of our deployment troubleshooting, solutions, and key
 - **Issue:** After deployment, the backend crashed immediately when trying to connect to Firestore, logging `FIREBASE_SERVICE_ACC_CONFIG is not set`.
 - **Root Cause:** The source code expects a JSON private key for Firebase Admin SDK initialization. However, manually managing private keys in Firebase App Hosting is neither secure nor elegant.
 - **Solution:**
-  1. Modify the initialization code to use Google Cloud's native ADC mechanism for automatic, keyless authentication:
-     ```typescript
-     // Before: Forced key check
-     firebaseAdmin.initializeApp({ credential: ... });
-     // After: Call initialization without arguments in production to activate ADC
-     } else if (!firebaseAdmin.apps.length) {
-         firebaseAdmin.initializeApp();
-         console.log('ℹ️ Firebase Admin initialised using ADC.');
-     }
-     ```
-  2. **Crucial Permission:** Go to the Google Cloud Console (IAM & Admin), locate the service account named `Firebase App Hosting Compute Service Agent`, and manually add the **"Cloud Datastore User"** role. Without this, ADC does not have permission to read the database by default.
+
+1. Modify the initialization code to use Google Cloud's native ADC mechanism for automatic, keyless authentication:
+
+```typescript
+// Before: Forced key check
+firebaseAdmin.initializeApp({ credential: ... });
+// After: Call initialization without arguments in production to activate ADC
+} else if (!firebaseAdmin.apps.length) {
+    firebaseAdmin.initializeApp();
+    console.log('ℹ️ Firebase Admin initialised using ADC.');
+}
+
+```
+
+2. **Crucial Permission:** Go to the Google Cloud Console (IAM & Admin), locate the service account named `Firebase App Hosting Compute Service Agent`, and manually add the **"Cloud Datastore User"** role. Without this, ADC does not have permission to read the database by default.
 
 ### 2. Missing Environment Variables
 
@@ -189,25 +205,59 @@ Below is a complete record of our deployment troubleshooting, solutions, and key
 - **Issue:** Opening a specific author's post list triggered a backend error: `FAILED_PRECONDITION: The query requires an index.`
 - **Root Cause:** Firestore strictly enforces that any query combining "conditional filtering" and "sorting" (e.g., `where("authorUid", "==", uid)` combined with `orderBy("createdAt", "desc")`) must have a pre-built composite index. Otherwise, the query is rejected.
 - **Solution:** Go to Firebase Console -> Firestore Database -> Indexes -> Composite, and manually add the following rule:
-  - **Collection ID**: `posts`
-  - **Field 1**: `authorUid` (Ascending)
-  - **Field 2**: `createdAt` (Descending)
-  - **Query Scope**: Collection
+- **Collection ID**: `posts`
+- **Field 1**: `authorUid` (Ascending)
+- **Field 2**: `createdAt` (Descending)
+- **Query Scope**: Collection
 
 ### 4. Frontend Security Defense: CSP Blocking Rich Text Rendering
 
 - **Issue:** Post details existed in the database, but the frontend still showed a pink 404 page. The browser console showed a red error: `Content Security Policy of your site blocks the use of 'eval'`.
 - **Root Cause:** Third-party libraries used by Polkassembly (like Markdown parsers or Web3 SDKs) quietly use dynamic script execution (`eval`) under the hood. The project's extremely strict CSP headers blocked the rendering process, causing Next.js to fallback to the 404 page.
 - **Solution:** Modify `next.config.mjs` in the root directory. Explicitly add `'unsafe-eval'` to the `script-src` directive of the `Content-Security-Policy`:
-  ```javascript
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://...";
-  ```
+
+```javascript
+"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://...";
+```
 
 ### 5. The "Ghost Bug": Next.js ISR & CDN Caching
 
 - **Issue:** After fixing all the database, permission, and code issues above, accessing the page **still resulted in a 404**. However, after waiting a few days (or a short period), the page magically started working.
 - **Root Cause:** This is caused by Next.js's ISR (Incremental Static Regeneration) and "stubborn caching" behavior. When the system previously failed, it generated a 404 page and aggressively cached it in the cloud CDN. Even after the backend was fixed, the frontend continued to serve the cached 404 until its TTL expired (or the instance cold-started).
-- **Solution (For future reference):** When debugging Next.js production environments, if you confirm the backend and data are fixed but the frontend still errors out, try using URL parameters like `?_rsc=` to bypass the cache, clear browser caches, or trigger API endpoints to force cache invalidation (Revalidate). Do not blindly modify the code.
+- **Solution (For future reference):** When debugging Next.js production environments, if you confirm the backend and data are fixed but the frontend still errors out, try using URL parameters like `?v=123` or `?_rsc=` to bypass the CDN cache, clear browser caches, or trigger API endpoints to force cache invalidation (Revalidate). Do not blindly modify the code.
+
+### 6. Cloud Functions: Independent Deployment & The `.env` Trap
+
+- **Issue:** New Cloud Functions logic (e.g., assigning 1000 points to new users, triggering Algolia sync) doesn't take effect, or logs show `Algolia environment variables not set` even though variables are set in App Hosting.
+- **Root Cause 1 (Deployment):** Firebase App Hosting ONLY deploys the Next.js frontend app. Your `functions` directory must be compiled and deployed completely independently.
+- **Root Cause 2 (`dotenv` Quirk):** By default, `dotenv.config()` strictly looks for a file exactly named `.env`. If you only have `.env.production` or rely solely on Google Cloud GUI Variables, `dotenv` will silently fail, leaving Secrets/Variables empty during execution.
+- **Solution:**
+
+1. **Algolia Write Key:** Ensure `ALGOLIA_WRITE_API_KEY` in `functions/.env` uses the **Admin API Key** (Write access), not the Search-Only key.
+2. **The `.env` Copy:** If you hardcode secrets for deployment, copy `.env.production` to `.env` before pushing, so the codebase can read it. (For enterprise setups, bind keys in Google Cloud Secret Manager).
+3. **Manual Deployment:** Always trigger functions updates manually:
+
+```bash
+cd functions && npm run build
+cd .. && firebase deploy --only functions
+
+```
+
+### 7. Client-Side Firestore Security Rules (403 Permission Denied)
+
+- **Issue:** Interactive features (like live vote charts) throw `React error #418` and `[onSnapshot error: Missing or insufficient permissions]`, while the page structure renders fine initially.
+- **Root Cause:** Next.js Server-Side Rendering (SSR) uses `firebase-admin` which has "God Mode" and bypasses Firestore Security Rules. However, when the page reaches the browser, the client-side Firebase SDK uses strict rules. If a component attempts to listen to deeply nested data (e.g., reading aggregate stats from `posts/{postId}/stats/{statDocId}` instead of just the `votes` collection), the connection is rejected.
+- **Solution:** Inspect the exact collection paths being queried in your database. Add specific read permissions for those nested paths or use Collection Group queries in your Firebase Console -> Firestore -> Rules:
+
+```javascript
+match /databases/{database}/documents {
+  // Whitelist access to post voting statistics
+  match /posts/{postId}/stats/{statDocId} {
+    allow read: if true;
+  }
+}
+
+```
 
 ---
 
