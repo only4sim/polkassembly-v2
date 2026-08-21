@@ -10,24 +10,37 @@ DemoOS is a Polkassembly-v2 style app that replaces ALL blockchain-dependent ope
 
 MVP must NOT require any blockchain-related API keys or on-chain access.
 
-## 2) MVP Scope (Must Ship in 1 month)
+## 2) MVP Scope
 
-A) Auth: Email/Password sign up + sign in
-B) Posts: create/list/detail
-C) Comments: create/list on posts
-D) Voting:
+- A) Auth: Email/Password sign up + sign in
+- B) Posts: create/list/detail
+- C) Comments: create/list on posts
+- D) Discussion poll voting:
 
-- Multi-select voting (user can pick multiple options)
-- One-person-one-vote results (points only as eligibility gate)
-- Real-time charts based on aggregated stats doc
-  E) Moderation: pin / lock / hide posts (admin only)
-  F) Notifications/subscriptions: OUT OF SCOPE for MVP
+  - Multi-select voting (user can pick multiple options)
+  - One-person-one-vote results (points only as eligibility gate)
+  - Real-time charts based on aggregated stats doc
+
+- E) Moderation: pin / lock / hide posts (admin only)
+- F) Notifications/subscriptions: OUT OF SCOPE for MVP
+
+The next product milestone is a Firebase-backed Referenda experience for
+`ENABLE_BLOCKCHAIN=false`. It should match the existing Referenda UI and interaction
+model as closely as practical, but use `pointsBalance` instead of DOT and must not
+initialize wallets, Polkadot APIs, indexers, or on-chain transactions. The implementation
+guide and acceptance criteria are in
+[`docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](./REFERENDA_POINTS_DEVELOPMENT_GUIDE.md).
 
 ## 3) Key Product Decisions
 
-- Voting is one-person-one-vote.
+- Discussion poll voting is one-person-one-vote.
 - Introduce off-chain "pointsBalance" as NON-transferable NON-tradable site points.
-  - pointsBalance is used ONLY as voting eligibility threshold (e.g., >= 1 can vote).
+  - In discussion polls, `pointsBalance` is used only as an eligibility threshold.
+  - In points-based Referenda, the user chooses an integer points amount up to their
+    current `pointsBalance`; that amount is the vote weight.
+  - Referenda voting does not spend or permanently deduct points. Conviction,
+    delegation, split voting, and lock reuse are not part of the first points-based
+    Referenda release.
 - Admin role is created by manually setting Firestore: users/{uid}.role = "admin".
 
 ## 4) Hard Constraints (Do NOT violate)
@@ -91,24 +104,25 @@ When creating **DemoOS alternatives** to existing components:
 
 ---
 
-## 8) MVP Implementation Roadmap (Issue/PR Tracker)
+## 8) MVP Implementation Status (Code Audit: 2026-08-21)
 
-> Issues ordered by priority. Dependency arrows show which must merge first.
-> Parallelizable pairs: #1 ∥ #2, #7 ∥ #8.
+The original tracker was not updated as features merged. The table below reflects the
+repository, not the historical issue labels.
 
-| #   | Title                                                                          | Status         | Depends On          | Est. Size |
-| --- | ------------------------------------------------------------------------------ | -------------- | ------------------- | --------- |
-| 1   | Hide non-MVP blockchain routes behind feature flags & stabilize no-chain build | 🔲 not started | —                   | M         |
-| 2   | Firebase client SDK init + emulator auto-connect                               | 🔲 not started | —                   | S         |
-| 3   | User profile (`users/{uid}`) + admin role + `onAuthUserCreated` function       | 🔲 not started | #2                  | M         |
-| 4   | Email/Password auth (register / login / logout)                                | 🔲 not started | #2, #3              | M         |
-| 5   | Posts CRUD (create / list / detail for discussions)                            | 🔲 not started | #3, #4              | L         |
-| 6   | Comments CRUD                                                                  | 🔲 not started | #5                  | M         |
-| 7   | Voting (multi-select, gate-only, one-person-one-vote) + realtime stats         | 🔲 not started | #5, #3              | L         |
-| 8   | Moderation (pin / lock / hide) via admin-only Cloud Functions                  | 🔲 not started | #5, #3              | M         |
-| 9   | Firestore security rules + CI test harness                                     | 🔲 not started | #3–#8 (incremental) | M         |
+| #   | Capability                                                   | Status                | Evidence / remaining work                                                          |
+| --- | ------------------------------------------------------------ | --------------------- | ---------------------------------------------------------------------------------- |
+| 1   | Hide blockchain routes and support a no-chain build          | 🟨 mostly implemented | Many pages and APIs have guards; a clean no-keys build must still be kept in CI.   |
+| 2   | Firebase client initialization and emulator connection       | ✅ implemented        | Client Auth/Firestore/Functions initialization exists.                             |
+| 3   | User profile, role, points, and auth-create trigger          | ✅ implemented        | `onAuthUserCreated` creates `users/{uid}`; current initial balance is 1000 points. |
+| 4   | Email/password registration, login, and logout               | ✅ implemented        | DemoOS auth components and Firebase Auth hooks are present.                        |
+| 5   | Discussion post CRUD                                         | ✅ implemented        | Create/list/detail/update/delete APIs and UI are present.                          |
+| 6   | Comment CRUD                                                 | ✅ implemented        | Create/list/reply/update/delete and comment-count trigger are present.             |
+| 7   | Discussion poll voting and realtime aggregate results        | ✅ implemented        | `castVote`, vote API, UI, and aggregate stats exist.                               |
+| 8   | Admin moderation (pin/lock/hide)                             | ⬜ not implemented    | No `moderatePost` Function or equivalent trusted route exists.                     |
+| 9   | Firestore rules, indexes, emulator integration tests, and CI | ⬜ not implemented    | No checked-in rules/index files; only one user-profile unit test exists.           |
+| 10  | Points-based Referenda parity                                | 🟦 next milestone     | Follow `REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`.                                    |
 
-### Dependency Graph
+### Historical MVP Dependency Graph
 
 ```
 #1 (hide routes) ───────────────────────────────────────────┐
@@ -128,7 +142,7 @@ When creating **DemoOS alternatives** to existing components:
 
 | Collection                            | Key Fields                                                                                                                                                        | Access                                                              |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `users/{uid}`                         | `uid, email, displayName, role('user'\|'admin'), pointsBalance(default 0), createdAt, updatedAt`                                                                  | Read: any authed user; Write: Cloud Functions only                  |
+| `users/{uid}`                         | `uid, email, displayName, role('user'\|'admin'), pointsBalance(default 1000), createdAt, updatedAt`                                                               | Read: any authed user; Write: Cloud Functions only                  |
 | `posts/{postId}`                      | `id, title, content, authorUid, authorDisplayName, type('discussion'), status('active'\|'locked'\|'hidden'), isPinned, commentCount, poll?, createdAt, updatedAt` | Read: public (active); Write: authed (create), Functions (moderate) |
 | `posts/{postId}/comments/{commentId}` | `id, postId, authorUid, authorDisplayName, content, createdAt`                                                                                                    | Read: public; Create: authed (if post active)                       |
 | `posts/{postId}/votes/{uid}`          | `uid, selectedOptions[], votedAt`                                                                                                                                 | Read: own only; Write: Cloud Functions only                         |
@@ -140,7 +154,7 @@ When creating **DemoOS alternatives** to existing components:
 | ------------------- | ---------------------- | ----------------------------------------------------------- |
 | `onAuthUserCreated` | `auth.user().onCreate` | Auto-create `users/{uid}` doc with defaults                 |
 | `castVote`          | `onCall` (callable)    | Validate eligibility + write vote + update stats atomically |
-| `moderatePost`      | `onCall` (callable)    | Verify admin role + apply pin/lock/hide action              |
+| `moderatePost`      | planned callable/API   | Verify admin role + apply pin/lock/hide action              |
 
 ### How to Set a User as Admin
 

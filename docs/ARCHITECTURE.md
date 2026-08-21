@@ -76,15 +76,18 @@ Domain ← Ports ← Adapters ← App
 
 ## Migration Strategy: Blockchain → Firebase
 
-### Current State
+### Current State (2026-08-21)
 
-- Legacy Firestore service at: `src/app/api/_api-services/offchain_db_service/firestore_service/`
-- Direct Firebase SDK imports in API routes
-- Tightly coupled data access logic
+- Domain entities exist for User, Post, Comment, Poll, and Vote.
+- Repository ports exist for User, Post, Comment, and Vote.
+- Firestore adapters exist for User, Post, and Comment; a Vote adapter is still missing.
+- DemoOS APIs also use `demoPostService`, `demoCommentService`, and the legacy
+  `src/app/api/_api-services/offchain_db_service/firestore_service/` path.
+- Data access and business rules therefore remain partly coupled to Next.js/Firebase.
 
 ### Migration Path
 
-#### Phase 1: Define Contracts (Current)
+#### Phase 1: Define Contracts (Mostly Complete)
 
 1. ✅ Create repository interfaces in `ports/repositories/`
 2. ✅ Example: `PostRepository.ts` interface
@@ -95,7 +98,7 @@ Domain ← Ports ← Adapters ← App
 2. Migrate existing Firestore logic to adapter pattern
 3. Example: `FirestorePostRepository.ts` implements `PostRepository`
 
-#### Phase 3: Refactor API Routes (Future)
+#### Phase 3: Refactor API Routes (Not Started Systematically)
 
 1. Update API routes to use repositories via dependency injection
 2. Remove direct Firebase imports from API routes
@@ -212,19 +215,19 @@ The `users` collection stores user profile documents keyed by Firebase Auth UID.
 
 ### Schema
 
-| Field          | Type                   | Default   | Description                                      |
-| -------------- | ---------------------- | --------- | ------------------------------------------------ |
-| `uid`          | `string`               | —         | Firebase Auth UID (document ID)                  |
-| `email`        | `string`               | `""`      | User's email address                             |
-| `displayName`  | `string`               | `""`      | User's display name                              |
-| `role`         | `'user' \| 'admin'`    | `'user'`  | User role; admin assigned manually via Firestore |
-| `pointsBalance`| `number`              | `0`       | Voting-eligibility points balance                |
-| `createdAt`    | `Timestamp`            | server    | Document creation timestamp                      |
-| `updatedAt`    | `Timestamp`            | server    | Last-update timestamp                            |
+| Field           | Type                | Default  | Description                                                |
+| --------------- | ------------------- | -------- | ---------------------------------------------------------- |
+| `uid`           | `string`            | —        | Firebase Auth UID (document ID)                            |
+| `email`         | `string`            | `""`     | User's email address                                       |
+| `displayName`   | `string`            | `""`     | User's display name                                        |
+| `role`          | `'user' \| 'admin'` | `'user'` | User role; admin assigned manually via Firestore           |
+| `pointsBalance` | `number`            | `1000`   | Voting eligibility and points-based Referenda voting power |
+| `createdAt`     | `Timestamp`         | server   | Document creation timestamp                                |
+| `updatedAt`     | `Timestamp`         | server   | Last-update timestamp                                      |
 
 ### Auto-Creation
 
-The `onAuthUserCreated` Cloud Function (blocking `beforeUserCreated` trigger) automatically
+The `onAuthUserCreated` Cloud Function (`auth.user().onCreate`) automatically
 creates a `users/{uid}` document with default values when a new Firebase Auth user signs up.
 
 ### Domain Entity
@@ -232,13 +235,13 @@ creates a `users/{uid}` document with default values when a new Firebase Auth us
 ```typescript
 // src/domain/entities/User.ts
 export interface User {
-  uid: string;
-  email: string;
-  displayName: string;
-  role: 'user' | 'admin';
-  pointsBalance: number;
-  createdAt: Date;
-  updatedAt: Date;
+	uid: string;
+	email: string;
+	displayName: string;
+	role: 'user' | 'admin';
+	pointsBalance: number;
+	createdAt: Date;
+	updatedAt: Date;
 }
 ```
 
@@ -247,21 +250,37 @@ export interface User {
 ```typescript
 // src/ports/repositories/UserRepository.ts
 export interface UserRepository {
-  getUserByUid(uid: string): Promise<User | null>;
-  createUser(user: Omit<User, 'createdAt' | 'updatedAt'>): Promise<User>;
-  updateUser(uid: string, updates: Partial<Omit<User, 'uid' | 'createdAt'>>): Promise<void>;
-  setRole(uid: string, role: 'user' | 'admin'): Promise<void>;
-  getPointsBalance(uid: string): Promise<number>;
+	getUserByUid(uid: string): Promise<User | null>;
+	createUser(user: Omit<User, 'createdAt' | 'updatedAt'>): Promise<User>;
+	updateUser(uid: string, updates: Partial<Omit<User, 'uid' | 'createdAt'>>): Promise<void>;
+	setRole(uid: string, role: 'user' | 'admin'): Promise<void>;
+	getPointsBalance(uid: string): Promise<number>;
 }
 ```
 
 ### Adapter
 
-- `src/adapters/firestore/FirestoreUserRepository.ts` — Firestore implementation (stub, to be completed).
+- `src/adapters/firestore/FirestoreUserRepository.ts` — Firestore implementation.
 
 ### API
 
 - `GET /api/v2/users/me` — Returns the authenticated user's public profile.
+
+## Next Architecture Milestone: Points-based Referenda
+
+When `ENABLE_BLOCKCHAIN=true`, the existing Referenda code continues to use the current
+on-chain/indexer path unchanged. When it is `false`, `/referenda` and
+`/referenda/{index}` will use Firebase repositories and trusted server-side voting with
+`pointsBalance` as voting power.
+
+The application layer should select a provider at the route boundary. Shared UI receives
+normalized listing/detail/vote view models and must not decide whether data came from the
+chain or Firestore. Points voting must not import wallet, Polkadot API, conviction,
+delegation, or chain transaction modules.
+
+See [`REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](./REFERENDA_POINTS_DEVELOPMENT_GUIDE.md)
+for the target data model, ports, API contracts, UI reuse map, implementation phases, and
+test requirements.
 
 ## References
 

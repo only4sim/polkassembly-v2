@@ -6,6 +6,18 @@ This repo hosts
 
 - next.js app: the next js fullstack app.
 
+DemoOS preserves the original Polkassembly blockchain implementation while adding a
+Firebase-backed mode for authentication, discussions, comments, profiles, and voting.
+The current implementation status and mandatory preservation rules are documented in
+[`docs/AGENTS.md`](docs/AGENTS.md).
+
+The next development milestone is Firebase-backed Referenda with the existing Referenda
+UI and interaction patterns, using `pointsBalance` in place of DOT. AI Agents and
+developers must follow
+[`docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md).
+To start a new implementation Agent, use the ready-to-copy
+[`docs/REFERENDA_POINTS_AGENT_PROMPT.md`](docs/REFERENDA_POINTS_AGENT_PROMPT.md).
+
 ## Getting Started
 
 First, install the dependencies:

@@ -19,7 +19,14 @@ Adapters provide:
 
 ## Current Adapters
 
-- **FirestorePostRepository**: Firestore implementation of PostRepository (stub with TODOs)
+- **FirestorePostRepository**: Firestore implementation of PostRepository
+- **FirestoreUserRepository**: Firestore implementation of UserRepository
+- **FirestoreCommentRepository**: Firestore implementation of CommentRepository
+
+`VoteRepository` has a port but does not yet have a Firestore adapter. The next
+points-based Referenda milestone will add dedicated Referendum and ReferendumVote ports
+and adapters; see
+[`REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](../../docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md).
 
 ## Example Structure
 

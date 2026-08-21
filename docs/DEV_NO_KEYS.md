@@ -77,6 +77,18 @@ To enable full functionality, set the corresponding feature flag to `true` and p
 
 `FIREBASE_SERVICE_ACC_CONFIG` is handled separately. If not set, a warning is logged but the server still starts. Firestore-dependent operations will fail at call time rather than at startup.
 
+## Current Configuration Caveat
+
+As of 2026-08-21, `.env.example` is not a canonical no-keys profile: it enables
+`ENABLE_ALGOLIA`, `IS_CACHE_ENABLED`, `IS_AI_ENABLED`, and
+`IS_NOTIFICATION_SERVICE_ENABLED` even though their credentials are empty. For a true
+no-keys run, explicitly use the values in this guide until `.env.example` is aligned.
+
+The upcoming points-based Referenda implementation must also run with all blockchain and
+indexer flags disabled. `/referenda` must no longer redirect to `/`; it should select the
+Firebase implementation while preserving the original chain implementation for
+`ENABLE_BLOCKCHAIN=true`.
+
 ## Troubleshooting
 
 **Server won't start?**
