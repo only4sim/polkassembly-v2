@@ -6,9 +6,14 @@
 
 import { defineConfig } from 'vitest/config';
 
+/**
+ * Firestore security-rules tests. Requires the Firestore emulator on :8080
+ * (`yarn test:rules`). Scoped to `tests/firestore/**` only — repository/service
+ * integration tests live in `vitest.integration.config.mts`.
+ */
 export default defineConfig({
 	test: {
-		include: ['tests/**/*.test.{ts,js}'],
+		include: ['tests/firestore/**/*.test.{ts,js}'],
 		exclude: ['node_modules/**', 'functions/**'],
 		testTimeout: 120000,
 		hookTimeout: 60000

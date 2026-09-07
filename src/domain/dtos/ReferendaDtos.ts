@@ -54,6 +54,20 @@ export interface ReferendumVoteDto {
 	updatedAt: string;
 }
 
+/**
+ * Privacy-safe public vote DTO used by the public vote history endpoint.
+ *
+ * Frozen contract (PR-1): MUST NOT contain `uid`, `balanceAtVote`, email, role,
+ * pointsBalance, or any other private profile field.
+ */
+export interface PublicReferendumVoteDto {
+	voterDisplayName: string;
+	decision: ReferendumDecision;
+	pointsUsed: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface ReferendaListDto {
 	items: ReferendumSummaryDto[];
 	totalCount: number;
@@ -130,6 +144,23 @@ export function toReferendumVoteDto(v: ReferendumVote): ReferendumVoteDto {
 		decision: v.decision,
 		pointsUsed: v.pointsUsed,
 		balanceAtVote: v.balanceAtVote,
+		createdAt: v.createdAt,
+		updatedAt: v.updatedAt
+	};
+}
+
+/**
+ * Map a domain vote to its public (privacy-safe) wire DTO.
+ *
+ * Frozen contract (PR-1): the public history endpoint must only expose
+ * display name, decision, points and timestamps. `uid` and `balanceAtVote`
+ * are audit fields reserved for the owner's own `/votes/me` response.
+ */
+export function toPublicReferendumVoteDto(v: ReferendumVote): PublicReferendumVoteDto {
+	return {
+		voterDisplayName: v.voterDisplayName,
+		decision: v.decision,
+		pointsUsed: v.pointsUsed,
 		createdAt: v.createdAt,
 		updatedAt: v.updatedAt
 	};

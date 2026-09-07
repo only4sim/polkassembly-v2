@@ -63,3 +63,33 @@ export function makeVote(overrides: Partial<ReferendumVote> = {}): ReferendumVot
 		...overrides
 	};
 }
+
+/**
+ * Deterministic test instant. Frozen contract (PR-1): boundary tests must use
+ * explicit instants (via the injectable clock helpers), never `Date.now()`.
+ */
+export const TEST_NOW = new Date('2026-09-07T12:00:00.000Z');
+
+/** Voting window that is open at `now` (half-open: startsAt <= now < endsAt). */
+export function openWindow(now: Date = TEST_NOW): { votingStartsAt: string; votingEndsAt: string } {
+	return {
+		votingStartsAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+		votingEndsAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString()
+	};
+}
+
+/** Voting window that has not opened yet at `now`. */
+export function futureWindow(now: Date = TEST_NOW): { votingStartsAt: string; votingEndsAt: string } {
+	return {
+		votingStartsAt: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
+		votingEndsAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+	};
+}
+
+/** Voting window that has already closed at `now`. */
+export function expiredWindow(now: Date = TEST_NOW): { votingStartsAt: string; votingEndsAt: string } {
+	return {
+		votingStartsAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		votingEndsAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString()
+	};
+}

@@ -121,4 +121,42 @@ describe('computeFinalOutcome pure function', () => {
 		const result = computeFinalOutcome(0, 100, makeStats({ ayePoints: 5, nayPoints: 5 }));
 		expect(result.outcome).toBe('Rejected');
 	});
+
+	// Frozen contract (PR-1 / audit REF-MATH-01): the final decision uses exact
+	// cross-multiplication, never the rounded display bps. These cases would
+	// incorrectly pass with `Math.round`-based comparisons.
+	it('rejects when rounded bps would meet the threshold but the exact ratio does not (1/6 case)', () => {
+		// exact approval = 10000/6 ≈ 1666.67 bps; Math.round -> 1667
+		// threshold 1667: rounded comparison would pass, exact must reject.
+		const stats = makeStats({ ayePoints: 1, nayPoints: 5, abstainPoints: 0 });
+		const result = computeFinalOutcome(1667, 1, stats);
+		expect(result.approvalBps).toBe(1667);
+		expect(result.passed).toBe(false);
+		expect(result.outcome).toBe('Rejected');
+	});
+
+	it('rejects the audit 0.5 bps example (1/20000) at a 1 bps threshold', () => {
+		// exact approval = 10000/20000 = 0.5 bps; Math.round(0.5) -> 1
+		// threshold 1: rounded comparison would pass, exact must reject.
+		const stats = makeStats({ ayePoints: 1, nayPoints: 19999, abstainPoints: 0 });
+		const result = computeFinalOutcome(1, 1, stats);
+		expect(result.approvalBps).toBe(1);
+		expect(result.passed).toBe(false);
+		expect(result.outcome).toBe('Rejected');
+	});
+
+	it('passes when the exact ratio equals the threshold (1/3 at 3333 bps)', () => {
+		// exact approval = 10000/3 ≈ 3333.33 bps; threshold 3333 -> exact passes.
+		const stats = makeStats({ ayePoints: 1, nayPoints: 2, abstainPoints: 0 });
+		const result = computeFinalOutcome(3333, 1, stats);
+		expect(result.passed).toBe(true);
+		expect(result.outcome).toBe('Confirmed');
+	});
+
+	it('rejects at exactly one integer below the exact ratio (1/3 at 3334 bps)', () => {
+		const stats = makeStats({ ayePoints: 1, nayPoints: 2, abstainPoints: 0 });
+		const result = computeFinalOutcome(3334, 1, stats);
+		expect(result.passed).toBe(false);
+		expect(result.outcome).toBe('Rejected');
+	});
 });

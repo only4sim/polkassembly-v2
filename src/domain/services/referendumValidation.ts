@@ -62,12 +62,13 @@ export function validateVoteInput(ctx: VoteValidationContext): { decision: Refer
 	}
 
 	// Time window (server time).
+	// Frozen contract (PR-1): half-open interval `votingStartsAt <= now < votingEndsAt`.
 	if (ctx.votingStartsAt && ctx.votingEndsAt) {
 		const nowMs = ctx.now.getTime();
 		if (nowMs < ctx.votingStartsAt.getTime()) {
 			throw new VoteValidationError('outside-voting-window', 'Voting has not started yet.');
 		}
-		if (nowMs > ctx.votingEndsAt.getTime()) {
+		if (nowMs >= ctx.votingEndsAt.getTime()) {
 			throw new VoteValidationError('outside-voting-window', 'Voting has ended.');
 		}
 	}
@@ -100,10 +101,11 @@ export function assertRemovalAllowed(referendumStatus: ReferendumStatus | undefi
 	}
 	if (votingStartsAt && votingEndsAt) {
 		const nowMs = now.getTime();
+		// Frozen contract (PR-1): half-open interval `votingStartsAt <= now < votingEndsAt`.
 		if (nowMs < votingStartsAt.getTime()) {
 			throw new VoteValidationError('outside-voting-window', 'Voting has not started yet.');
 		}
-		if (nowMs > votingEndsAt.getTime()) {
+		if (nowMs >= votingEndsAt.getTime()) {
 			throw new VoteValidationError('outside-voting-window', 'Voting has ended.');
 		}
 	}

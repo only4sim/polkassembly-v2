@@ -53,7 +53,7 @@ export class ReferendaServiceError extends Error {
 	}
 }
 
-function toServiceError(err: unknown): ReferendaServiceError {
+function toServiceError(err: unknown): unknown {
 	if (err instanceof ReferendaServiceError) return err;
 	if (err instanceof VoteValidationError) {
 		const map: Record<string, ReferendaServiceErrorCode> = {
@@ -70,7 +70,10 @@ function toServiceError(err: unknown): ReferendaServiceError {
 	if (err instanceof CreationValidationError) {
 		return new ReferendaServiceError(err.code === 'unauthorized' ? 'unauthorized' : 'invalid-argument', err.message);
 	}
-	return new ReferendaServiceError('conflict', (err as Error).message || 'Referenda operation failed.');
+	// Frozen contract (PR-1): only known business errors are mapped to HTTP 4xx.
+	// Unknown errors (infra failures, corrupt state, Firestore contention) are
+	// re-thrown untouched so the API boundary returns 500 instead of 409.
+	return err;
 }
 
 export class ReferendumTrustedService {
@@ -143,16 +146,17 @@ export class ReferendumTrustedService {
 		}
 	}
 
-	async removeVote(index: number, actor: VerifiedActor): Promise<void> {
+	async removeVote(index: number, actor: VerifiedActor): Promise<ReferendumStats> {
 		try {
-			await this.db.runTransaction(async (tx) => {
+			return await this.db.runTransaction(async (tx) => {
 				const ref = referendumDoc(this.db, index);
 				const voteRef = voteDoc(this.db, index, actor.uid);
 				const statsRef = statsDoc(this.db, index);
 				const [refSnap, voteSnap, statsSnap] = await Promise.all([tx.get(ref), tx.get(voteRef), tx.get(statsRef)]);
 				if (!refSnap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
 				const referendum = mapReferendum(refSnap.data()!, index);
-				if (!voteSnap.exists) return;
+				// Frozen contract (PR-1): idempotent removal returns the current stats.
+				if (!voteSnap.exists) return statsSnap.exists ? mapStats(statsSnap.data()!) : this.emptyStats();
 				assertRemovalAllowed(referendum.status, new Date(), new Date(referendum.votingStartsAt), new Date(referendum.votingEndsAt));
 				const prev = mapVote(voteSnap.data()!, actor.uid);
 				const stats = statsSnap.exists ? mapStats(statsSnap.data()!) : this.emptyStats();
@@ -170,6 +174,7 @@ export class ReferendumTrustedService {
 					updatedAt: now,
 					schemaVersion: STATS_SCHEMA_VERSION
 				});
+				return nextStats;
 			});
 		} catch (err) {
 			throw toServiceError(err);

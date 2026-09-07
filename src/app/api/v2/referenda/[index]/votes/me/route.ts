@@ -20,11 +20,13 @@ function parseIndex(value: string): number | null {
 }
 
 /**
- * GET /api/v2/referenda/{index}/votes/me — the authenticated user's own vote.
+ * GET /api/v2/referenda/{index}/votes/me
+ * Frozen shape (PR-1): `{ vote: ReferendumVoteDto | null }`
+ * Includes audit fields (uid, balanceAtVote) — owner-only.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ index: string }> }): Promise<NextResponse> {
 	if (ENABLE_BLOCKCHAIN) {
-		return NextResponse.json(null);
+		return NextResponse.json({ vote: null });
 	}
 	const { index: raw } = await params;
 	const index = parseIndex(raw);
@@ -40,14 +42,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ inde
 			return referendaErrorResponse(new ReferendaServiceError('not-found', NOT_FOUND_MESSAGE));
 		}
 		const vote = await service.getVote(index, actor.uid);
-		return NextResponse.json(vote ? toReferendumVoteDto(vote) : null);
+		return NextResponse.json({ vote: vote ? toReferendumVoteDto(vote) : null });
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}
 }
 
 /**
- * PUT /api/v2/referenda/{index}/votes/me — create or change own vote.
+ * PUT /api/v2/referenda/{index}/votes/me
+ * Frozen shape (PR-1): `{ vote: ReferendumVoteDto, stats: ReferendumStatsDto }`
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ index: string }> }): Promise<NextResponse> {
 	if (ENABLE_BLOCKCHAIN) {
@@ -68,15 +71,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ inde
 			decision: body.decision as ReferendumDecision,
 			pointsUsed: body.pointsUsed as number
 		});
-		return NextResponse.json({ data: toReferendumVoteDto(vote), stats: toReferendumStatsDto(stats) });
+		return NextResponse.json({ vote: toReferendumVoteDto(vote), stats: toReferendumStatsDto(stats) });
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}
 }
 
 /**
- * DELETE /api/v2/referenda/{index}/votes/me — remove own vote.
- * Idempotent: removing a non-existent vote still returns success.
+ * DELETE /api/v2/referenda/{index}/votes/me
+ * Frozen shape (PR-1): `{ removed: true, stats: ReferendumStatsDto }`
+ * Idempotent: removing a non-existent vote still returns `{ removed: true }`.
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ index: string }> }): Promise<NextResponse> {
 	if (ENABLE_BLOCKCHAIN) {
@@ -91,8 +95,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 	try {
 		const actor = await requireVerifiedActor(req);
 		const service = new ReferendumTrustedService();
-		await service.removeVote(index, actor);
-		return NextResponse.json({ message: 'Vote removed.' });
+		const stats = await service.removeVote(index, actor);
+		return NextResponse.json({ removed: true, stats: toReferendumStatsDto(stats) });
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

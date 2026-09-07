@@ -15,8 +15,9 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:unit": "vitest run",
-		"test:rules": "firebase emulators:exec --only firestore \"vitest run --config vitest.rules.config.mts tests/firestore/rules.test.ts\"",
-		"test:emulators": "firebase emulators:exec --only firestore,auth,functions \"vitest run --config vitest.rules.config.mts\"",
+		"test:rules": "firebase emulators:exec --only firestore \"vitest run --config vitest.rules.config.mts\"",
+		"test:integration": "firebase emulators:exec --only firestore \"vitest run --config vitest.integration.config.mts\"",
+		"test:emulators": "firebase emulators:exec --only firestore \"vitest run --config vitest.rules.config.mts && vitest run --config vitest.integration.config.mts\"",
 		"api-bump:polkadot": "yarn add @polkadot/api @polkadot/api-augment @polkadot/extension-dapp @polkadot/extension-inject @polkadot/react-identicon @polkadot/react-qr @polkadot/types @polkadot/util @polkadot/util-crypto"
 	},
 	"engines": {

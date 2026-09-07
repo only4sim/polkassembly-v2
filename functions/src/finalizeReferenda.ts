@@ -31,24 +31,27 @@ function iso(v: admin.firestore.Timestamp | string | undefined): string {
 	return new Date(0).toISOString();
 }
 
-function computeApprovalBps(stats: { ayePoints?: number; nayPoints?: number }): number {
-	const aye = parsePoints(stats.ayePoints);
-	const nay = parsePoints(stats.nayPoints);
-	const denom = aye + nay;
-	if (denom === 0) return 0;
-	return Math.round((aye / denom) * APPROVAL_BPS_DENOM);
-}
-
 function computeFinalOutcome(
 	approvalThresholdBps: number,
 	minimumTurnoutPoints: number,
 	stats: { ayePoints?: number; nayPoints?: number; abstainPoints?: number }
 ): 'Confirmed' | 'Rejected' {
-	const aBps = computeApprovalBps(stats);
-	const participation = parsePoints(stats.ayePoints) + parsePoints(stats.nayPoints) + parsePoints(stats.abstainPoints);
-	const passesApproval = aBps >= approvalThresholdBps;
+	// Frozen contract (PR-1): identical exact cross-multiplication as the Next.js
+	// domain implementation — `ayePoints * 10000 >= threshold * (aye + nay)` via
+	// BigInt. Rounded display bps must never drive the decision.
+	const ayePoints = parsePoints(stats.ayePoints);
+	const nayPoints = parsePoints(stats.nayPoints);
+	const denominator = ayePoints + nayPoints;
+	const participation = ayePoints + nayPoints + parsePoints(stats.abstainPoints);
+
+	let passesApproval: boolean;
+	if (denominator === 0) {
+		passesApproval = approvalThresholdBps === 0;
+	} else {
+		passesApproval = BigInt(ayePoints) * BigInt(APPROVAL_BPS_DENOM) >= BigInt(approvalThresholdBps) * BigInt(denominator);
+	}
 	const passesTurnout = participation >= minimumTurnoutPoints;
-	const passes = approvalThresholdBps === 0 ? passesTurnout && passesApproval : passesApproval && passesTurnout;
+	const passes = passesApproval && passesTurnout;
 	return passes ? 'Confirmed' : 'Rejected';
 }
 

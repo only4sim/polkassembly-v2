@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { ReferendumReadService } from '@/app/api/_api-services/referenda/referendumReadService';
 import { ReferendaServiceError } from '@/app/api/_api-services/referenda/referendumTrustedService';
-import { toReferendumVoteDto } from '@/domain/dtos/ReferendaDtos';
+import { toPublicReferendumVoteDto } from '@/domain/dtos/ReferendaDtos';
 import { referendaErrorResponse } from '@/app/api/_api-utils/referendaErrors';
 
 function parseIndex(value: string): number | null {
@@ -17,7 +17,12 @@ function parseIndex(value: string): number | null {
 
 /**
  * GET /api/v2/referenda/{index}/votes
- * Recent vote history (point-weighted) for the detail page.
+ * Public vote history.
+ *
+ * Frozen contract (PR-1):
+ *  - items use the privacy-safe PublicReferendumVoteDto (no uid, no balanceAtVote,
+ *    no email/role/pointsBalance);
+ *  - `totalCount` is the real total, not the current page size.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ index: string }> }): Promise<NextResponse> {
 	if (ENABLE_BLOCKCHAIN) {
@@ -36,8 +41,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ inde
 		if (!referendum) {
 			return referendaErrorResponse(new ReferendaServiceError('not-found', 'Referendum not found.'));
 		}
-		const votes = await service.listVotes(index, limit);
-		return NextResponse.json({ items: votes.map(toReferendumVoteDto), totalCount: votes.length });
+		const [votes, totalCount] = await Promise.all([service.listVotes(index, limit), service.countVotes(index)]);
+		return NextResponse.json({ items: votes.map(toPublicReferendumVoteDto), totalCount });
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

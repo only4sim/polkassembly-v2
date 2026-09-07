@@ -52,7 +52,8 @@ function DemoReferendaVoteDialog({ index, existingVote, onClose, onVoteChanged, 
 				throw new Error(body.message || 'Vote failed.');
 			}
 			const json = await res.json();
-			onVoteChanged(json.data);
+			// Frozen contract (PR-1): PUT /votes/me returns `{ vote, stats }`.
+			onVoteChanged(json.vote);
 			toast({ title: 'Vote cast successfully!', status: ENotificationStatus.SUCCESS });
 		} catch (err) {
 			toast({ title: (err as Error).message || 'Failed to cast vote.', status: ENotificationStatus.ERROR });

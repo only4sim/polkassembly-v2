@@ -31,10 +31,13 @@ export class FirestoreReferendumRepository implements ReferendumRepository, Coun
 	}
 
 	async list(filter: ReferendumListFilter): Promise<ReferendumListPage> {
-		const { page, pageSize, statuses } = filter;
+		const { page, pageSize, statuses, origin } = filter;
 		let query: admin.firestore.Query = this.db.collection(REFERENDA_COLLECTION).orderBy('createdAt', 'desc');
 		if (statuses && statuses.length > 0) {
 			query = query.where('status', 'in', statuses);
+		}
+		if (origin) {
+			query = query.where('origin', '==', origin);
 		}
 		const snapshot = await query
 			.limit(pageSize)
@@ -43,15 +46,15 @@ export class FirestoreReferendumRepository implements ReferendumRepository, Coun
 
 		const items = snapshot.docs.map((doc) => mapReferendum(doc.data(), Number(doc.id)));
 
-		let totalCount = 0;
+		let countQuery: admin.firestore.Query = this.db.collection(REFERENDA_COLLECTION);
 		if (statuses && statuses.length > 0) {
-			// Use count aggregation where available; fall back to size
-			const countSnap = await this.db.collection(REFERENDA_COLLECTION).where('status', 'in', statuses).count().get();
-			totalCount = countSnap.data().count;
-		} else {
-			const countSnap = await this.db.collection(REFERENDA_COLLECTION).count().get();
-			totalCount = countSnap.data().count;
+			countQuery = countQuery.where('status', 'in', statuses);
 		}
+		if (origin) {
+			countQuery = countQuery.where('origin', '==', origin);
+		}
+		const countSnap = await countQuery.count().get();
+		const totalCount = countSnap.data().count;
 
 		return { items, totalCount };
 	}

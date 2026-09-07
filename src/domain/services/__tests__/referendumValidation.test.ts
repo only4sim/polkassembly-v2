@@ -81,6 +81,24 @@ describe('validateVoteInput', () => {
 		expect(() => validateVoteInput(ctx({ now: new Date('2026-08-23T12:00:00Z') }))).toThrowError(/has ended/);
 	});
 
+	// Frozen contract (PR-1): half-open interval `votingStartsAt <= now < votingEndsAt`.
+	it('allows a vote exactly at votingStartsAt (inclusive start boundary)', () => {
+		const result = validateVoteInput(ctx({ now: new Date('2026-08-20T12:00:00Z') }));
+		expect(result.decision).toBe(ReferendumDecision.AYE);
+	});
+
+	it('rejects a vote exactly at votingEndsAt (exclusive end boundary)', () => {
+		let thrown: unknown;
+		try {
+			validateVoteInput(ctx({ now: new Date('2026-08-22T12:00:00Z') }));
+		} catch (e) {
+			thrown = e;
+		}
+		expect(thrown).toBeInstanceOf(VoteValidationError);
+		expect((thrown as VoteValidationError).code).toBe('outside-voting-window');
+		expect((thrown as VoteValidationError).message).toMatch(/has ended/);
+	});
+
 	it('rejects missing referendum (not found)', () => {
 		expect(() => validateVoteInput(ctx({ referendumStatus: undefined }))).toThrowError(/not found/);
 	});

@@ -59,10 +59,12 @@ function DemoReferendaDetail({ params }: Props) {
 							headers: { Authorization: `Bearer ${token}` }
 						});
 						if (voteRes.ok) {
-							const voteData = await voteRes.json();
-							// Accept only proper vote objects (not error bodies)
-							if (voteData && voteData.uid) {
-								setMyVote(voteData);
+							const body = await voteRes.json();
+							// Frozen contract (PR-1): GET /votes/me returns `{ vote }`.
+							// Accept only proper vote objects (never error bodies).
+							const vote = body?.vote ?? null;
+							if (vote && vote.uid) {
+								setMyVote(vote);
 							}
 						}
 					}

@@ -7,15 +7,77 @@ import { StatusCodes } from 'http-status-codes';
 import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { ReferendumReadService } from '@/app/api/_api-services/referenda/referendumReadService';
 import { ReferendumTrustedService, ReferendaServiceError } from '@/app/api/_api-services/referenda/referendumTrustedService';
-import { toReferendumSummaryDto, type ReferendaListDto } from '@/domain/dtos/ReferendaDtos';
-import { ReferendumStatus } from '@/domain/entities/Referendum';
+import { toReferendumDetailDto, toReferendumSummaryDto, type ReferendaListDto } from '@/domain/dtos/ReferendaDtos';
+import { REFERENDA_ORIGINS, ReferendumStatus } from '@/domain/entities/Referendum';
 import { referendaErrorResponse } from '@/app/api/_api-utils/referendaErrors';
 import { requireVerifiedActor } from '@/app/api/_api-utils/referendaAuth';
 
 const MAX_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 10;
+
+const VALID_STATUSES = Object.values(ReferendumStatus) as string[];
 
 /**
- * GET /api/v2/referenda?page=&pageSize=&status=
+ * Frozen list query contract (PR-1):
+ *  - `page` — positive integer (default 1);
+ *  - `pageSize` — integer 1..MAX_PAGE_SIZE (default 10);
+ *  - `status` — repeatable and/or comma-separated; must be a valid ReferendumStatus;
+ *  - `origin` — single value from the domain origin allowlist;
+ *  - invalid values return 400 and are never silently dropped.
+ */
+function parseListQuery(req: NextRequest): { errors: string[]; page: number; pageSize: number; statuses?: ReferendumStatus[]; origin?: string } {
+	const sp = req.nextUrl.searchParams;
+	const errors: string[] = [];
+
+	const parsePositiveInt = (raw: string | null, name: string, fallback: number): number => {
+		if (raw === null || raw === '') return fallback;
+		if (!/^\d+$/.test(raw)) {
+			errors.push(`${name} must be a positive integer.`);
+			return fallback;
+		}
+		const n = Number(raw);
+		if (!Number.isSafeInteger(n) || n < 1) {
+			errors.push(`${name} must be a positive integer.`);
+			return fallback;
+		}
+		return n;
+	};
+
+	const page = parsePositiveInt(sp.get('page'), 'page', 1);
+	const pageSizeRaw = parsePositiveInt(sp.get('pageSize'), 'pageSize', DEFAULT_PAGE_SIZE);
+	const pageSize = Math.min(MAX_PAGE_SIZE, pageSizeRaw);
+
+	const statusParam = sp
+		.getAll('status')
+		.flatMap((s) => s.split(','))
+		.map((s) => s.trim())
+		.filter(Boolean);
+
+	let statuses: ReferendumStatus[] | undefined;
+	if (statusParam.length > 0) {
+		const invalid = statusParam.filter((s) => !VALID_STATUSES.includes(s));
+		if (invalid.length > 0) {
+			errors.push(`status contains invalid values: ${invalid.join(', ')}`);
+		} else {
+			statuses = Array.from(new Set(statusParam)) as ReferendumStatus[];
+		}
+	}
+
+	const originParam = sp.get('origin');
+	let origin: string | undefined;
+	if (originParam !== null && originParam !== '') {
+		if (!(REFERENDA_ORIGINS as readonly string[]).includes(originParam)) {
+			errors.push(`origin '${originParam}' is not supported.`);
+		} else {
+			origin = originParam;
+		}
+	}
+
+	return { errors, page, pageSize, statuses, origin };
+}
+
+/**
+ * GET /api/v2/referenda?page=&pageSize=&status=&origin=
  * List points-based referenda (DemoOS) in the existing listing visual language.
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
@@ -25,19 +87,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 		return NextResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 0 });
 	}
 
-	const page = Math.max(1, Number(req.nextUrl.searchParams.get('page')) || 1);
-	const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(req.nextUrl.searchParams.get('pageSize')) || 10));
-	const rawStatus = req.nextUrl.searchParams.get('status');
-	const statuses = rawStatus
-		? rawStatus
-				.split(',')
-				.map((s) => s.trim())
-				.filter((s) => (Object.values(ReferendumStatus) as string[]).includes(s))
-		: undefined;
+	const { errors, page, pageSize, statuses, origin } = parseListQuery(req);
+	if (errors.length > 0) {
+		return referendaErrorResponse(new ReferendaServiceError('invalid-argument', errors.join(' ')));
+	}
 
 	try {
 		const service = new ReferendumReadService();
-		const { items, totalCount } = await service.list({ page, pageSize, statuses });
+		const { items, totalCount } = await service.list({ page, pageSize, statuses, origin });
 		const dto: ReferendaListDto = {
 			items: items.map(toReferendumSummaryDto),
 			totalCount,
@@ -54,6 +111,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
  * POST /api/v2/referenda
  * Trusted creation with a server-assigned author and transactionally allocated
  * numeric index. The DemoOS create flow calls this — never the wallet/extrinsic path.
+ *
+ * Frozen shape (PR-1): `{ referendum: ReferendumDetailDto }`
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
 	if (ENABLE_BLOCKCHAIN) {
@@ -77,11 +136,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 		});
 
 		// If the voting window has already opened, transition to Deciding immediately.
+		// NOTE (Phase 3 / PR-4): the initial Submitted/Deciding decision moves into the
+		// creation transaction using one captured server `now`, and already-expired
+		// windows are rejected at creation time.
 		if (new Date(created.votingStartsAt).getTime() <= Date.now()) {
 			await service.openForVoting(created.index);
 		}
 
-		return NextResponse.json({ message: 'Referendum created', data: toReferendumSummaryDto(created) }, { status: StatusCodes.CREATED });
+		// Return the persisted state so the response never claims a stale status.
+		const readService = new ReferendumReadService();
+		const persisted = await readService.getByIndex(created.index);
+
+		return NextResponse.json({ referendum: toReferendumDetailDto(persisted ?? created) }, { status: StatusCodes.CREATED });
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

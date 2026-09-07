@@ -13,6 +13,7 @@ export interface ReferendaListQuery {
 	page: number;
 	pageSize: number;
 	statuses?: string[];
+	origin?: string;
 }
 
 export interface ReferendaListResult {
@@ -36,7 +37,8 @@ export class ReferendumReadService {
 		return this.repo.list({
 			page: query.page,
 			pageSize: query.pageSize,
-			statuses: query.statuses
+			statuses: query.statuses,
+			origin: query.origin
 		});
 	}
 
@@ -55,6 +57,16 @@ export class ReferendumReadService {
 	async listVotes(index: number, limit = 50): Promise<ReferendumVote[]> {
 		const snapshot = await referendumDoc(this.db, index).collection('votes').orderBy('updatedAt', 'desc').limit(limit).get();
 		return snapshot.docs.map((d) => mapVote(d.data(), d.id));
+	}
+
+	/**
+	 * Total number of votes for a referendum, via count aggregation (no doc reads).
+	 * Frozen contract (PR-1): public history `totalCount` is the real total, not
+	 * the number of items on the current page.
+	 */
+	async countVotes(index: number): Promise<number> {
+		const snapshot = await referendumDoc(this.db, index).collection('votes').count().get();
+		return snapshot.data().count;
 	}
 
 	/**

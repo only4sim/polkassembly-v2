@@ -10,6 +10,7 @@ export interface ReferendumListFilter {
 	page: number;
 	pageSize: number;
 	statuses?: string[];
+	origin?: string;
 }
 
 export interface ReferendumListPage {
