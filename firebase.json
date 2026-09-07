@@ -1,74 +1,63 @@
 {
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        ".runtimeconfig.json",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        ".runtimeconfig.json"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint",
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ]
-    }
-  ],
-  "emulators": {
-    "auth": {
-      "host": "0.0.0.0",
-      "port": 9099
-    },
-    "functions": {
-      "port": 5001
-    },
-    "firestore": {
-      "host": "0.0.0.0",
-      "port": 8080
-    },
-    "ui": {
-      "enabled": true,
-      "host": "0.0.0.0"
-    },
-    "singleProjectMode": true,
-    "apphosting": {
-      "port": 5002,
-      "rootDirectory": "./",
-      "startCommand": "yarn run dev"
-    }
-  },
-  "apphosting": [
-    {
-      "backendId": "cbs-demoos-app",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ],
-      "alwaysDeployFromSource": false
-    },
-    {
-      "backendId": "cbs-demoos-app",
-      "rootDir": "/",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "functions"
-      ],
-      "alwaysDeployFromSource": false
-    }
-  ]
+"firestore": {
+		"rules": "firestore.rules",
+		"indexes": "firestore.indexes.json"
+	},
+	"functions": [
+		{
+			"source": "functions",
+			"codebase": "default",
+			"ignore": [
+				"node_modules",
+				".git",
+				"firebase-debug.log",
+				"firebase-debug.*.log",
+				"*.local",
+				"firebase-debug.log",
+				"firebase-debug.*.log",
+				".runtimeconfig.json",
+				"firebase-debug.log",
+				"firebase-debug.*.log",
+				".runtimeconfig.json"
+			],
+			"predeploy": ["npm --prefix \"$RESOURCE_DIR\" run lint", "npm --prefix \"$RESOURCE_DIR\" run build"]
+		}
+	],
+	"emulators": {
+		"auth": {
+			"host": "0.0.0.0",
+			"port": 9099
+		},
+		"functions": {
+			"port": 5001
+		},
+		"firestore": {
+			"host": "0.0.0.0",
+			"port": 8080
+		},
+		"ui": {
+			"enabled": true,
+			"host": "0.0.0.0"
+		},
+		"singleProjectMode": true,
+		"apphosting": {
+			"port": 5002,
+			"rootDirectory": "./",
+			"startCommand": "yarn run dev"
+		}
+	},
+	"apphosting": [
+		{
+			"backendId": "cbs-demoos-app",
+			"rootDir": "/",
+			"ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "functions"],
+			"alwaysDeployFromSource": false
+		},
+		{
+			"backendId": "cbs-demoos-app",
+			"rootDir": "/",
+			"ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "functions"],
+			"alwaysDeployFromSource": false
+		}
+	]
 }

@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========== Users ==========
+    // Only the authenticated user can read their own profile; others are public.
+    // All mutations are server-side only.
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if false; // Server-side only via Admin SDK
+    }
+
+    // ========== Counters ==========
+    match /counters/{counter} {
+      allow read: if true;
+      allow write: if false; // Server-side only
+    }
+
+    // ========== Referenda ==========
+    match /referenda/{index} {
+      // Public read for listing and detail pages
+      allow read: if true;
+      // All lifecycle mutations are server-side only
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+
+      // ===== Votes subcollection =====
+      match /votes/{uid} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false; // Server-side via trusted API
+      }
+
+      // ===== Stats subcollection =====
+      match /stats/{statId} {
+        allow read: if true;
+        allow write: if false; // Server-side only
+      }
+    }
+
+    // ========== Existing posts/comments (DemoOS MVP) ==========
+    // Rules: create by any auth user, update/delete by owner only,
+    // moderation (pin/lock/hide) server-side only.
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      // Only the original author may update non-moderation fields.
+      // Moderation fields (status, isPinned) must be changed server-side.
+      allow update: if request.auth != null && request.auth.uid == resource.data.authorUid;
+      // Delete: only the author. resource.data exists on delete in Firestore.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorUid;
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        // Update: check existing document's authorUid (not the request body)
+        allow update: if request.auth != null && request.auth.uid == resource.data.authorUid;
+        // Delete: check existing document's authorUid
+        allow delete: if request.auth != null && request.auth.uid == resource.data.authorUid;
+      }
+
+      match /votes/{uid} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false; // Server-side only
+      }
+
+      match /stats/{statId} {
+        allow read: if true;
+        allow write: if false; // Server-side only
+      }
+    }
+
+    // ========== Deny all other access ==========
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -12,6 +12,11 @@
 		"format": "prettier --check --ignore-path .gitignore .",
 		"format:fix": "prettier --write --ignore-path .gitignore .",
 		"prepare": "husky",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:unit": "vitest run",
+		"test:rules": "firebase emulators:exec --only firestore \"vitest run --config vitest.rules.config.mts tests/firestore/rules.test.ts\"",
+		"test:emulators": "firebase emulators:exec --only firestore,auth,functions \"vitest run --config vitest.rules.config.mts\"",
 		"api-bump:polkadot": "yarn add @polkadot/api @polkadot/api-augment @polkadot/extension-dapp @polkadot/extension-inject @polkadot/react-identicon @polkadot/react-qr @polkadot/types @polkadot/util @polkadot/util-crypto"
 	},
 	"engines": {
@@ -124,6 +129,7 @@
 		"zod-validation-error": "^3.4.0"
 	},
 	"devDependencies": {
+		"@firebase/rules-unit-testing": "^5.0.2",
 		"@types/cookie": "^0.6.0",
 		"@types/jsonwebtoken": "^9.0.6",
 		"@types/node": "^20",
@@ -155,7 +161,8 @@
 		"sass": "^1.83.4",
 		"tailwindcss": "^3.4.1",
 		"tw-colors": "^3.3.1",
-		"typescript": "5.4.5"
+		"typescript": "5.4.5",
+		"vitest": "^4.1.11"
 	},
 	"lint-staged": {
 		"**/*.(ts|tsx|js|jsx)": ["yarn eslint --fix", "yarn prettier --write"],

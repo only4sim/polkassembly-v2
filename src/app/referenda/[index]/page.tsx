@@ -2,84 +2,32 @@
 // This software may be modified and distributed under the terms
 // of the Apache-2.0 license. See the LICENSE file for details.
 
-import { EProposalType } from '@/_shared/types';
-import { NextApiClientService } from '@/app/_client-services/next_api_client_service';
-import PostDetails from '@/app/_shared-components/PostDetails/PostDetails';
-import React, { Suspense } from 'react';
-import { headers } from 'next/headers';
 import { Metadata } from 'next';
-import PollForProposal from '@/app/_shared-components/PollForProposal';
-import { getNetworkFromHeaders } from '@/app/api/_api-utils/getNetworkFromHeaders';
-import { markdownToPlainText } from '@/_shared/_utils/markdownToText';
-import { getGeneratedContentMetadata } from '@/_shared/_utils/generateContentMetadata';
-import { notFound, redirect } from 'next/navigation';
-import { StatusCodes } from 'http-status-codes';
-import ServerComponentError from '@/app/_shared-components/ServerComponentError';
 
-export async function generateMetadata({ params }: { params: Promise<{ index: string }> }): Promise<Metadata> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+export async function generateMetadata(_params: { params: Promise<{ index: string }> }): Promise<Metadata> {
 	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
-		return { title: 'DemoOS' };
+		return { title: 'Referendum – DemoOS' };
 	}
-	const { index } = await params;
-
-	const network = await getNetworkFromHeaders();
-	const { data } = await NextApiClientService.fetchProposalDetails({ proposalType: EProposalType.REFERENDUM_V2, indexOrHash: index });
-
-	return getGeneratedContentMetadata({
-		title: `Polkassembly - Referendum #${index}`,
-		description: data
-			? [data.title, data.contentSummary?.postSummary ? markdownToPlainText(data.contentSummary.postSummary) : ''].filter(Boolean).join(' - ').trim() ||
-				`Referendum #${index} on Polkassembly`
-			: `Explore Polkassembly Referendum #${index}`,
-		network,
-		url: `https://${network}.polkassembly.io/referenda/${index}`,
-		imageAlt: `Polkassembly Referendum #${index}`
-	});
+	// Chain mode: load rich metadata from the chain detail component
+	const chainModule = await import('./ReferendaChainDetail');
+	if (typeof chainModule.generateMetadata === 'function') {
+		return chainModule.generateMetadata(_params);
+	}
+	return { title: 'Referendum' };
 }
 
-async function Referenda({ params, searchParams }: { params: Promise<{ index: string }>; searchParams: Promise<{ created?: string }> }) {
-	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
-		redirect('/');
-	}
-	const { index } = await params;
-	const { created } = await searchParams;
-
-	const headersList = await headers();
-	const referer = headersList.get('referer');
-
-	const { data, error } = await NextApiClientService.fetchProposalDetails({ proposalType: EProposalType.REFERENDUM_V2, indexOrHash: index });
-
-	// If created=true and no data, we'll poll on the client side
-	if (created && created === 'true' && (!data || error)) {
+export default async function ReferendaDetailProvider({ params, searchParams }: { params: Promise<{ index: string }>; searchParams: Promise<{ created?: string }> }) {
+	if (process.env.ENABLE_BLOCKCHAIN === 'true') {
+		const { default: ChainDetail } = await import('./ReferendaChainDetail');
 		return (
-			<Suspense fallback={<div className='flex h-screen items-center justify-center'>Loading...</div>}>
-				<PollForProposal
-					index={index}
-					referer={referer}
-					proposalType={EProposalType.REFERENDUM_V2}
-				/>
-			</Suspense>
+			<ChainDetail
+				params={params}
+				searchParams={searchParams}
+			/>
 		);
 	}
 
-	if (error || !data) {
-		// Handle 404 errors properly by calling notFound()
-		if (error?.status === StatusCodes.NOT_FOUND) {
-			notFound();
-		}
-
-		// For other errors, show the error message.
-		return <ServerComponentError errorMsg={error?.message || 'Failed to load referendum.'} />;
-	}
-
-	return (
-		<div className='h-full w-full'>
-			<PostDetails
-				index={index}
-				postData={data}
-			/>
-		</div>
-	);
+	const { default: DemoReferendaDetail } = await import('./DemoReferendaDetail');
+	return <DemoReferendaDetail params={params} />;
 }
-
-export default Referenda;

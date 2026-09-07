@@ -45,9 +45,9 @@ Complete these setup steps before proceeding:
     environments without a browser (e.g., remote shells), use `npx -y
 firebase-tools@latest login --no-localhost`.
 
-    - The command should output the current user.
-    - If you are not logged in, follow the interactive instructions from this
-      command to authenticate.
+            - The command should output the current user.
+            - If you are not logged in, follow the interactive instructions from this
+              command to authenticate.
 
 3.  **Active Project:**
     Most Firebase tasks require an active project context.

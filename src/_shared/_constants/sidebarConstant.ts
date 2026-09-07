@@ -57,7 +57,12 @@ export const getSidebarData = (networkKey: ENetwork, pathname: string, t: (key: 
 		throw new Error(`Network ${networkKey} not found`);
 	}
 
-	// Feature flag: when blockchain is disabled, show only Home + Discussions
+	const TREASURY_KEY = 'Sidebar.treasury';
+	const REFERENDA_KEY = 'Sidebar.referenda';
+
+	// Feature flag: when blockchain is disabled, show only the DemoOS-backed sections.
+	// Referenda is included because the points-based (Firestore) implementation serves
+	// /referenda without any wallet, Polkadot API, RPC or indexer dependency.
 	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
 		return [
 			{
@@ -65,7 +70,8 @@ export const getSidebarData = (networkKey: ENetwork, pathname: string, t: (key: 
 				initalItems: ActiveItems(
 					[
 						{ title: t('Sidebar.home'), url: '/', icon: Home },
-						{ title: t('Sidebar.discussions'), url: '/discussions', icon: Discussion }
+						{ title: t('Sidebar.discussions'), url: '/discussions', icon: Discussion },
+						{ title: t(REFERENDA_KEY), url: '/referenda', icon: ReferendaIcon }
 					],
 					pathname
 				),
@@ -74,9 +80,6 @@ export const getSidebarData = (networkKey: ENetwork, pathname: string, t: (key: 
 			}
 		];
 	}
-
-	const TREASURY_KEY = 'Sidebar.treasury';
-	const REFERENDA_KEY = 'Sidebar.referenda';
 
 	const baseConfig = {
 		heading: t('Sidebar.main'),
