@@ -5,10 +5,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/hooks/useToast';
-import { ReferendumDetailDto, ReferendumVoteDto, type PublicReferendumVoteDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
+import { ReferendumDetailDto, ReferendumVoteDto, type PublicReferendumVoteDto, type ReferendumCommentDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
 import StatusTag from '@/app/_shared-components/StatusTag/StatusTag';
 import { EProposalStatus, ENotificationStatus } from '@/_shared/types';
 import DemoReferendaRealtimeStats from '@/app/_shared-components/DemoReferenda/DemoReferendaRealtimeStats';
@@ -17,16 +18,19 @@ import { Button } from '@/app/_shared-components/Button';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { onAuthStateChanged } from 'firebase/auth';
 import { fetchMyVote, fetchReferendumCapabilities, type ReferendumCapabilitiesDto, cancelReferendum } from '@/app/_client-services/points_referenda_client_service';
+import DemoReferendaComments from '@/app/_shared-components/DemoReferenda/DemoReferendaComments';
 
 interface Props {
 	index: number;
 	initialDetail: ReferendumDetailDto | null;
 	initialStats: ReferendumStatsDto | null;
 	initialHistory: { items: PublicReferendumVoteDto[]; totalCount: number } | null;
+	initialComments: { items: ReferendumCommentDto[]; totalCount: number } | null;
+	decisionFilter?: 'aye' | 'nay' | 'abstain';
 	serverError: boolean;
 }
 
-function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistory, serverError }: Props) {
+function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistory, initialComments, decisionFilter, serverError }: Props) {
 	const router = useRouter();
 	const { toast } = useToast();
 	const t = useTranslations('DemoReferenda');
@@ -222,27 +226,51 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 			/>
 
 			{/* Privacy-safe public vote history (no UID, no balance — contract) */}
-			{initialHistory && initialHistory.items.length > 0 && (
+			{initialHistory && (
 				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
-					<h3 className='mb-2 text-sm font-semibold text-text_primary'>
-						Votes <span className='text-xs font-normal text-wallet_btn_text'>({initialHistory.totalCount})</span>
-					</h3>
-					<ul className='divide-y divide-border_grey'>
-						{initialHistory.items.map((vote, i) => (
-							<li
-								// eslint-disable-next-line react/no-array-index-key
-								key={`${vote.voterDisplayName}-${vote.updatedAt}-${i}`}
-								className='flex items-center justify-between py-2 text-sm'
-							>
-								<span className='text-text_primary'>{vote.voterDisplayName}</span>
-								<span className='capitalize text-wallet_btn_text'>
-									{vote.decision} &middot; {vote.pointsUsed} points
-								</span>
-							</li>
-						))}
-					</ul>
+					<div className='mb-2 flex items-center justify-between'>
+						<h3 className='text-sm font-semibold text-text_primary'>
+							{t('votes')} <span className='text-xs font-normal text-wallet_btn_text'>({initialHistory.totalCount})</span>
+						</h3>
+						{/* URL-driven decision filter (plan PR-7) */}
+						<div className='flex gap-2'>
+							{(['aye', 'nay', 'abstain'] as const).map((d) => (
+								<Link
+									key={d}
+									href={decisionFilter === d ? `/referenda/${index}` : `/referenda/${index}?decision=${d}`}
+									className={`rounded-full border px-2 py-0.5 text-xs capitalize ${decisionFilter === d ? 'border-text_pink bg-text_pink text-white' : 'border-border_grey text-wallet_btn_text'}`}
+								>
+									{d}
+								</Link>
+							))}
+						</div>
+					</div>
+					{initialHistory.items.length === 0 ? (
+						<p className='text-sm text-wallet_btn_text'>{t('noVotes')}</p>
+					) : (
+						<ul className='divide-y divide-border_grey'>
+							{initialHistory.items.map((vote, i) => (
+								<li
+									// eslint-disable-next-line react/no-array-index-key
+									key={`${vote.voterDisplayName}-${vote.updatedAt}-${i}`}
+									className='flex items-center justify-between py-2 text-sm'
+								>
+									<span className='text-text_primary'>{vote.voterDisplayName}</span>
+									<span className='capitalize text-wallet_btn_text'>
+										{vote.decision} &middot; {vote.pointsUsed} points
+									</span>
+								</li>
+							))}
+						</ul>
+					)}
 				</div>
 			)}
+
+			{/* Referendum comments (plan PR-7) */}
+			<DemoReferendaComments
+				index={index}
+				initialComments={initialComments}
+			/>
 
 			{dialogOpen && (
 				<DemoReferendaVoteDialog

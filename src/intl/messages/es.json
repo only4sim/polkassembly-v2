@@ -1819,6 +1819,16 @@
 			"cancelButton": "Cancel Referendum",
 			"confirmBody": "Cancel this referendum? This cannot be undone.",
 			"cancelled": "Referendum cancelled."
+		},
+		"comments": {
+			"title": "Comments",
+			"empty": "No comments yet. Be the first to comment!",
+			"addPlaceholder": "Add a comment (markdown supported)",
+			"submit": "Comment",
+			"delete": "Delete",
+			"added": "Comment added.",
+			"deleted": "Comment deleted.",
+			"loginPrompt": "Please log in to leave a comment."
 		}
 	}
 }

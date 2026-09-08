@@ -33,7 +33,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ inde
 	if (index === null) {
 		return referendaErrorResponse(new ReferendaServiceError('not-found', 'Referendum not found.'));
 	}
+	// Plan PR-7: pagination + decision filter; invalid filters are 400, not silently dropped.
 	const limit = Math.min(50, Math.max(1, Number(req.nextUrl.searchParams.get('limit')) || 20));
+	const pageParam = req.nextUrl.searchParams.get('page');
+	const page = pageParam === null ? 1 : Number(pageParam);
+	if (!Number.isSafeInteger(page) || page < 1) {
+		return referendaErrorResponse(new ReferendaServiceError('invalid-argument', 'page must be a positive integer.'));
+	}
+	const decisionParam = req.nextUrl.searchParams.get('decision');
+	let decision: 'aye' | 'nay' | 'abstain' | undefined;
+	if (decisionParam) {
+		if (decisionParam !== 'aye' && decisionParam !== 'nay' && decisionParam !== 'abstain') {
+			return referendaErrorResponse(new ReferendaServiceError('invalid-argument', 'decision must be aye, nay, or abstain.'));
+		}
+		decision = decisionParam;
+	}
 
 	try {
 		const service = new ReferendumReadService();
@@ -41,8 +55,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ inde
 		if (!referendum) {
 			return referendaErrorResponse(new ReferendaServiceError('not-found', 'Referendum not found.'));
 		}
-		const [votes, totalCount] = await Promise.all([service.listVotes(index, limit), service.countVotes(index)]);
-		return NextResponse.json({ items: votes.map(toPublicReferendumVoteDto), totalCount });
+		const [votes, totalCount] = await Promise.all([service.listVotes(index, { limit, page, decision }), service.countVotes(index, decision)]);
+		return NextResponse.json({ items: votes.map(toPublicReferendumVoteDto), totalCount, page, pageSize: limit });
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

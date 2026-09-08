@@ -11,6 +11,9 @@ import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
 export const REFERENDUM_SCHEMA_VERSION = 1;
 export const VOTE_SCHEMA_VERSION = 1;
 export const STATS_SCHEMA_VERSION = 1;
+export const COMMENT_SCHEMA_VERSION = 1;
+/** Max characters allowed for a referendum comment body. */
+export const COMMENT_MAX_LENGTH = 4000;
 
 export function makeReferendum(overrides: Partial<Referendum> = {}): Referendum {
 	const votingStarts = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();

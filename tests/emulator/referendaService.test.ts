@@ -13,7 +13,7 @@
  * Run via `yarn test:emulators` or `yarn test:integration`.
  */
 
-/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop, no-restricted-syntax */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing';
@@ -31,7 +31,23 @@ let testEnv: RulesTestEnvironment;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let trustedMod: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+let readMod: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let svc: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let adminDb: any;
+
+const HOUR = 60 * 60 * 1000;
+const past = (ms: number) => new Date(Date.now() - ms);
+const future = (ms: number) => new Date(Date.now() + ms);
+
+const REFERENDUM_CONTENT = 'This referendum content is sufficiently long.';
+const INVALID_ARGUMENT = 'invalid-argument';
+const COMMENT_BODY = 'Hello **world**';
+
+const service = () => new trustedMod.ReferendumTrustedService();
+const readSvc = () => new readMod.ReferendumReadService();
+const actor = (uid: string, displayName = 'Voter') => ({ uid, displayName });
 
 beforeAll(async () => {
 	const { initializeTestEnvironment } = await import('@firebase/rules-unit-testing');
@@ -40,6 +56,8 @@ beforeAll(async () => {
 		firestore: { host: '127.0.0.1', port: 8080 }
 	});
 	trustedMod = await import('@/app/api/_api-services/referenda/referendumTrustedService');
+	readMod = await import('@/app/api/_api-services/referenda/referendumReadService');
+	svc = service();
 	const init = await import('@/adapters/firestore/firestoreInit');
 	adminDb = init.getAdminDb();
 });
@@ -51,15 +69,6 @@ beforeEach(async () => {
 afterAll(async () => {
 	await testEnv.cleanup();
 });
-
-const HOUR = 60 * 60 * 1000;
-const past = (ms: number) => new Date(Date.now() - ms);
-const future = (ms: number) => new Date(Date.now() + ms);
-
-const REFERENDUM_CONTENT = 'This referendum content is sufficiently long.';
-
-const service = () => new trustedMod.ReferendumTrustedService();
-const actor = (uid: string, displayName = 'Voter') => ({ uid, displayName });
 
 async function seedUser(uid: string, pointsBalance: number, displayName = 'Voter'): Promise<void> {
 	await adminDb.collection('users').doc(uid).set({
@@ -216,7 +225,7 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 				approvalThresholdBps: 5000,
 				minimumTurnoutPoints: 1
 			})
-		).rejects.toMatchObject({ code: 'invalid-argument' });
+		).rejects.toMatchObject({ code: INVALID_ARGUMENT });
 	});
 
 	it('allocates unique indexes under concurrent creation', async () => {
@@ -263,7 +272,6 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 	it('changing decision and amount keeps stats equal to a fresh recomputation', async () => {
 		await seedUser('voter-1', 1000);
 		await seedDecidingReferendum(1);
-		const svc = service();
 
 		await svc.upsertVote(1, actor('voter-1'), { decision: ReferendumDecision.AYE, pointsUsed: 100 });
 		await svc.upsertVote(1, actor('voter-1'), { decision: ReferendumDecision.NAY, pointsUsed: 50 });
@@ -280,7 +288,6 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 	it('an identical idempotent PUT does not change the aggregate', async () => {
 		await seedUser('voter-1', 1000);
 		await seedDecidingReferendum(1);
-		const svc = service();
 		const payload = { decision: ReferendumDecision.AYE, pointsUsed: 100 } as const;
 
 		const first = await svc.upsertVote(1, actor('voter-1'), payload);
@@ -294,7 +301,6 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 	it('removeVote subtracts the contribution and is idempotent', async () => {
 		await seedUser('voter-1', 1000);
 		await seedDecidingReferendum(1);
-		const svc = service();
 
 		await svc.upsertVote(1, actor('voter-1'), { decision: ReferendumDecision.ABSTAIN, pointsUsed: 40 });
 		const statsAfterRemove = await svc.removeVote(1, actor('voter-1'));
@@ -309,7 +315,6 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 	it('same-user concurrent changes leave stats consistent with the final votes', async () => {
 		await seedUser('voter-1', 1000);
 		await seedDecidingReferendum(1);
-		const svc = service();
 
 		// Two concurrent PUTs from the same user: transactions serialize and the
 		// last committed write wins, but the stored aggregate must always match
@@ -349,7 +354,7 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 		await seedDecidingReferendum(1);
 
 		await expect(service().upsertVote(1, actor('voter-1'), { decision: 'split' as unknown as ReferendumDecision, pointsUsed: 10 })).rejects.toMatchObject({
-			code: 'invalid-argument',
+			code: INVALID_ARGUMENT,
 			name: 'ReferendaServiceError'
 		});
 	});
@@ -419,5 +424,65 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 		const stats = await readStats(1);
 		expect(stats.ayePoints).toBe(5);
 		expect(stats.totalVoters).toBe(1);
+	});
+
+	describe('Referendum comments (plan PR-7, Firestore emulator)', () => {
+		it('adds a comment with the authoritative profile displayName and lists it', async () => {
+			const idx = 700;
+			await seedDecidingReferendum(idx);
+			await seedUser('commenter-1', 100, 'Commenter One');
+			const added = await service().addComment(idx, actor('commenter-1', 'token-name'), COMMENT_BODY);
+			expect(added.authorDisplayName).toBe('Commenter One');
+			expect(added.content).toBe(COMMENT_BODY);
+			const page = await readSvc().listComments(idx, 20, 1);
+			expect(page.totalCount).toBe(1);
+			expect(page.items[0].content).toBe(COMMENT_BODY);
+		});
+
+		it('rejects empty and oversized comment bodies with 400', async () => {
+			const idx = 701;
+			await seedDecidingReferendum(idx);
+			const commenter = 'commenter-2';
+			await seedUser(commenter, 100);
+			await expect(svc.addComment(idx, actor(commenter), '   ')).rejects.toMatchObject({ code: INVALID_ARGUMENT });
+			await expect(svc.addComment(idx, actor(commenter), 'x'.repeat(4001))).rejects.toMatchObject({ code: INVALID_ARGUMENT });
+		});
+
+		it('rejects comments on missing referenda with 404', async () => {
+			await seedUser('commenter-3', 100);
+			await expect(svc.addComment(999999, actor('commenter-3'), 'hi')).rejects.toMatchObject({ code: 'not-found' });
+		});
+
+		it('enforces author-or-admin deletion and idempotent missing-comment delete', async () => {
+			const idx = 702;
+			await seedDecidingReferendum(idx);
+			await seedUser('author-a', 100);
+			await seedUser('author-b', 100);
+			const added = await service().addComment(idx, actor('author-a'), 'mine');
+			await expect(svc.deleteComment(idx, added.id, 'author-b', false)).rejects.toMatchObject({ code: 'forbidden' });
+			await expect(svc.deleteComment(idx, added.id, 'author-b', true)).resolves.toBeUndefined(); // admin may delete
+			await expect(svc.deleteComment(idx, added.id, 'author-a', false)).resolves.toBeUndefined(); // idempotent
+		});
+	});
+
+	describe('Public vote history pagination + decision filter (plan PR-7, emulator)', () => {
+		it('pages through votes and filters by decision with a matching totalCount', async () => {
+			const idx = 710;
+			await seedDecidingReferendum(idx);
+			for (let i = 1; i <= 5; i += 1) {
+				await seedUser(`voter-${i}`, 1000);
+				await service().upsertVote(idx, actor(`voter-${i}`), { decision: i % 2 === 0 ? ReferendumDecision.NAY : ReferendumDecision.AYE, pointsUsed: 10 * i });
+			}
+			const page1 = await readSvc().listVotes(idx, { limit: 2, page: 1 });
+			const page2 = await readSvc().listVotes(idx, { limit: 2, page: 2 });
+			expect(page1).toHaveLength(2);
+			expect(page2).toHaveLength(2);
+			const ids = new Set([...page1, ...page2].map((v) => v.uid));
+			expect(ids.size).toBe(4); // pages do not overlap
+			const ayeOnly = await readSvc().listVotes(idx, { limit: 50, decision: 'aye' });
+			expect(ayeOnly).toHaveLength(3); // i = 1, 3, 5
+			expect(await readSvc().countVotes(idx, 'aye')).toBe(3);
+			expect(await readSvc().countVotes(idx, 'nay')).toBe(2);
+		});
 	});
 });

@@ -3,11 +3,12 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import { type Referendum } from '@/domain/entities/Referendum';
+import { type ReferendumComment } from '@/domain/entities/ReferendumComment';
 import { type ReferendumStats } from '@/domain/entities/ReferendumStats';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
 import { getAdminDb } from '@/adapters/firestore/firestoreInit';
 import { FirestoreReferendumRepository } from '@/adapters/firestore/FirestoreReferendumRepository';
-import { REFERENDA_COLLECTION, mapReferendum, mapStats, mapVote, referendumDoc, statsDoc, voteDoc } from '@/adapters/firestore/referendaMappers';
+import { REFERENDA_COLLECTION, commentsRef, mapComment, mapReferendum, mapStats, mapVote, referendumDoc, statsDoc, voteDoc } from '@/adapters/firestore/referendaMappers';
 
 export interface ReferendaListQuery {
 	page: number;
@@ -54,19 +55,54 @@ export class ReferendumReadService {
 		return mapVote(doc.data()!, uid);
 	}
 
-	async listVotes(index: number, limit = 50): Promise<ReferendumVote[]> {
-		const snapshot = await referendumDoc(this.db, index).collection('votes').orderBy('updatedAt', 'desc').limit(limit).get();
+	/**
+	 * Public vote history with offset pagination and an optional decision
+	 * filter (plan PR-7). `decision` must be aye/nay/abstain when provided.
+	 */
+	async listVotes(index: number, options: { limit?: number; page?: number; decision?: 'aye' | 'nay' | 'abstain' } = {}): Promise<ReferendumVote[]> {
+		const limit = Math.max(1, Math.floor(options.limit ?? 20));
+		const page = Math.max(1, Math.floor(options.page ?? 1));
+		let query = referendumDoc(this.db, index).collection('votes').orderBy('updatedAt', 'desc');
+		if (options.decision) {
+			query = query.where('decision', '==', options.decision) as typeof query;
+		}
+		const snapshot = await query
+			.limit(limit)
+			.offset((page - 1) * limit)
+			.get();
 		return snapshot.docs.map((d) => mapVote(d.data(), d.id));
 	}
 
 	/**
 	 * Total number of votes for a referendum, via count aggregation (no doc reads).
 	 * Frozen contract (PR-1): public history `totalCount` is the real total, not
-	 * the number of items on the current page.
+	 * the number of items on the current page. Accepts the same decision filter.
 	 */
-	async countVotes(index: number): Promise<number> {
-		const snapshot = await referendumDoc(this.db, index).collection('votes').count().get();
+	async countVotes(index: number, decision?: 'aye' | 'nay' | 'abstain'): Promise<number> {
+		let query = referendumDoc(this.db, index).collection('votes');
+		if (decision) {
+			query = query.where('decision', '==', decision) as typeof query;
+		}
+		const snapshot = await query.count().get();
 		return snapshot.data().count;
+	}
+
+	/**
+	 * Referendum comments (plan PR-7), oldest first for chronological reading.
+	 */
+	// eslint-disable-next-line class-methods-use-this
+	async listComments(index: number, limit = 50, page = 1): Promise<{ items: ReferendumComment[]; totalCount: number }> {
+		const ref = commentsRef(this.db, index);
+		const [snapshot, countSnap] = await Promise.all([
+			ref
+				.orderBy('createdAt', 'asc')
+				.limit(Math.max(1, Math.floor(limit)))
+				.offset((Math.max(1, Math.floor(page)) - 1) * Math.max(1, Math.floor(limit)))
+				.get(),
+			ref.count().get()
+		]);
+		const items = snapshot.docs.map((d) => mapComment(d.data(), d.id));
+		return { items, totalCount: countSnap.data().count };
 	}
 
 	/**

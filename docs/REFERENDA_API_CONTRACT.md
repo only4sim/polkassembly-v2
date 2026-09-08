@@ -156,3 +156,24 @@ ReferendumStatsDto
 | 事务/并发/幂等/不变量  | `tests/emulator/referendaService.test.ts`                                                 |
 | 精确时间边界、精确结果 | `src/domain/services/__tests__/referendumValidation.test.ts`、`referendumOutcome.test.ts` |
 | 安全规则               | `tests/firestore/rules.test.ts`                                                           |
+
+## Comments（PR-7）
+
+存储：`referenda/{index}/comments/{commentId}`。全部写入经可信 API（Admin SDK）；
+客户端对 comments 只读（公开内容），规则 deny 全部直写。
+
+| 端点                                                    | 合同                                                                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `GET /api/v2/referenda/{index}/comments?limit=&page=`   | `{ items: ReferendumCommentDto[], totalCount, page, pageSize }`；公开                                        |
+| `POST /api/v2/referenda/{index}/comments`               | `{ comment: ReferendumCommentDto }` 201；需认证；内容 trim 后 1..4000 字符；作者显示名取自 Firestore profile |
+| `DELETE /api/v2/referenda/{index}/comments/{commentId}` | `{ deleted: true }`；作者或 admin；缺失幂等成功                                                              |
+
+`ReferendumCommentDto = { id, index, authorUid, authorDisplayName, content, createdAt, updatedAt }`。
+
+## Public vote history 分页与筛选（PR-7）
+
+`GET /api/v2/referenda/{index}/votes?limit=&page=&decision=`：
+
+- `page` 非法 → 400；`decision` 仅接受 aye/nay/abstain，非法 → 400；
+- `totalCount` 为应用筛选后的真实总数（count aggregation）；
+- 条目仍为隐私安全 `PublicReferendumVoteDto`（无 UID/余额）。

@@ -51,6 +51,14 @@ service cloud.firestore {
         allow get, list: if true;
         allow create, update, delete: if false; // Trusted transaction only
       }
+
+      match /comments/{commentId} {
+        // Referendum comments are public content (plan PR-7).
+        allow get, list: if true;
+        // Comment CRUD is served by trusted comment API routes (Admin SDK);
+        // clients never write comments directly.
+        allow create, update, delete: if false;
+      }
     }
 
     // ========== DemoOS posts (discussions) ==========

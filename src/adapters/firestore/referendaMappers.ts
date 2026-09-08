@@ -4,10 +4,11 @@
 
 import { Timestamp, type FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { type Referendum, ReferendumStatus } from '@/domain/entities/Referendum';
+import { type ReferendumComment } from '@/domain/entities/ReferendumComment';
 import { type ReferendumStats } from '@/domain/entities/ReferendumStats';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
 import { type ReferendumWrite } from '@/ports/repositories/ReferendumRepository';
-import { REFERENDUM_SCHEMA_VERSION, STATS_SCHEMA_VERSION, VOTE_SCHEMA_VERSION } from '@/domain/fixtures/referendaFixtures';
+import { COMMENT_SCHEMA_VERSION, REFERENDUM_SCHEMA_VERSION, STATS_SCHEMA_VERSION, VOTE_SCHEMA_VERSION } from '@/domain/fixtures/referendaFixtures';
 
 /** Centralised Firestore path constants for the referenda domain. */
 export const REFERENDA_COLLECTION = 'referenda';
@@ -23,8 +24,29 @@ export function voteDoc(db: Firestore, index: number, uid: string) {
 export function statsDoc(db: Firestore, index: number) {
 	return referendumDoc(db, index).collection('stats').doc(STATS_DOC_ID);
 }
+export function commentDoc(db: Firestore, index: number, commentId: string) {
+	return referendumDoc(db, index).collection('comments').doc(commentId);
+}
+export function commentsRef(db: Firestore, index: number) {
+	return referendumDoc(db, index).collection('comments');
+}
 export function counterDoc(db: Firestore) {
 	return db.collection('counters').doc(REFERENDA_COUNTER_DOC);
+}
+
+/** Convert a raw Firestore snapshot to a domain ReferendumComment (plan PR-7). */
+export function mapComment(data: Record<string, unknown>, id: string): ReferendumComment {
+	const iso = (v: unknown): string => (v instanceof Timestamp ? v.toDate().toISOString() : typeof v === 'string' ? v : new Date().toISOString());
+	return {
+		id,
+		index: (data.index as number) ?? 0,
+		authorUid: (data.authorUid as string) ?? '',
+		authorDisplayName: (data.authorDisplayName as string) ?? '',
+		content: (data.content as string) ?? '',
+		createdAt: iso(data.createdAt),
+		updatedAt: iso(data.updatedAt),
+		schemaVersion: (data.schemaVersion as number) ?? COMMENT_SCHEMA_VERSION
+	};
 }
 
 /** Convert a raw Firestore snapshot to a domain Referendum (Timestamps -> ISO strings). */

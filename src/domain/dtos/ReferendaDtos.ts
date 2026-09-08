@@ -7,6 +7,7 @@
 
 import { type ReferendumDecision, type ReferendumStatus, type ReferendumOrigin, type Referendum } from '@/domain/entities/Referendum';
 import { approvalBps, participatingPoints, type ReferendumStats } from '@/domain/entities/ReferendumStats';
+import { type ReferendumComment } from '@/domain/entities/ReferendumComment';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
 
 export interface ReferendumSummaryDto {
@@ -64,6 +65,21 @@ export interface PublicReferendumVoteDto {
 	voterDisplayName: string;
 	decision: ReferendumDecision;
 	pointsUsed: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
+/**
+ * Referendum comment (plan PR-7). Stored in `referenda/{index}/comments/{id}`.
+ * `authorUid` is public in the same sense as on referendum summaries (it is
+ * needed for ownership-gated delete UI); no email/role/private profile fields.
+ */
+export interface ReferendumCommentDto {
+	id: string;
+	index: number;
+	authorUid: string;
+	authorDisplayName: string;
+	content: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -163,5 +179,18 @@ export function toPublicReferendumVoteDto(v: ReferendumVote): PublicReferendumVo
 		pointsUsed: v.pointsUsed,
 		createdAt: v.createdAt,
 		updatedAt: v.updatedAt
+	};
+}
+
+/** Map a domain referendum comment to its wire DTO (plan PR-7). */
+export function toReferendumCommentDto(c: ReferendumComment): ReferendumCommentDto {
+	return {
+		id: c.id,
+		index: c.index,
+		authorUid: c.authorUid,
+		authorDisplayName: c.authorDisplayName,
+		content: c.content,
+		createdAt: c.createdAt,
+		updatedAt: c.updatedAt
 	};
 }

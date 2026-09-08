@@ -4,7 +4,7 @@
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { type PublicReferendumVoteDto, type ReferendumDetailDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
+import { type PublicReferendumVoteDto, type ReferendumCommentDto, type ReferendumDetailDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 export async function generateMetadata(_params: { params: Promise<{ index: string }> }): Promise<Metadata> {
@@ -19,7 +19,13 @@ export async function generateMetadata(_params: { params: Promise<{ index: strin
 	return { title: 'Referendum' };
 }
 
-export default async function ReferendaDetailProvider({ params, searchParams }: { params: Promise<{ index: string }>; searchParams: Promise<{ created?: string }> }) {
+export default async function ReferendaDetailProvider({
+	params,
+	searchParams
+}: {
+	params: Promise<{ index: string }>;
+	searchParams: Promise<{ created?: string; decision?: string }>;
+}) {
 	if (process.env.ENABLE_BLOCKCHAIN === 'true') {
 		const { default: ChainDetail } = await import('./ReferendaChainDetail');
 		return (
@@ -43,11 +49,16 @@ export default async function ReferendaDetailProvider({ params, searchParams }: 
 	let initialDetail: ReferendumDetailDto | null = null;
 	let initialStats: ReferendumStatsDto | null = null;
 	let initialHistory: { items: PublicReferendumVoteDto[]; totalCount: number } | null = null;
+	let initialComments: { items: ReferendumCommentDto[]; totalCount: number } | null = null;
 	let serverError = false;
+
+	// Public history decision filter is URL-driven (plan PR-7).
+	const sp = await searchParams;
+	const decisionFilter = sp.decision === 'aye' || sp.decision === 'nay' || sp.decision === 'abstain' ? sp.decision : undefined;
 
 	try {
 		const { ReferendumReadService } = await import('@/app/api/_api-services/referenda/referendumReadService');
-		const { toReferendumDetailDto, toPublicReferendumVoteDto, toReferendumStatsDto } = await import('@/domain/dtos/ReferendaDtos');
+		const { toReferendumCommentDto, toReferendumDetailDto, toPublicReferendumVoteDto, toReferendumStatsDto } = await import('@/domain/dtos/ReferendaDtos');
 		const readService = new ReferendumReadService();
 
 		const referendum = await readService.getByIndex(index);
@@ -56,9 +67,15 @@ export default async function ReferendaDetailProvider({ params, searchParams }: 
 		}
 		initialDetail = toReferendumDetailDto(referendum);
 
-		const [stats, votes, voteCount] = await Promise.all([readService.getStats(index), readService.listVotes(index, 20), readService.countVotes(index)]);
+		const [stats, votes, voteCount, commentsPage] = await Promise.all([
+			readService.getStats(index),
+			readService.listVotes(index, { limit: 20, decision: decisionFilter }),
+			readService.countVotes(index, decisionFilter),
+			readService.listComments(index, 20, 1)
+		]);
 		initialStats = stats ? toReferendumStatsDto(stats) : null;
 		initialHistory = { items: votes.map(toPublicReferendumVoteDto), totalCount: voteCount };
+		initialComments = { items: commentsPage.items.map(toReferendumCommentDto), totalCount: commentsPage.totalCount };
 	} catch {
 		// Do not leak a fake referendum on infrastructure failure — surface the
 		// error state in the client shell with a retry.
@@ -71,6 +88,8 @@ export default async function ReferendaDetailProvider({ params, searchParams }: 
 			initialDetail={initialDetail}
 			initialStats={initialStats}
 			initialHistory={initialHistory}
+			initialComments={initialComments}
+			decisionFilter={decisionFilter}
 			serverError={serverError}
 		/>
 	);

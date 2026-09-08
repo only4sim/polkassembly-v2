@@ -262,6 +262,21 @@ describe('posts/{postId} (client-write lockdown)', () => {
 	});
 });
 
+describe('referenda/{index}/comments/{id} (plan PR-7)', () => {
+	it('allows public reads of referendum comments', async () => {
+		await Promise.all([assertSucceeds(getDoc(doc(anon(), 'referenda', '1', 'comments', 'c1'))), assertSucceeds(getDoc(doc(asUser('u1'), 'referenda', '1', 'comments', 'c1')))]);
+	});
+
+	it('denies client comment writes for anonymous, author and admin-like tokens (trusted API only)', async () => {
+		await Promise.all([
+			assertFails(setDoc(doc(anon(), 'referenda', '1', 'comments', 'c1'), { content: 'x' })),
+			assertFails(setDoc(doc(asUser('u1'), 'referenda', '1', 'comments', 'c1'), { content: 'x', authorUid: 'u1' })),
+			assertFails(updateDoc(doc(asUser('u1'), 'referenda', '1', 'comments', 'c1'), { content: 'edited' })),
+			assertFails(deleteDoc(doc(asUser('u1'), 'referenda', '1', 'comments', 'c1')))
+		]);
+	});
+});
+
 // ===== Catch-all deny =====
 describe('catch-all deny', () => {
 	it('denies unknown collections and arbitrary paths for every caller', async () => {

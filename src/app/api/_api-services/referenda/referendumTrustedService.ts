@@ -6,14 +6,15 @@
 
 import { Timestamp } from 'firebase-admin/firestore';
 import { ReferendumDecision, ReferendumStatus } from '@/domain/entities/Referendum';
+import { type ReferendumComment } from '@/domain/entities/ReferendumComment';
 import { type ReferendumStats } from '@/domain/entities/ReferendumStats';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
 import { assertRemovalAllowed, validateVoteInput, validateCreationInput, VoteValidationError, CreationValidationError } from '@/domain/services/referendumValidation';
 import { applyVoteDelta, emptyReferendumStats, subtractVote } from '@/domain/services/referendumStatsDelta';
-import { REFERENDUM_SCHEMA_VERSION, STATS_SCHEMA_VERSION, VOTE_SCHEMA_VERSION } from '@/domain/fixtures/referendaFixtures';
+import { COMMENT_MAX_LENGTH, COMMENT_SCHEMA_VERSION, REFERENDUM_SCHEMA_VERSION, STATS_SCHEMA_VERSION, VOTE_SCHEMA_VERSION } from '@/domain/fixtures/referendaFixtures';
 import { getAdminDb } from '@/adapters/firestore/firestoreInit';
 import { FirestoreReferendumRepository } from '@/adapters/firestore/FirestoreReferendumRepository';
-import { mapReferendum, mapStats, mapVote, referendumDoc, statsDoc, voteDoc } from '@/adapters/firestore/referendaMappers';
+import { commentDoc, commentsRef, mapReferendum, mapStats, mapVote, referendumDoc, statsDoc, voteDoc } from '@/adapters/firestore/referendaMappers';
 
 export interface VotePayload {
 	decision: ReferendumDecision;
@@ -240,6 +241,73 @@ export class ReferendumTrustedService {
 					throw new ReferendaServiceError('conflict', 'Referendum is already closed.');
 				}
 				tx.update(ref, { status: ReferendumStatus.Cancelled, closedAt: Timestamp.now(), updatedAt: Timestamp.now() });
+			});
+		} catch (err) {
+			throw toServiceError(err);
+		}
+	}
+
+	/**
+	 * Add a comment to a referendum (plan PR-7). Identity comes from the
+	 * verified token; display name from the authoritative Firestore profile.
+	 * Single trusted write — no client-side comment writes exist.
+	 */
+	async addComment(index: number, actor: VerifiedActor, content: string): Promise<ReferendumComment> {
+		try {
+			if (!actor.uid) throw new ReferendaServiceError('unauthorized', 'You must be logged in.');
+			const trimmed = typeof content === 'string' ? content.trim() : '';
+			if (!trimmed) throw new ReferendaServiceError('invalid-argument', 'Comment cannot be empty.');
+			if (trimmed.length > COMMENT_MAX_LENGTH) {
+				throw new ReferendaServiceError('invalid-argument', `Comment cannot exceed ${COMMENT_MAX_LENGTH} characters.`);
+			}
+			const profileSnap = await this.db.collection('users').doc(actor.uid).get();
+			if (!profileSnap.exists) throw new ReferendaServiceError('not-found', 'User profile not found.');
+			const displayName = (profileSnap.data()?.displayName as string | undefined) || actor.displayName;
+
+			const referendumSnap = await referendumDoc(this.db, index).get();
+			if (!referendumSnap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
+
+			const now = Timestamp.now();
+			const ref = await commentsRef(this.db, index).add({
+				index,
+				authorUid: actor.uid,
+				authorDisplayName: displayName,
+				content: trimmed,
+				createdAt: now,
+				updatedAt: now,
+				schemaVersion: COMMENT_SCHEMA_VERSION
+			});
+			return {
+				id: ref.id,
+				index,
+				authorUid: actor.uid,
+				authorDisplayName: displayName,
+				content: trimmed,
+				createdAt: now.toDate().toISOString(),
+				updatedAt: now.toDate().toISOString(),
+				schemaVersion: COMMENT_SCHEMA_VERSION
+			};
+		} catch (err) {
+			throw toServiceError(err);
+		}
+	}
+
+	/**
+	 * Delete a comment: the author or an administrator. Missing comments are
+	 * idempotently successful; deleting someone else's comment is 403.
+	 */
+	async deleteComment(index: number, commentId: string, actorUid: string, isAdmin: boolean): Promise<void> {
+		try {
+			if (!actorUid) throw new ReferendaServiceError('unauthorized', 'You must be logged in.');
+			await this.db.runTransaction(async (tx) => {
+				const ref = commentDoc(this.db, index, commentId);
+				const snap = await tx.get(ref);
+				if (!snap.exists) return; // idempotent delete
+				const data = snap.data() ?? {};
+				if (!isAdmin && data.authorUid !== actorUid) {
+					throw new ReferendaServiceError('forbidden', 'You can only delete your own comments.');
+				}
+				tx.delete(ref);
 			});
 		} catch (err) {
 			throw toServiceError(err);

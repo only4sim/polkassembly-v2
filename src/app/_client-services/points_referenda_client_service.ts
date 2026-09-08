@@ -21,6 +21,7 @@ import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import {
 	type PublicReferendumVoteDto,
 	type ReferendaListDto,
+	type ReferendumCommentDto,
 	type ReferendumDetailDto,
 	type ReferendumStatsDto,
 	type ReferendumSummaryDto,
@@ -305,10 +306,17 @@ export async function fetchMyVote(index: number): Promise<ReferendumVoteDto | nu
 export interface PublicVotesPage {
 	items: PublicReferendumVoteDto[];
 	totalCount: number;
+	page: number;
+	pageSize: number;
 }
 
-export async function fetchPublicVotes(index: number, limit = 50): Promise<PublicVotesPage> {
-	const json = await requestJson(`${API_BASE}/${index}/votes?limit=${Math.max(1, Math.floor(limit))}`, { method: 'GET' });
+/** Public vote history with pagination and decision filter (plan PR-7). */
+export async function fetchPublicVotes(index: number, options: { limit?: number; page?: number; decision?: 'aye' | 'nay' | 'abstain' } = {}): Promise<PublicVotesPage> {
+	const limit = Math.max(1, Math.floor(options.limit ?? 20));
+	const page = Math.max(1, Math.floor(options.page ?? 1));
+	const search = new URLSearchParams({ limit: String(limit), page: String(page) });
+	if (options.decision) search.set('decision', options.decision);
+	const json = await requestJson(`${API_BASE}/${index}/votes?${search.toString()}`, { method: 'GET' });
 	if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, 'Malformed vote history response.');
 	const body = json as Record<string, unknown>;
 	if (!Array.isArray(body.items) || !isSafeNonNegativeInt(body.totalCount)) throw new PointsReferendaApiError(502, 'Malformed vote history response.');
@@ -318,7 +326,70 @@ export async function fetchPublicVotes(index: number, limit = 50): Promise<Publi
 		if (!dto) throw new PointsReferendaApiError(502, 'Malformed vote history entry.');
 		items.push(dto);
 	}
-	return { items, totalCount: body.totalCount };
+	return { items, totalCount: body.totalCount, page: typeof body.page === 'number' ? body.page : page, pageSize: typeof body.pageSize === 'number' ? body.pageSize : limit };
+}
+
+// ---------------------------------------------------------------------------
+// Referendum comments (plan PR-7)
+// ---------------------------------------------------------------------------
+
+/** Comment DTO validation — rejects malformed/private-laden entries. */
+export function commentDtoFromJson(json: unknown): ReferendumCommentDto | null {
+	if (!json || typeof json !== 'object') return null;
+	const c = json as Record<string, unknown>;
+	if (!isNonEmptyString(c.id) || !isNonEmptyString(c.authorDisplayName) || !isNonEmptyString(c.content)) return null;
+	if (!isNonEmptyString(c.authorUid)) return null;
+	if (!isIsoDate(c.createdAt) || !isIsoDate(c.updatedAt)) return null;
+	return {
+		id: c.id,
+		index: typeof c.index === 'number' ? c.index : 0,
+		authorUid: c.authorUid,
+		authorDisplayName: c.authorDisplayName,
+		content: c.content,
+		createdAt: c.createdAt,
+		updatedAt: c.updatedAt
+	};
+}
+
+export interface ReferendumCommentsPage {
+	items: ReferendumCommentDto[];
+	totalCount: number;
+	page: number;
+	pageSize: number;
+}
+
+export async function fetchReferendumComments(index: number, options: { limit?: number; page?: number } = {}): Promise<ReferendumCommentsPage> {
+	const limit = Math.max(1, Math.floor(options.limit ?? 20));
+	const page = Math.max(1, Math.floor(options.page ?? 1));
+	const json = await requestJson(`${API_BASE}/${index}/comments?limit=${limit}&page=${page}`, { method: 'GET' });
+	if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, 'Malformed comments response.');
+	const body = json as Record<string, unknown>;
+	if (!Array.isArray(body.items) || !isSafeNonNegativeInt(body.totalCount)) throw new PointsReferendaApiError(502, 'Malformed comments response.');
+	const items: ReferendumCommentDto[] = [];
+	for (let i = 0; i < body.items.length; i += 1) {
+		const dto = commentDtoFromJson(body.items[i]);
+		if (!dto) throw new PointsReferendaApiError(502, 'Malformed comment entry.');
+		items.push(dto);
+	}
+	return { items, totalCount: body.totalCount, page: typeof body.page === 'number' ? body.page : page, pageSize: typeof body.pageSize === 'number' ? body.pageSize : limit };
+}
+
+export async function addReferendumComment(index: number, content: string): Promise<ReferendumCommentDto> {
+	const headers = await getAuthHeaders();
+	const json = await requestJson(`${API_BASE}/${index}/comments`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', ...headers },
+		body: JSON.stringify({ content })
+	});
+	if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, 'Malformed comment response.');
+	const dto = commentDtoFromJson((json as Record<string, unknown>).comment);
+	if (!dto) throw new PointsReferendaApiError(502, 'Malformed comment response.');
+	return dto;
+}
+
+export async function deleteReferendumComment(index: number, commentId: string): Promise<void> {
+	const headers = await getAuthHeaders();
+	await requestJson(`${API_BASE}/${index}/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE', headers });
 }
 
 // ---------------------------------------------------------------------------
