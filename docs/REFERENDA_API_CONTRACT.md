@@ -43,7 +43,8 @@
 
 `referendum.status` 为响应时的持久化状态（已开始的创建会返回 `Deciding`）。
 
-> 已知限制（PR-4 修复）：初始 `Submitted`/`Deciding` 状态目前在创建事务之后、由独立调用决定；届时将改为在创建事务内用一次捕获的 server `now` 决定，并拒绝已过期窗口。
+> 初始 `Submitted`/`Deciding` 状态在创建事务内用一次捕获的 server `now` 决定（PR-4 已实现）：
+> `now < startsAt` → `Submitted`；`startsAt <= now < endsAt` → `Deciding`；`now >= endsAt` → 拒绝创建（400 invalid-dates）。
 
 ### GET `/api/v2/referenda/{index}`
 
@@ -121,9 +122,11 @@ ReferendumStatsDto
 | 创建参数非法（标题、正文、origin、日期、门槛）           | 400  |
 | pointsUsed 超过权威 pointsBalance                        | 403  |
 | 非管理员执行管理员操作                                   | 403  |
-| referendum / 用户文档不存在                              | 404  |
+| referendum 不存在                                        | 404  |
+| 用户 Firestore profile 缺失（PR-3）                      | 404  |
 | 非 Deciding 状态投票/撤票；`now >= votingEndsAt`         | 409  |
 | 基础设施异常、损坏的 aggregate、Firestore 竞争等未知错误 | 500  |
+| 用户 profile 的 pointsBalance 非安全非负整数（PR-3）     | 409  |
 
 未知错误不得被映射为 409（PR-1 已修复：只有 `ReferendaServiceError`、
 `VoteValidationError`、`CreationValidationError` 参与 4xx 映射）。

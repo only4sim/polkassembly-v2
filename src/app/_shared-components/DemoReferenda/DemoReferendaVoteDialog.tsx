@@ -5,12 +5,13 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { ReferendumVoteDto } from '@/domain/dtos/ReferendaDtos';
-import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
+import { type ReferendumVoteDto } from '@/domain/dtos/ReferendaDtos';
+import { type ReferendumDecision, ReferendumDecision as EDecision } from '@/domain/entities/Referendum';
 import { useToast } from '@/hooks/useToast';
 import { ENotificationStatus } from '@/_shared/types';
 import { Button } from '@/app/_shared-components/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/_shared-components/Dialog/Dialog';
+import { removeMyVote, upsertMyVote } from '@/app/_client-services/points_referenda_client_service';
 
 interface Props {
 	index: number;
@@ -23,37 +24,22 @@ interface Props {
 function DemoReferendaVoteDialog({ index, existingVote, onClose, onVoteChanged, onVoteRemoved }: Props) {
 	const { toast } = useToast();
 
-	const [decision, setDecision] = useState<'aye' | 'nay' | 'abstain'>(existingVote?.decision ?? 'aye');
+	const [decision, setDecision] = useState<ReferendumDecision>(existingVote?.decision ?? EDecision.AYE);
 	const [pointsUsed, setPointsUsed] = useState<number>(existingVote?.pointsUsed ?? 1);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isRemoving, setIsRemoving] = useState(false);
 
 	const handleVote = useCallback(async () => {
-		const u = clientAuth.currentUser;
-		if (!u) {
-			toast({ title: 'Please log in to vote.', status: ENotificationStatus.WARNING });
-			return;
-		}
 		if (pointsUsed < 1) {
 			toast({ title: 'You must use at least 1 point.', status: ENotificationStatus.WARNING });
 			return;
 		}
 		setIsLoading(true);
 		try {
-			const token = await u.getIdToken();
-			if (!token) throw new Error('Not authenticated');
-			const res = await fetch(`/api/v2/referenda/${index}/votes/me`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ decision, pointsUsed })
-			});
-			if (!res.ok) {
-				const body = await res.json().catch(() => ({ message: 'Vote failed.' }));
-				throw new Error(body.message || 'Vote failed.');
-			}
-			const json = await res.json();
-			// Frozen contract (PR-1): PUT /votes/me returns `{ vote, stats }`.
-			onVoteChanged(json.vote);
+			// Frozen contract (PR-1): PUT /votes/me returns `{ vote, stats }` —
+			// handled entirely by the client service (auth, ok, validation).
+			const { vote } = await upsertMyVote(index, decision, pointsUsed);
+			onVoteChanged(vote);
 			toast({ title: 'Vote cast successfully!', status: ENotificationStatus.SUCCESS });
 		} catch (err) {
 			toast({ title: (err as Error).message || 'Failed to cast vote.', status: ENotificationStatus.ERROR });
@@ -63,20 +49,9 @@ function DemoReferendaVoteDialog({ index, existingVote, onClose, onVoteChanged, 
 	}, [index, decision, pointsUsed, toast, onVoteChanged]);
 
 	const handleRemove = useCallback(async () => {
-		const u = clientAuth.currentUser;
-		if (!u) return;
 		setIsRemoving(true);
 		try {
-			const token = await u.getIdToken();
-			if (!token) throw new Error('Not authenticated');
-			const res = await fetch(`/api/v2/referenda/${index}/votes/me`, {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` }
-			});
-			if (!res.ok) {
-				const body = await res.json().catch(() => ({ message: 'Remove failed.' }));
-				throw new Error(body.message || 'Remove failed.');
-			}
+			await removeMyVote(index);
 			onVoteRemoved();
 			toast({ title: 'Vote removed.', status: ENotificationStatus.SUCCESS });
 		} catch (err) {
@@ -101,7 +76,7 @@ function DemoReferendaVoteDialog({ index, existingVote, onClose, onVoteChanged, 
 					<div>
 						<p className='mb-2 text-sm font-medium text-text_primary'>Decision</p>
 						<div className='flex gap-2'>
-							{(['aye', 'nay', 'abstain'] as const).map((d) => (
+							{([EDecision.AYE, EDecision.NAY, EDecision.ABSTAIN] as ReferendumDecision[]).map((d) => (
 								<button
 									key={d}
 									type='button'

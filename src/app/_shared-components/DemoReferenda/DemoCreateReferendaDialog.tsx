@@ -5,11 +5,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { useToast } from '@/hooks/useToast';
 import { ENotificationStatus } from '@/_shared/types';
 import { Button } from '@/app/_shared-components/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/_shared-components/Dialog/Dialog';
+import { createPointsReferendum } from '@/app/_client-services/points_referenda_client_service';
 
 interface Props {
 	onClose: () => void;
@@ -29,11 +29,6 @@ function DemoCreateReferendaDialog({ onClose, onCreated }: Props) {
 	const [isLoading, setIsLoading] = useState(false);
 
 	const handleCreate = useCallback(async () => {
-		const u = clientAuth.currentUser;
-		if (!u) {
-			toast({ title: 'Please log in.', status: ENotificationStatus.WARNING });
-			return;
-		}
 		if (!title.trim() || !content.trim()) {
 			toast({ title: 'Title and content required.', status: ENotificationStatus.WARNING });
 			return;
@@ -44,31 +39,23 @@ function DemoCreateReferendaDialog({ onClose, onCreated }: Props) {
 		}
 		setIsLoading(true);
 		try {
-			const token = await u.getIdToken();
-			if (!token) throw new Error('Not authenticated');
-			const res = await fetch('/api/v2/referenda', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					title,
-					content,
-					origin,
-					tags: tags
-						? tags
-								.split(',')
-								.map((t) => t.trim())
-								.filter(Boolean)
-						: [],
-					votingStartsAt: new Date(votingStartsAt).toISOString(),
-					votingEndsAt: new Date(votingEndsAt).toISOString(),
-					approvalThresholdBps,
-					minimumTurnoutPoints
-				})
+			// Auth header, response.ok and DTO validation are handled by the
+			// unified client service (plan PR-5).
+			await createPointsReferendum({
+				title,
+				content,
+				origin,
+				tags: tags
+					? tags
+							.split(',')
+							.map((t) => t.trim())
+							.filter(Boolean)
+					: [],
+				votingStartsAt: new Date(votingStartsAt).toISOString(),
+				votingEndsAt: new Date(votingEndsAt).toISOString(),
+				approvalThresholdBps,
+				minimumTurnoutPoints
 			});
-			if (!res.ok) {
-				const body = await res.json().catch(() => ({ message: 'Creation failed.' }));
-				throw new Error(body.message || 'Creation failed.');
-			}
 			toast({ title: 'Referendum created!', status: ENotificationStatus.SUCCESS });
 			onCreated();
 		} catch (err) {

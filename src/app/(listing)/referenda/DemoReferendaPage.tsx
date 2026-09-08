@@ -4,56 +4,93 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ReferendumSummaryDto } from '@/domain/dtos/ReferendaDtos';
+import { type ReferendumSummaryDto } from '@/domain/dtos/ReferendaDtos';
 import DemoReferendaCard from '@/app/_shared-components/DemoReferenda/DemoReferendaCard';
 import DemoCreateReferendaDialog from '@/app/_shared-components/DemoReferenda/DemoCreateReferendaDialog';
 import { Button } from '@/app/_shared-components/Button';
 
-function DemoReferendaPage() {
+interface ListPayload {
+	items: ReferendumSummaryDto[];
+	totalCount: number;
+	page: number;
+	pageSize: number;
+}
+
+interface Props {
+	/** Server-rendered initial list; null means the server load FAILED (not empty). */
+	initialList: ListPayload | null;
+	initialPage: number;
+	initialStatuses: string[];
+}
+
+const STATUS_FILTERS = ['Submitted', 'Deciding', 'Confirmed', 'Rejected'] as const;
+
+function hrefFor(page: number, statuses: string[]): string {
+	const params = new URLSearchParams();
+	if (page > 1) params.set('page', String(page));
+	if (statuses.length > 0) params.set('status', statuses.join(','));
+	const qs = params.toString();
+	return qs ? `/referenda?${qs}` : '/referenda';
+}
+
+function DemoReferendaPage({ initialList, initialPage, initialStatuses }: Props) {
 	const t = useTranslations();
-	const [items, setItems] = useState<ReferendumSummaryDto[]>([]);
-	const [totalCount, setTotalCount] = useState(0);
-	const [page, setPage] = useState(1);
-	const [loading, setLoading] = useState(true);
+	const router = useRouter();
 	const [createOpen, setCreateOpen] = useState(false);
 
-	const pageSize = 10;
-
-	const fetchData = useCallback(async () => {
-		setLoading(true);
-		try {
-			const res = await fetch(`/api/v2/referenda?page=${page}&pageSize=${pageSize}`);
-			if (!res.ok) throw new Error('Failed to fetch');
-			const data = await res.json();
-			setItems(data.items || []);
-			setTotalCount(data.totalCount || 0);
-		} catch {
-			setItems([]);
-		} finally {
-			setLoading(false);
-		}
-	}, [page]);
-
-	useEffect(() => {
-		fetchData();
-	}, [fetchData]);
-
-	const totalPages = Math.ceil(totalCount / pageSize);
+	const items = initialList?.items ?? [];
+	const totalCount = initialList?.totalCount ?? 0;
+	const pageSize = initialList?.pageSize ?? 10;
+	const page = initialList?.page ?? initialPage;
+	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+	// null payload = server load failure — distinct from a genuine empty list.
+	const isServerError = initialList === null;
 
 	return (
 		<div className='container mx-auto px-4 py-6'>
-			<div className='mb-6 flex items-center justify-between'>
+			<div className='mb-4 flex items-center justify-between'>
 				<h1 className='text-2xl font-bold text-text_primary'>
 					{t('ListingPage.Referenda')} ({totalCount})
 				</h1>
 				<Button onClick={() => setCreateOpen(true)}>+ Create Referendum</Button>
 			</div>
 
-			{loading && items.length === 0 ? (
-				<div className='flex h-40 items-center justify-center'>
-					<span className='text-sm text-wallet_btn_text'>Loading...</span>
+			{/* Status filter — URL-driven so each view is server-rendered */}
+			<div className='mb-4 flex flex-wrap items-center gap-2'>
+				<Link
+					href={hrefFor(1, [])}
+					className={`rounded-full border px-3 py-1 text-xs font-medium ${initialStatuses.length === 0 ? 'border-text_pink bg-text_pink text-white' : 'border-border_grey text-wallet_btn_text'}`}
+				>
+					All
+				</Link>
+				{STATUS_FILTERS.map((status) => {
+					const active = initialStatuses.length === 1 && initialStatuses[0] === status;
+					return (
+						<Link
+							key={status}
+							href={hrefFor(1, [status])}
+							className={`rounded-full border px-3 py-1 text-xs font-medium capitalize ${active ? 'border-text_pink bg-text_pink text-white' : 'border-border_grey text-wallet_btn_text'}`}
+						>
+							{status}
+						</Link>
+					);
+				})}
+			</div>
+
+			{isServerError ? (
+				<div className='flex h-40 flex-col items-center justify-center gap-3'>
+					<span className='text-sm text-failure'>Unable to load referenda. Please try again.</span>
+					<Button
+						variant='ghost'
+						size='sm'
+						onClick={() => router.refresh()}
+					>
+						Retry
+					</Button>
 				</div>
 			) : items.length === 0 ? (
 				<div className='flex h-40 items-center justify-center'>
@@ -72,27 +109,31 @@ function DemoReferendaPage() {
 				</div>
 			)}
 
-			{totalPages > 1 && (
+			{!isServerError && totalPages > 1 && (
 				<div className='mt-6 flex items-center justify-center gap-2'>
-					<Button
-						variant='ghost'
-						size='sm'
-						disabled={page <= 1}
-						onClick={() => setPage((p) => Math.max(1, p - 1))}
-					>
-						Previous
-					</Button>
+					{page > 1 ? (
+						<Link
+							href={hrefFor(page - 1, initialStatuses)}
+							className='rounded-md px-3 py-1.5 text-sm text-wallet_btn_text hover:text-text_primary'
+						>
+							Previous
+						</Link>
+					) : (
+						<span className='rounded-md px-3 py-1.5 text-sm text-grey_bg'>Previous</span>
+					)}
 					<span className='text-sm text-wallet_btn_text'>
 						Page {page} of {totalPages}
 					</span>
-					<Button
-						variant='ghost'
-						size='sm'
-						disabled={page >= totalPages}
-						onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-					>
-						Next
-					</Button>
+					{page < totalPages ? (
+						<Link
+							href={hrefFor(page + 1, initialStatuses)}
+							className='rounded-md px-3 py-1.5 text-sm text-wallet_btn_text hover:text-text_primary'
+						>
+							Next
+						</Link>
+					) : (
+						<span className='rounded-md px-3 py-1.5 text-sm text-grey_bg'>Next</span>
+					)}
 				</div>
 			)}
 
@@ -101,7 +142,9 @@ function DemoReferendaPage() {
 					onClose={() => setCreateOpen(false)}
 					onCreated={() => {
 						setCreateOpen(false);
-						setPage(1);
+						// Frozen contract (PR-5): refresh via the server provider so the
+						// list (including page one) reflects the creation immediately.
+						router.refresh();
 					}}
 				/>
 			)}

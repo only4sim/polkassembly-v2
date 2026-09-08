@@ -1,73 +1,83 @@
 rules_version = '2';
 
+// Firestore security rules — DemoOS (points-based) configuration.
+//
+// Access model (frozen PR-2):
+//   - ALL client writes are denied. Every mutation goes through the Admin SDK
+//     (trusted Next.js API routes / Cloud Functions), which bypasses these rules.
+//     Verified 2026-09-07: the client bundle contains zero addDoc/setDoc/updateDoc/
+//     deleteDoc/transaction calls; the only client reads are the three listed below.
+//   - Client reads are minimal-privilege:
+//       * users/{uid}: only the owner (documents contain email PII + role/pointsBalance)
+//       * posts/{id}/votes/{uid}: only the owner
+//       * everything else listed below: public read
+//   - `counters/*` documents are allocation primitives with no client use case:
+//     fully inaccessible to clients.
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // ========== Users ==========
-    // Only the authenticated user can read their own profile; others are public.
-    // All mutations are server-side only.
+    // Documents contain email (PII), role and pointsBalance. Clients may only
+    // read their own document; profile data for other users is served through
+    // trusted API routes which project public fields.
     match /users/{uid} {
-      allow read: if request.auth != null;
-      allow write: if false; // Server-side only via Admin SDK
+      allow get, list: if request.auth != null && request.auth.uid == uid;
+      allow create, update, delete: if false; // Admin SDK only
     }
 
     // ========== Counters ==========
+    // Index-allocation primitives. No legitimate client use case.
     match /counters/{counter} {
-      allow read: if true;
-      allow write: if false; // Server-side only
+      allow read, write: if false; // Admin SDK only
     }
 
-    // ========== Referenda ==========
+    // ========== Referenda (points-based) ==========
     match /referenda/{index} {
-      // Public read for listing and detail pages
-      allow read: if true;
-      // All lifecycle mutations are server-side only
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      // Listing and detail pages read referenda publicly.
+      allow get, list: if true;
+      // Lifecycle, creation and deletion are trusted-server operations only.
+      allow create, update, delete: if false;
 
-      // ===== Votes subcollection =====
       match /votes/{uid} {
-        allow read: if request.auth != null && request.auth.uid == uid;
-        allow write: if false; // Server-side via trusted API
+        // One vote per UID, keyed by the voter's Firebase UID: owner-only read.
+        allow get, list: if request.auth != null && request.auth.uid == uid;
+        // Voting/removal goes through PUT/DELETE /api/v2/referenda/{index}/votes/me.
+        allow create, update, delete: if false;
       }
 
-      // ===== Stats subcollection =====
       match /stats/{statId} {
-        allow read: if true;
-        allow write: if false; // Server-side only
+        // Realtime aggregate results are public by design.
+        allow get, list: if true;
+        allow create, update, delete: if false; // Trusted transaction only
       }
     }
 
-    // ========== Existing posts/comments (DemoOS MVP) ==========
-    // Rules: create by any auth user, update/delete by owner only,
-    // moderation (pin/lock/hide) server-side only.
+    // ========== DemoOS posts (discussions) ==========
     match /posts/{postId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      // Only the original author may update non-moderation fields.
-      // Moderation fields (status, isPinned) must be changed server-side.
-      allow update: if request.auth != null && request.auth.uid == resource.data.authorUid;
-      // Delete: only the author. resource.data exists on delete in Firestore.
-      allow delete: if request.auth != null && request.auth.uid == resource.data.authorUid;
+      // Post lists and details are public.
+      allow get, list: if true;
+      // All writes (create/update/delete/moderation/vote-counters) are performed by
+      // trusted server routes (DemoPostService via Admin SDK). Allowing client writes
+      // would enable moderation-field escalation and author takeover (audit P0-5).
+      allow create, update, delete: if false;
 
       match /comments/{commentId} {
-        allow read: if true;
-        allow create: if request.auth != null;
-        // Update: check existing document's authorUid (not the request body)
-        allow update: if request.auth != null && request.auth.uid == resource.data.authorUid;
-        // Delete: check existing document's authorUid
-        allow delete: if request.auth != null && request.auth.uid == resource.data.authorUid;
+        allow get, list: if true;
+        // Comment CRUD is served by trusted comment API routes.
+        allow create, update, delete: if false;
       }
 
       match /votes/{uid} {
-        allow read: if request.auth != null && request.auth.uid == uid;
-        allow write: if false; // Server-side only
+        // Discussion poll votes: owner-only read.
+        allow get, list: if request.auth != null && request.auth.uid == uid;
+        allow create, update, delete: if false; // castVote trusted path only
       }
 
       match /stats/{statId} {
-        allow read: if true;
-        allow write: if false; // Server-side only
+        // Realtime poll results are public.
+        allow get, list: if true;
+        allow create, update, delete: if false;
       }
     }
 

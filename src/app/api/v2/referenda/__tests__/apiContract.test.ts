@@ -31,7 +31,6 @@ const mocks = vi.hoisted(() => ({
 	upsertVote: vi.fn(),
 	removeVote: vi.fn(),
 	createReferendum: vi.fn(),
-	openForVoting: vi.fn(),
 	requireVerifiedActor: vi.fn(),
 	isAdminActor: vi.fn()
 }));
@@ -54,7 +53,6 @@ vi.mock('@/app/api/_api-services/referenda/referendumTrustedService', async (imp
 			upsertVote = mocks.upsertVote;
 			removeVote = mocks.removeVote;
 			createReferendum = mocks.createReferendum;
-			openForVoting = mocks.openForVoting;
 		}
 	};
 });
@@ -73,6 +71,8 @@ import { ReferendumDecision, ReferendumStatus } from '@/domain/entities/Referend
 import { makeReferendum, makeStats, makeVote } from '@/domain/fixtures/referendaFixtures';
 import { toPublicReferendumVoteDto, toReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
 
+const JSON_CONTENT_TYPE = 'application/json';
+const REFERENDA_URL = '/api/v2/referenda';
 const req = (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => new NextRequest(`http://localhost:3000${url}`, init);
 const ctx = (index: string) => ({ params: Promise.resolve({ index }) });
 
@@ -121,15 +121,15 @@ describe('GET /api/v2/referenda (list)', () => {
 });
 
 describe('POST /api/v2/referenda (create)', () => {
-	it('returns frozen shape `{ referendum: ReferendumDetailDto }` with the persisted status', async () => {
-		mocks.createReferendum.mockResolvedValue(makeReferendum({ status: ReferendumStatus.Submitted }));
-		mocks.openForVoting.mockResolvedValue(undefined);
-		mocks.getByIndex.mockResolvedValue(makeReferendum({ status: ReferendumStatus.Deciding }));
+	it('returns frozen shape `{ referendum: ReferendumDetailDto }` with the in-transaction status', async () => {
+		// PR-4: the service decides Submitted/Deciding inside the creation
+		// transaction; the route no longer performs a second transition call.
+		mocks.createReferendum.mockResolvedValue(makeReferendum({ status: ReferendumStatus.Deciding }));
 
 		const res = await referendaPOST(
-			req('/api/v2/referenda', {
+			req(REFERENDA_URL, {
 				method: 'POST',
-				headers: { 'content-type': 'application/json' },
+				headers: { 'content-type': JSON_CONTENT_TYPE },
 				body: JSON.stringify({
 					title: 'A valid referendum title',
 					content: 'This referendum content is sufficiently long.',
@@ -146,15 +146,36 @@ describe('POST /api/v2/referenda (create)', () => {
 		expect(Object.keys(body)).toEqual(['referendum']);
 		expect(body.referendum.status).toBe('Deciding');
 		expect(body.referendum.index).toBe(1);
-		expect(mocks.openForVoting).toHaveBeenCalledWith(1);
+	});
+
+	it('maps an already-expired voting window to 400', async () => {
+		mocks.createReferendum.mockRejectedValue(new ReferendaServiceError('invalid-argument', 'The voting window has already expired.'));
+		const res = await referendaPOST(
+			req(REFERENDA_URL, {
+				method: 'POST',
+				headers: { 'content-type': JSON_CONTENT_TYPE },
+				body: JSON.stringify({
+					title: 'A valid referendum title',
+					content: 'This referendum content is sufficiently long.',
+					origin: 'root',
+					votingStartsAt: '2020-01-01T00:00:00Z',
+					votingEndsAt: '2020-06-01T00:00:00Z',
+					approvalThresholdBps: 5000,
+					minimumTurnoutPoints: 1
+				})
+			})
+		);
+		expect(res.status).toBe(400);
+		const body = await res.json();
+		expect(body.message).toContain('expired');
 	});
 
 	it('maps creation validation errors to 400', async () => {
 		mocks.createReferendum.mockRejectedValue(new CreationValidationError('invalid-title', 'Title must be between 4 and 120 characters.'));
 		const res = await referendaPOST(
-			req('/api/v2/referenda', {
+			req(REFERENDA_URL, {
 				method: 'POST',
-				headers: { 'content-type': 'application/json' },
+				headers: { 'content-type': JSON_CONTENT_TYPE },
 				body: JSON.stringify({ title: 'ab' })
 			})
 		);
@@ -201,7 +222,7 @@ describe('PUT /api/v2/referenda/{index}/votes/me', () => {
 		const res = await mePUT(
 			req(meUrl, {
 				method: 'PUT',
-				headers: { 'content-type': 'application/json' },
+				headers: { 'content-type': JSON_CONTENT_TYPE },
 				body: JSON.stringify({ decision: ReferendumDecision.AYE, pointsUsed: 100 })
 			}),
 			ctx('1')
@@ -219,7 +240,7 @@ describe('PUT /api/v2/referenda/{index}/votes/me', () => {
 		const res = await mePUT(
 			req(meUrl, {
 				method: 'PUT',
-				headers: { 'content-type': 'application/json' },
+				headers: { 'content-type': JSON_CONTENT_TYPE },
 				body: JSON.stringify({ decision: 'aye', pointsUsed: 100 })
 			}),
 			ctx('1')
@@ -232,7 +253,7 @@ describe('PUT /api/v2/referenda/{index}/votes/me', () => {
 		const res409 = await mePUT(
 			req(meUrl, {
 				method: 'PUT',
-				headers: { 'content-type': 'application/json' },
+				headers: { 'content-type': JSON_CONTENT_TYPE },
 				body: JSON.stringify({ decision: 'aye', pointsUsed: 10 })
 			}),
 			ctx('1')
@@ -243,7 +264,7 @@ describe('PUT /api/v2/referenda/{index}/votes/me', () => {
 		const res400 = await mePUT(
 			req(meUrl, {
 				method: 'PUT',
-				headers: { 'content-type': 'application/json' },
+				headers: { 'content-type': JSON_CONTENT_TYPE },
 				body: JSON.stringify({ decision: 'aye', pointsUsed: 1.5 })
 			}),
 			ctx('1')

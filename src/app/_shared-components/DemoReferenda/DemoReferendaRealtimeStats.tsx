@@ -4,27 +4,31 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { clientDb } from '@/app/_client-services/firebase/firebaseClientApp';
-import { ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
+import { type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
+import { statsDtoFromSnapshotData } from '@/app/_client-services/points_referenda_client_service';
 
 interface DemoReferendaRealtimeStatsProps {
 	index: number;
+	/** Server-rendered initial aggregate (plan PR-5) — shown before/at listener failure. */
+	initialStats: ReferendumStatsDto | null;
 }
 
-function DemoReferendaRealtimeStats({ index }: DemoReferendaRealtimeStatsProps) {
-	const [stats, setStats] = useState<ReferendumStatsDto | null>(null);
+function pct(part: number, total: number): number {
+	return total > 0 ? Math.round((part / total) * 100) : 0;
+}
+
+function DemoReferendaRealtimeStats({ index, initialStats }: DemoReferendaRealtimeStatsProps) {
+	// Hydration-safe: state is seeded from the SERVER-provided value, so the
+	// first client render matches SSR markup exactly.
+	const [stats, setStats] = useState<ReferendumStatsDto | null>(initialStats);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		// Fetch initial stats via SSR-friendly API
-		fetch(`/api/v2/referenda/${index}/stats`)
-			.then((r) => r.json())
-			.then(setStats)
-			.catch(() => {});
-
-		// Subscribe to realtime updates from the aggregate stats doc
+		// Exactly ONE realtime listener on referenda/{index}/stats/current —
+		// no HTTP seed fetch that could race with (and overwrite) the snapshot.
 		const statsRef = doc(clientDb, 'referenda', String(index), 'stats', 'current');
 		const unsubscribe = onSnapshot(
 			statsRef,
@@ -33,44 +37,34 @@ function DemoReferendaRealtimeStats({ index }: DemoReferendaRealtimeStatsProps) 
 					setStats(null);
 					return;
 				}
-				const data = snapshot.data();
-				setStats({
-					ayePoints: (data.ayePoints as number) ?? 0,
-					nayPoints: (data.nayPoints as number) ?? 0,
-					abstainPoints: (data.abstainPoints as number) ?? 0,
-					ayeVoters: (data.ayeVoters as number) ?? 0,
-					nayVoters: (data.nayVoters as number) ?? 0,
-					abstainVoters: (data.abstainVoters as number) ?? 0,
-					totalVoters: (data.totalVoters as number) ?? 0,
-					approvalBps: 0,
-					participatingPoints: 0,
-					updatedAt: data.updatedAt?.toDate?.()?.toISOString?.() ?? new Date().toISOString()
-				});
+				// Snapshot → DTO via the shared client-service mapper (single
+				// source of validation/normalisation).
+				const dto = statsDtoFromSnapshotData(snapshot.data() as Record<string, unknown>);
+				if (dto) {
+					setStats(dto);
+					setError(null);
+				}
 			},
 			(err) => {
 				// eslint-disable-next-line no-console
 				console.error('[DemoReferendaRealtimeStats] onSnapshot error:', err);
-				setError('Unable to load live results.');
+				// Preserve the last known value; just mark the feed stale.
+				setError('Live results are unavailable — showing the last known results.');
 			}
 		);
 
 		return () => unsubscribe();
 	}, [index]);
 
-	if (error) {
-		return <div className='mb-6 text-sm text-failure'>{error}</div>;
-	}
-
 	if (!stats) {
 		return <div className='mb-6 text-sm text-wallet_btn_text'>No vote data yet.</div>;
 	}
 
-	const total = stats.ayePoints + stats.nayPoints + stats.abstainPoints;
-	const ayePct = total > 0 ? Math.round((stats.ayePoints / total) * 100) : 0;
-	const nayPct = total > 0 ? Math.round((stats.nayPoints / total) * 100) : 0;
-	const abstainPct = total > 0 ? Math.round((stats.abstainPoints / total) * 100) : 0;
-	const approvalDenom = stats.ayePoints + stats.nayPoints;
-	const approvalPct = approvalDenom > 0 ? Math.round((stats.ayePoints / approvalDenom) * 100) : 0;
+	const total = stats.participatingPoints + stats.abstainPoints;
+	const ayePct = pct(stats.ayePoints, stats.participatingPoints);
+	const nayPct = pct(stats.nayPoints, stats.participatingPoints);
+	const abstainPct = pct(stats.abstainPoints, total);
+	const approvalPct = Math.round((stats.approvalBps / 100) * 100) / 100;
 
 	return (
 		<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
@@ -79,12 +73,15 @@ function DemoReferendaRealtimeStats({ index }: DemoReferendaRealtimeStatsProps) 
 				<span className='text-xs font-normal text-wallet_btn_text'>
 					({stats.totalVoters} {stats.totalVoters === 1 ? 'voter' : 'voters'})
 				</span>
+				{error && <span className='ml-2 text-xs font-normal text-failure'>{error}</span>}
 			</h3>
 
 			{/* Aye bar */}
 			<div className='mb-2'>
 				<div className='mb-1 flex items-center justify-between text-xs'>
-					<span className='font-medium text-success'>Aye</span>
+					<span className='font-medium text-success'>
+						Aye <span className='text-wallet_btn_text'>({stats.ayeVoters})</span>
+					</span>
 					<span className='text-wallet_btn_text'>
 						{stats.ayePoints} points ({ayePct}%)
 					</span>
@@ -100,7 +97,9 @@ function DemoReferendaRealtimeStats({ index }: DemoReferendaRealtimeStatsProps) 
 			{/* Nay bar */}
 			<div className='mb-2'>
 				<div className='mb-1 flex items-center justify-between text-xs'>
-					<span className='font-medium text-failure'>Nay</span>
+					<span className='font-medium text-failure'>
+						Nay <span className='text-wallet_btn_text'>({stats.nayVoters})</span>
+					</span>
 					<span className='text-wallet_btn_text'>
 						{stats.nayPoints} points ({nayPct}%)
 					</span>
@@ -117,7 +116,9 @@ function DemoReferendaRealtimeStats({ index }: DemoReferendaRealtimeStatsProps) 
 			{stats.abstainPoints > 0 && (
 				<div className='mb-2'>
 					<div className='mb-1 flex items-center justify-between text-xs'>
-						<span className='font-medium text-decision_bar_indicator'>Abstain</span>
+						<span className='font-medium text-decision_bar_indicator'>
+							Abstain <span className='text-wallet_btn_text'>({stats.abstainVoters})</span>
+						</span>
 						<span className='text-wallet_btn_text'>
 							{stats.abstainPoints} points ({abstainPct}%)
 						</span>
@@ -131,9 +132,9 @@ function DemoReferendaRealtimeStats({ index }: DemoReferendaRealtimeStatsProps) 
 				</div>
 			)}
 
-			{/* Approval */}
+			{/* Approval + turnout (server-computed fields, single semantics) */}
 			<div className='mt-3 border-t border-border_grey pt-2 text-xs text-wallet_btn_text'>
-				Approval: {approvalPct}% &middot; Turnout: {total} points
+				Approval: {approvalPct}% &middot; Turnout: {stats.participatingPoints} points &middot; Updated {new Date(stats.updatedAt).toLocaleTimeString()}
 			</div>
 		</div>
 	);

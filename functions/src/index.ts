@@ -338,3 +338,4 @@ export const onCommentWritten = onDocumentWritten(
 
 export { castVote } from './castVote';
 export { finalizeReferenda } from './finalizeReferenda';
+export { processReferendaLifecycle, computeFinalOutcomeExact } from './lifecycle';

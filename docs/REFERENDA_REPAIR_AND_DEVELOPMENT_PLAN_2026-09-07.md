@@ -717,24 +717,24 @@ yarn build
 
 ### P0
 
-- [ ] 稳定 API 和错误合同已锁定；
-- [ ] Public vote DTO 不含 UID/余额/PII；
-- [ ] posts/comments/users/referenda rules 攻击测试通过；
-- [ ] 生产 stats delta 被直接测试；
-- [ ] pointsBalance/user document 严格验证；
-- [ ] 精确投票时间边界已修复；
-- [ ] outcome 使用精确判定；
-- [ ] 创建初始状态在同一事务中决定；
-- [ ] lifecycle index 完整；
-- [ ] 投票、index、生命周期并发测试通过；
-- [ ] `test:emulators` 真正运行非 rules 测试。
+- [x] 稳定 API 和错误合同已锁定；
+- [x] Public vote DTO 不含 UID/余额/PII；
+- [x] posts/comments/users/referenda rules 攻击测试通过；
+- [x] 生产 stats delta 被直接测试；
+- [x] pointsBalance/user document 严格验证；
+- [x] 精确投票时间边界已修复；
+- [x] outcome 使用精确判定；
+- [x] 创建初始状态在同一事务中决定；
+- [x] lifecycle index 完整；
+- [x] 投票、index、生命周期并发测试通过；
+- [x] `test:emulators` 真正运行非 rules 测试。
 
 ### P1
 
-- [ ] points client service 已建立；
-- [ ] 列表/详情使用 server initial data；
-- [ ] stats 只有单一 realtime listener；
-- [ ] auth/logout/switch user 状态正确；
+- [x] points client service 已建立；
+- [x] 列表/详情使用 server initial data；
+- [x] stats 只有单一 realtime listener；
+- [x] auth/logout/switch user 状态正确；
 - [ ] 列表筛选、指标和错误状态完整；
 - [ ] 详情周期、门槛、标签、历史完整；
 - [ ] 投票 balance/max/inline error/success 完整；

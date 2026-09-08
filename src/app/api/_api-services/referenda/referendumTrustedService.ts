@@ -9,6 +9,7 @@ import { ReferendumDecision, ReferendumStatus } from '@/domain/entities/Referend
 import { type ReferendumStats } from '@/domain/entities/ReferendumStats';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
 import { assertRemovalAllowed, validateVoteInput, validateCreationInput, VoteValidationError, CreationValidationError } from '@/domain/services/referendumValidation';
+import { applyVoteDelta, emptyReferendumStats, subtractVote } from '@/domain/services/referendumStatsDelta';
 import { REFERENDUM_SCHEMA_VERSION, STATS_SCHEMA_VERSION, VOTE_SCHEMA_VERSION } from '@/domain/fixtures/referendaFixtures';
 import { getAdminDb } from '@/adapters/firestore/firestoreInit';
 import { FirestoreReferendumRepository } from '@/adapters/firestore/FirestoreReferendumRepository';
@@ -90,8 +91,14 @@ export class ReferendumTrustedService {
 				const [refSnap, voteSnap, userSnap, statsSnap] = await Promise.all([tx.get(ref), tx.get(voteRef), tx.get(userRef), tx.get(statsRef)]);
 				if (!refSnap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
 				const referendum = mapReferendum(refSnap.data()!, index);
-				const pointsBalance = (userSnap.data()?.pointsBalance as number) ?? 0;
-				const displayName = (userSnap.data()?.displayName as string) || actor.displayName;
+				// Frozen contract (PR-3): the Firestore user profile is mandatory and is
+				// the authoritative source of the balance and display name.
+				if (!userSnap.exists) throw new ReferendaServiceError('not-found', 'User profile not found.');
+				const pointsBalance = userSnap.data()?.pointsBalance as number | undefined;
+				if (typeof pointsBalance !== 'number' || !Number.isSafeInteger(pointsBalance) || pointsBalance < 0) {
+					throw new ReferendaServiceError('conflict', 'User profile has an invalid points balance.');
+				}
+				const displayName = (userSnap.data()?.displayName as string) || '';
 				validateVoteInput({
 					uid: actor.uid,
 					decision: payload.decision,
@@ -103,9 +110,9 @@ export class ReferendumTrustedService {
 					votingEndsAt: new Date(referendum.votingEndsAt)
 				});
 				const prev = voteSnap.exists ? mapVote(voteSnap.data()!, actor.uid) : null;
-				const stats = statsSnap.exists ? mapStats(statsSnap.data()!) : this.emptyStats();
+				const stats = statsSnap.exists ? mapStats(statsSnap.data()!) : emptyReferendumStats();
 				const now = Timestamp.now();
-				const nextStats = this.applyDelta(stats, prev, payload, now);
+				const nextStats = applyVoteDelta(stats, prev, payload);
 				tx.set(voteRef, {
 					uid: actor.uid,
 					voterDisplayName: displayName,
@@ -156,12 +163,12 @@ export class ReferendumTrustedService {
 				if (!refSnap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
 				const referendum = mapReferendum(refSnap.data()!, index);
 				// Frozen contract (PR-1): idempotent removal returns the current stats.
-				if (!voteSnap.exists) return statsSnap.exists ? mapStats(statsSnap.data()!) : this.emptyStats();
+				if (!voteSnap.exists) return statsSnap.exists ? mapStats(statsSnap.data()!) : emptyReferendumStats();
 				assertRemovalAllowed(referendum.status, new Date(), new Date(referendum.votingStartsAt), new Date(referendum.votingEndsAt));
 				const prev = mapVote(voteSnap.data()!, actor.uid);
-				const stats = statsSnap.exists ? mapStats(statsSnap.data()!) : this.emptyStats();
+				const stats = statsSnap.exists ? mapStats(statsSnap.data()!) : emptyReferendumStats();
 				const now = Timestamp.now();
-				const nextStats = this.subtractContribution(stats, prev, now);
+				const nextStats = subtractVote(stats, prev);
 				tx.delete(voteRef);
 				tx.set(statsRef, {
 					ayePoints: nextStats.ayePoints,
@@ -184,32 +191,36 @@ export class ReferendumTrustedService {
 	async createReferendum(actor: VerifiedActor, input: CreateReferendumInput) {
 		try {
 			const validated = validateCreationInput({ uid: actor.uid, ...input });
+			// Frozen contract (PR-3): the author display name comes from the Firestore
+			// profile (authoritative), which must exist.
+			const userSnap = await this.db.collection('users').doc(actor.uid).get();
+			if (!userSnap.exists) {
+				throw new ReferendaServiceError('not-found', 'User profile not found.');
+			}
+			const authorDisplayName = (userSnap.data()?.displayName as string) || actor.displayName;
+			// Frozen contract (PR-4): the initial status is decided inside the creation
+			// transaction from one captured server `now` — no second transition call:
+			//   now <  startsAt -> Submitted
+			//   now >= startsAt -> Deciding (the window is open)
+			//   now >= endsAt   -> rejected (already expired, 400)
+			const nowMs = Date.now();
+			if (nowMs >= validated.votingEndsAt.getTime()) {
+				throw new ReferendaServiceError('invalid-argument', 'The voting window has already expired.');
+			}
+			const initialStatus = nowMs >= validated.votingStartsAt.getTime() ? ReferendumStatus.Deciding : ReferendumStatus.Submitted;
 			return this.repo.create({
 				title: validated.title,
 				content: validated.content,
 				authorUid: actor.uid,
-				authorDisplayName: actor.displayName,
+				authorDisplayName,
 				origin: validated.origin,
-				status: ReferendumStatus.Submitted,
+				status: initialStatus,
 				tags: validated.tags,
 				votingStartsAt: validated.votingStartsAt.toISOString(),
 				votingEndsAt: validated.votingEndsAt.toISOString(),
 				approvalThresholdBps: validated.approvalThresholdBps,
 				minimumTurnoutPoints: validated.minimumTurnoutPoints,
 				schemaVersion: REFERENDUM_SCHEMA_VERSION
-			});
-		} catch (err) {
-			throw toServiceError(err);
-		}
-	}
-
-	async openForVoting(index: number): Promise<void> {
-		try {
-			await this.db.runTransaction(async (tx) => {
-				const ref = referendumDoc(this.db, index);
-				const snap = await tx.get(ref);
-				if (!snap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
-				tx.update(ref, { status: ReferendumStatus.Deciding, updatedAt: Timestamp.now() });
 			});
 		} catch (err) {
 			throw toServiceError(err);
@@ -233,66 +244,5 @@ export class ReferendumTrustedService {
 		} catch (err) {
 			throw toServiceError(err);
 		}
-	}
-
-	private emptyStats(): ReferendumStats {
-		return {
-			ayePoints: 0,
-			nayPoints: 0,
-			abstainPoints: 0,
-			ayeVoters: 0,
-			nayVoters: 0,
-			abstainVoters: 0,
-			totalVoters: 0,
-			updatedAt: new Date(0).toISOString(),
-			schemaVersion: STATS_SCHEMA_VERSION
-		};
-	}
-
-	private applyDelta(stats: ReferendumStats, prev: ReferendumVote | null, next: VotePayload, now: Timestamp): ReferendumStats {
-		const result = { ...stats };
-		if (prev) this.subtractFrom(result, prev.decision, prev.pointsUsed);
-		this.addTo(result, next.decision, next.pointsUsed);
-		result.updatedAt = now.toDate().toISOString();
-		return result;
-	}
-
-	private subtractContribution(stats: ReferendumStats, prev: ReferendumVote, now: Timestamp): ReferendumStats {
-		const result = { ...stats };
-		this.subtractFrom(result, prev.decision, prev.pointsUsed);
-		result.updatedAt = now.toDate().toISOString();
-		return result;
-	}
-
-	private addTo(stats: ReferendumStats, decision: ReferendumDecision, points: number): void {
-		stats.totalVoters += 1;
-		if (decision === ReferendumDecision.AYE) {
-			stats.ayePoints += points;
-			stats.ayeVoters += 1;
-		} else if (decision === ReferendumDecision.NAY) {
-			stats.nayPoints += points;
-			stats.nayVoters += 1;
-		} else {
-			stats.abstainPoints += points;
-			stats.abstainVoters += 1;
-		}
-	}
-
-	private subtractFrom(stats: ReferendumStats, decision: ReferendumDecision, points: number): void {
-		if (stats.totalVoters < 1) throw new Error('corrupt stats: totalVoters would go negative');
-		if (decision === ReferendumDecision.AYE) {
-			if (stats.ayePoints < points || stats.ayeVoters < 1) throw new Error('corrupt stats: aye would go negative');
-			stats.ayePoints -= points;
-			stats.ayeVoters -= 1;
-		} else if (decision === ReferendumDecision.NAY) {
-			if (stats.nayPoints < points || stats.nayVoters < 1) throw new Error('corrupt stats: nay would go negative');
-			stats.nayPoints -= points;
-			stats.nayVoters -= 1;
-		} else {
-			if (stats.abstainPoints < points || stats.abstainVoters < 1) throw new Error('corrupt stats: abstain would go negative');
-			stats.abstainPoints -= points;
-			stats.abstainVoters -= 1;
-		}
-		stats.totalVoters -= 1;
 	}
 }

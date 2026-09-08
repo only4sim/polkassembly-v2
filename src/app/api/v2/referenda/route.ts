@@ -135,19 +135,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 			minimumTurnoutPoints: body.minimumTurnoutPoints as number
 		});
 
-		// If the voting window has already opened, transition to Deciding immediately.
-		// NOTE (Phase 3 / PR-4): the initial Submitted/Deciding decision moves into the
-		// creation transaction using one captured server `now`, and already-expired
-		// windows are rejected at creation time.
-		if (new Date(created.votingStartsAt).getTime() <= Date.now()) {
-			await service.openForVoting(created.index);
-		}
-
-		// Return the persisted state so the response never claims a stale status.
-		const readService = new ReferendumReadService();
-		const persisted = await readService.getByIndex(created.index);
-
-		return NextResponse.json({ referendum: toReferendumDetailDto(persisted ?? created) }, { status: StatusCodes.CREATED });
+		// Frozen contract (PR-4): the initial status was decided inside the creation
+		// transaction, so `created` already reflects the persisted state.
+		return NextResponse.json({ referendum: toReferendumDetailDto(created) }, { status: StatusCodes.CREATED });
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

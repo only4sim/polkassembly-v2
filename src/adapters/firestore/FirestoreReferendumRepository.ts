@@ -66,10 +66,15 @@ export class FirestoreReferendumRepository implements ReferendumRepository, Coun
 	 */
 	async create(data: ReferendumWrite): Promise<import('@/domain/entities/Referendum').Referendum> {
 		return this.db.runTransaction(async (tx) => {
-			// 1. Allocate index
+			// 1. Allocate index. Frozen contract (PR-4): the counter must be a safe
+			// non-negative integer; a corrupted counter aborts creation (500) rather
+			// than handing out a colliding or unsafe index.
 			const counterRef = counterDoc(this.db);
 			const counterSnap = await tx.get(counterRef);
 			const current = (counterSnap.data()?.value as number) ?? 0;
+			if (typeof current !== 'number' || !Number.isSafeInteger(current) || current < 0) {
+				throw new Error(`Corrupted counter: value must be a non-negative safe integer (got ${String(current)})`);
+			}
 			const index = current + 1;
 
 			// 2. Verify document doesn't already exist at that index

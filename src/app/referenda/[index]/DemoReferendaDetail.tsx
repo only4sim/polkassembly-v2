@@ -4,8 +4,9 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ReferendumDetailDto, ReferendumVoteDto } from '@/domain/dtos/ReferendaDtos';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ReferendumDetailDto, ReferendumVoteDto, type PublicReferendumVoteDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
 import StatusTag from '@/app/_shared-components/StatusTag/StatusTag';
 import { EProposalStatus } from '@/_shared/types';
 import DemoReferendaRealtimeStats from '@/app/_shared-components/DemoReferenda/DemoReferendaRealtimeStats';
@@ -13,80 +14,80 @@ import DemoReferendaVoteDialog from '@/app/_shared-components/DemoReferenda/Demo
 import { Button } from '@/app/_shared-components/Button';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { onAuthStateChanged } from 'firebase/auth';
+import { fetchMyVote } from '@/app/_client-services/points_referenda_client_service';
 
 interface Props {
-	params: Promise<{ index: string }>;
+	index: number;
+	initialDetail: ReferendumDetailDto | null;
+	initialStats: ReferendumStatsDto | null;
+	initialHistory: { items: PublicReferendumVoteDto[]; totalCount: number } | null;
+	serverError: boolean;
 }
 
-function DemoReferendaDetail({ params }: Props) {
-	const [index, setIndex] = useState<number | null>(null);
-	const [referendum, setReferendum] = useState<ReferendumDetailDto | null>(null);
+function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistory, serverError }: Props) {
+	const router = useRouter();
+	const referendum = initialDetail;
 	const [myVote, setMyVote] = useState<ReferendumVoteDto | null>(null);
-	const [loading, setLoading] = useState(true);
+	const [myVoteState, setMyVoteState] = useState<'loading' | 'loaded' | 'error'>('loading');
 	const [authReady, setAuthReady] = useState(false);
 	const [authUid, setAuthUid] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	useEffect(() => {
-		params.then((p) => setIndex(Number(p.index)));
-	}, [params]);
-
-	// Wait for Firebase auth readiness
+	// Auth state machine (plan PR-5): anonymous → no own vote; logout or user
+	// switch MUST clear the previously displayed vote immediately.
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(clientAuth, (user) => {
 			setAuthReady(true);
-			setAuthUid(user?.uid ?? null);
+			const uid = user?.uid ?? null;
+			setAuthUid(uid);
+			if (!uid) {
+				setMyVote(null);
+				setMyVoteState('loaded');
+			}
 		});
 		return () => unsubscribe();
 	}, []);
 
-	useEffect(() => {
-		if (index === null || !authReady) return;
-		setLoading(true);
-
-		async function load() {
-			try {
-				// Fetch referendum detail (public)
-				const refRes = await fetch(`/api/v2/referenda/${index}`);
-				const refData = await refRes.json();
-				setReferendum(refData);
-
-				// Fetch own vote only if authenticated
-				if (authUid) {
-					const token = await clientAuth.currentUser?.getIdToken();
-					if (token) {
-						const voteRes = await fetch(`/api/v2/referenda/${index}/votes/me`, {
-							headers: { Authorization: `Bearer ${token}` }
-						});
-						if (voteRes.ok) {
-							const body = await voteRes.json();
-							// Frozen contract (PR-1): GET /votes/me returns `{ vote }`.
-							// Accept only proper vote objects (never error bodies).
-							const vote = body?.vote ?? null;
-							if (vote && vote.uid) {
-								setMyVote(vote);
-							}
-						}
-					}
-				}
-			} catch {
-				// Error handled by empty states
-			} finally {
-				setLoading(false);
-			}
+	// Own vote: fetched only for an authenticated user, via the client service.
+	// 401 (expired token) is surfaced as an error rather than shown as a vote.
+	const loadMyVote = useCallback(async () => {
+		if (!authUid) return;
+		setMyVoteState('loading');
+		try {
+			const vote = await fetchMyVote(index);
+			setMyVote(vote);
+			setMyVoteState('loaded');
+		} catch (err) {
+			// eslint-disable-next-line no-console
+			console.error('[DemoReferendaDetail] failed to load own vote:', err);
+			setMyVote(null);
+			setMyVoteState('error');
 		}
-		load();
-	}, [index, authReady, authUid]);
+	}, [authUid, index]);
 
-	if (loading) {
-		return <div className='flex h-60 items-center justify-center text-sm text-wallet_btn_text'>Loading...</div>;
-	}
+	useEffect(() => {
+		if (authReady && authUid) {
+			loadMyVote();
+		}
+	}, [authReady, authUid, loadMyVote]);
 
-	if (!referendum) {
-		return <div className='flex h-60 items-center justify-center text-sm text-wallet_btn_text'>Referendum not found.</div>;
+	if (serverError || !referendum) {
+		return (
+			<div className='container mx-auto flex h-60 flex-col items-center justify-center gap-3 px-4'>
+				<span className='text-sm text-failure'>Unable to load this referendum. Please try again.</span>
+				<Button
+					variant='ghost'
+					size='sm'
+					onClick={() => router.refresh()}
+				>
+					Retry
+				</Button>
+			</div>
+		);
 	}
 
 	const isDeciding = referendum.status === 'Deciding';
+	const authResolved = authReady;
 
 	return (
 		<div className='container mx-auto px-4 py-6'>
@@ -101,13 +102,30 @@ function DemoReferendaDetail({ params }: Props) {
 					by {referendum.authorDisplayName} &middot; {new Date(referendum.createdAt).toLocaleDateString()}
 					{referendum.origin && <span className='ml-2 capitalize'>({referendum.origin})</span>}
 				</p>
+				{/* Voting window and thresholds — previously backend-only fields */}
+				<p className='mt-1 text-xs text-wallet_btn_text'>
+					Voting: {new Date(referendum.votingStartsAt).toLocaleString()} → {new Date(referendum.votingEndsAt).toLocaleString()} &middot; Approval ≥{' '}
+					{(referendum.approvalThresholdBps / 100).toFixed(2)}% &middot; Min turnout {referendum.minimumTurnoutPoints} points
+				</p>
+				{referendum.tags.length > 0 && (
+					<div className='mt-2 flex flex-wrap gap-2'>
+						{referendum.tags.map((tag) => (
+							<span
+								key={tag}
+								className='rounded-full border border-border_grey px-2 py-0.5 text-xs text-wallet_btn_text'
+							>
+								{tag}
+							</span>
+						))}
+					</div>
+				)}
 			</div>
 
 			<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
 				<div className='prose prose-sm dark:prose-invert max-w-none'>{referendum.content}</div>
 			</div>
 
-			{/* Voting - only for authenticated users when Deciding */}
+			{/* Voting - only for authenticated users while Deciding */}
 			{isDeciding && authUid && (
 				<div className='mb-6'>
 					<Button
@@ -118,9 +136,15 @@ function DemoReferendaDetail({ params }: Props) {
 					</Button>
 				</div>
 			)}
-			{isDeciding && !authUid && authReady && (
+			{isDeciding && !authUid && authResolved && (
 				<div className='mb-6'>
 					<p className='text-sm text-wallet_btn_text'>Please log in to vote.</p>
+				</div>
+			)}
+
+			{myVoteState === 'error' && authUid && (
+				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
+					<p className='text-sm text-failure'>Could not load your vote. Please try again later.</p>
 				</div>
 			)}
 
@@ -133,7 +157,33 @@ function DemoReferendaDetail({ params }: Props) {
 				</div>
 			)}
 
-			<DemoReferendaRealtimeStats index={referendum.index} />
+			<DemoReferendaRealtimeStats
+				index={referendum.index}
+				initialStats={initialStats}
+			/>
+
+			{/* Privacy-safe public vote history (no UID, no balance — contract) */}
+			{initialHistory && initialHistory.items.length > 0 && (
+				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
+					<h3 className='mb-2 text-sm font-semibold text-text_primary'>
+						Votes <span className='text-xs font-normal text-wallet_btn_text'>({initialHistory.totalCount})</span>
+					</h3>
+					<ul className='divide-y divide-border_grey'>
+						{initialHistory.items.map((vote, i) => (
+							<li
+								// eslint-disable-next-line react/no-array-index-key
+								key={`${vote.voterDisplayName}-${vote.updatedAt}-${i}`}
+								className='flex items-center justify-between py-2 text-sm'
+							>
+								<span className='text-text_primary'>{vote.voterDisplayName}</span>
+								<span className='capitalize text-wallet_btn_text'>
+									{vote.decision} &middot; {vote.pointsUsed} points
+								</span>
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
 
 			{dialogOpen && (
 				<DemoReferendaVoteDialog
@@ -142,10 +192,12 @@ function DemoReferendaDetail({ params }: Props) {
 					onClose={() => setDialogOpen(false)}
 					onVoteChanged={(vote) => {
 						setMyVote(vote);
+						setMyVoteState('loaded');
 						setDialogOpen(false);
 					}}
 					onVoteRemoved={() => {
 						setMyVote(null);
+						setMyVoteState('loaded');
 						setDialogOpen(false);
 					}}
 				/>
