@@ -70,6 +70,23 @@ export class ReferendumReadService {
 	}
 
 	/**
+	 * Batch-read the aggregate stats for a page of referenda using a single
+	 * `getAll` round trip (plan PR-6: avoid per-card browser reads).
+	 * Missing/corrupt stats map to null so cards can hide metrics gracefully.
+	 */
+	async getStatsForIndexes(indexes: number[]): Promise<Map<number, ReferendumStats | null>> {
+		const result = new Map<number, ReferendumStats | null>();
+		if (indexes.length === 0) return result;
+		const refs = indexes.map((index) => statsDoc(this.db, index));
+		const snapshots = await this.db.getAll(...refs);
+		snapshots.forEach((snap, position) => {
+			const index = indexes[position];
+			result.set(index, snap.exists ? mapStats(snap.data()!) : null);
+		});
+		return result;
+	}
+
+	/**
 	 * List referenda feed (most recent first) for server-rendered pages.
 	 */
 	async listAll(): Promise<Referendum[]> {

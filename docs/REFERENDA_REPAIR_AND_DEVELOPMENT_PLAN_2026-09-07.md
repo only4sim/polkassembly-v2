@@ -735,10 +735,10 @@ yarn build
 - [x] 列表/详情使用 server initial data；
 - [x] stats 只有单一 realtime listener；
 - [x] auth/logout/switch user 状态正确；
-- [ ] 列表筛选、指标和错误状态完整；
-- [ ] 详情周期、门槛、标签、历史完整；
-- [ ] 投票 balance/max/inline error/success 完整；
-- [ ] 管理员取消 UI 完整；
+- [x] 列表筛选、指标和错误状态完整；
+- [x] 详情周期、门槛、标签、历史完整；
+- [x] 投票 balance/max/inline error/success 完整；
+- [x] 管理员取消 UI 完整；
 - [ ] comments 和安全 public history 完整；
 - [ ] 本地化和可访问性达到验收要求；
 - [ ] chain/demo 回归通过；

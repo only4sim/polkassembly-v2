@@ -5,19 +5,31 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ReferendumSummaryDto } from '@/domain/dtos/ReferendaDtos';
 import { EProposalStatus } from '@/_shared/types';
 import StatusTag from '@/app/_shared-components/StatusTag/StatusTag';
 
-interface DemoReferendaCardProps {
-	data: ReferendumSummaryDto;
+export interface ReferendumCardMetrics {
+	ayePoints: number;
+	nayPoints: number;
+	participatingPoints: number;
 }
 
-function DemoReferendaCard({ data }: DemoReferendaCardProps) {
+interface DemoReferendaCardProps {
+	data: ReferendumSummaryDto;
+	/** Server-batched aggregate for this card (absent → hide metrics block). */
+	metrics?: ReferendumCardMetrics;
+}
+
+function DemoReferendaCard({ data, metrics }: DemoReferendaCardProps) {
+	const t = useTranslations('DemoReferenda');
+	const ayeShare = metrics && metrics.participatingPoints > 0 ? Math.round((metrics.ayePoints / metrics.participatingPoints) * 100) : null;
+
 	return (
 		<Link
 			href={`/referenda/${data.index}`}
-			className='flex w-full items-center justify-between gap-1 p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 md:flex-row md:p-6'
+			className='flex w-full items-center justify-between gap-1 p-3 transition-colors hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-text_pink dark:hover:bg-gray-800 md:flex-row md:p-6'
 		>
 			<div className='flex flex-col gap-1'>
 				<div className='flex items-center gap-2'>
@@ -28,9 +40,30 @@ function DemoReferendaCard({ data }: DemoReferendaCardProps) {
 					{data.authorDisplayName && <span>by {data.authorDisplayName}</span>}
 					<span className='capitalize'>{data.origin}</span>
 					<span>{new Date(data.createdAt).toLocaleDateString()}</span>
+					{/* Voting window end — previously a backend-only field */}
+					<span>
+						{t('endsAt')} {new Date(data.votingEndsAt).toLocaleDateString()}
+					</span>
 				</div>
 			</div>
 			<div className='flex items-center gap-2'>
+				{metrics && (
+					<span
+						className='hidden text-xs text-wallet_btn_text md:inline'
+						aria-label={`${t('ayePoints')}: ${metrics.ayePoints}, ${t('nayPoints')}: ${metrics.nayPoints}, ${t('turnout')}: ${metrics.participatingPoints}`}
+					>
+						{metrics.participatingPoints > 0 ? (
+							<>
+								<span className='text-success'>{metrics.ayePoints}</span>
+								{' / '}
+								<span className='text-failure'>{metrics.nayPoints}</span>
+								{ayeShare !== null && <span className='ml-1'>({ayeShare}%)</span>}
+							</>
+						) : (
+							<span>{t('noVotes')}</span>
+						)}
+					</span>
+				)}
 				<StatusTag status={data.status as unknown as EProposalStatus} />
 			</div>
 		</Link>

@@ -1772,5 +1772,52 @@
 		"assethubMigration": "{network}已迁移至AssetHub。余额、数据、国民投票、以及其他链上活动已迁移至AssetHub。",
 		"learnMore": "了解更多",
 		"polkadotMigration": "Polkadot正在迁移至AssetHub。一些功能可能在迁移期间不可用。"
+	},
+	"DemoReferenda": {
+		"castVote": "Cast Vote",
+		"changeVote": "Change Vote",
+		"removeVote": "Remove Vote",
+		"cancel": "Cancel",
+		"close": "Close",
+		"points": "points",
+		"pointsToUse": "Points to use",
+		"yourBalance": "Your points balance",
+		"useMax": "Use max",
+		"decision": "Decision",
+		"loginToVote": "Please log in to vote.",
+		"retry": "Retry",
+		"yourVote": "Your Vote",
+		"votes": "Votes",
+		"window": "Voting window",
+		"approvalThreshold": "Approval ≥",
+		"minTurnout": "Min turnout",
+		"endsAt": "Ends",
+		"ayePoints": "Aye points",
+		"nayPoints": "Nay points",
+		"turnout": "Turnout",
+		"noVotes": "No votes yet",
+		"success": {
+			"title": "Vote recorded",
+			"toast": "Vote cast successfully!"
+		},
+		"removed": {
+			"toast": "Vote removed."
+		},
+		"errors": {
+			"minPoints": "You must use at least 1 point.",
+			"overBalance": "You cannot use more than your current balance ({balance} points).",
+			"invalid": "Enter a whole number of points.",
+			"closed": "Voting has ended for this referendum.",
+			"notOpen": "Voting is not open for this referendum.",
+			"generic": "Something went wrong. Please try again.",
+			"loadFailed": "Unable to load this referendum. Please try again.",
+			"ownVoteFailed": "Could not load your vote. Please try again later."
+		},
+		"admin": {
+			"title": "Administrator actions",
+			"cancelButton": "Cancel Referendum",
+			"confirmBody": "Cancel this referendum? This cannot be undone.",
+			"cancelled": "Referendum cancelled."
+		}
 	}
 }

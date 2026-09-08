@@ -373,6 +373,43 @@ export async function removeMyVote(index: number): Promise<ReferendumStatsDto> {
 	return stats;
 }
 
+export interface ReferendumCapabilitiesDto {
+	isVotingOpen: boolean;
+	isClosed: boolean;
+	canVote: boolean;
+	canChangeVote: boolean;
+	canRemoveVote: boolean;
+	canCancel: boolean;
+	/** Authoritative points balance for the verified user; null when anonymous/unknown. */
+	pointsBalance: number | null;
+}
+
+/**
+ * Trusted, server-derived capabilities (incl. admin flag and pointsBalance).
+ * Returns null only for 404 (referendum gone); otherwise throws.
+ */
+export async function fetchReferendumCapabilities(index: number): Promise<ReferendumCapabilitiesDto | null> {
+	const headers = await getAuthHeaders();
+	try {
+		const json = await requestJson(`${API_BASE}/${index}/capabilities`, { method: 'GET', headers });
+		if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, 'Malformed capabilities response.');
+		const c = json as Record<string, unknown>;
+		const balance = c.pointsBalance === null ? null : isSafeNonNegativeInt(c.pointsBalance) ? (c.pointsBalance as number) : null;
+		return {
+			isVotingOpen: c.isVotingOpen === true,
+			isClosed: c.isClosed === true,
+			canVote: c.canVote === true,
+			canChangeVote: c.canChangeVote === true,
+			canRemoveVote: c.canRemoveVote === true,
+			canCancel: c.canCancel === true,
+			pointsBalance: balance
+		};
+	} catch (err) {
+		if (err instanceof PointsReferendaApiError && err.status === 404) return null;
+		throw err;
+	}
+}
+
 export async function cancelReferendum(index: number): Promise<void> {
 	const headers = await getAuthHeaders();
 	await requestJson(`${API_BASE}/${index}`, { method: 'DELETE', headers });

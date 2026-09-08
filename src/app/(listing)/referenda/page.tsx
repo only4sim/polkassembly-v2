@@ -33,6 +33,7 @@ export default async function ReferendaPageProvider({ searchParams }: { searchPa
 	const { default: DemoReferendaPage } = await import('./DemoReferendaPage');
 
 	let initialList: { items: ReferendumSummaryDto[]; totalCount: number; page: number; pageSize: number } | null = null;
+	let initialStatsMap: Record<string, { ayePoints: number; nayPoints: number; participatingPoints: number }> | null = null;
 	try {
 		const { ReferendumReadService } = await import('@/app/api/_api-services/referenda/referendumReadService');
 		const { toReferendumSummaryDto } = await import('@/domain/dtos/ReferendaDtos');
@@ -40,10 +41,23 @@ export default async function ReferendaPageProvider({ searchParams }: { searchPa
 		const readService = new ReferendumReadService();
 		const { items, totalCount } = await readService.list({ page, pageSize: PAGE_SIZE, statuses, origin });
 		initialList = { items: items.map(toReferendumSummaryDto), totalCount, page, pageSize: PAGE_SIZE };
+		// One batched getAll for the whole page of cards (plan PR-6).
+		const statsMap = await readService.getStatsForIndexes(items.map((item) => item.index));
+		initialStatsMap = {};
+		statsMap.forEach((stats, index) => {
+			if (stats) {
+				initialStatsMap![String(index)] = {
+					ayePoints: stats.ayePoints,
+					nayPoints: stats.nayPoints,
+					participatingPoints: stats.ayePoints + stats.nayPoints
+				};
+			}
+		});
 	} catch {
 		// Server-side load failure: pass null so the client shell renders its
 		// error state (distinct from a genuine empty list) with retry.
 		initialList = null;
+		initialStatsMap = null;
 	}
 
 	return (
@@ -51,6 +65,7 @@ export default async function ReferendaPageProvider({ searchParams }: { searchPa
 			initialList={initialList}
 			initialPage={page}
 			initialStatuses={statuses}
+			initialStatsMap={initialStatsMap}
 		/>
 	);
 }

@@ -1801,5 +1801,52 @@
 		"assethubMigration": "Notice: {network} has migrated to AssetHub. Balances, data, referenda, and other on-chain activity has moved to AssetHub.",
 		"learnMore": "Learn more",
 		"polkadotMigration": "Notice: Polkadot is undergoing AssetHub migration. Some features may be unavailable during the migration."
+	},
+	"DemoReferenda": {
+		"castVote": "Cast Vote",
+		"changeVote": "Change Vote",
+		"removeVote": "Remove Vote",
+		"cancel": "Cancel",
+		"close": "Close",
+		"points": "points",
+		"pointsToUse": "Points to use",
+		"yourBalance": "Your points balance",
+		"useMax": "Use max",
+		"decision": "Decision",
+		"loginToVote": "Please log in to vote.",
+		"retry": "Retry",
+		"yourVote": "Your Vote",
+		"votes": "Votes",
+		"window": "Voting window",
+		"approvalThreshold": "Approval ≥",
+		"minTurnout": "Min turnout",
+		"endsAt": "Ends",
+		"ayePoints": "Aye points",
+		"nayPoints": "Nay points",
+		"turnout": "Turnout",
+		"noVotes": "No votes yet",
+		"success": {
+			"title": "Vote recorded",
+			"toast": "Vote cast successfully!"
+		},
+		"removed": {
+			"toast": "Vote removed."
+		},
+		"errors": {
+			"minPoints": "You must use at least 1 point.",
+			"overBalance": "You cannot use more than your current balance ({balance} points).",
+			"invalid": "Enter a whole number of points.",
+			"closed": "Voting has ended for this referendum.",
+			"notOpen": "Voting is not open for this referendum.",
+			"generic": "Something went wrong. Please try again.",
+			"loadFailed": "Unable to load this referendum. Please try again.",
+			"ownVoteFailed": "Could not load your vote. Please try again later."
+		},
+		"admin": {
+			"title": "Administrator actions",
+			"cancelButton": "Cancel Referendum",
+			"confirmBody": "Cancel this referendum? This cannot be undone.",
+			"cancelled": "Referendum cancelled."
+		}
 	}
 }

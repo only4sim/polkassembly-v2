@@ -25,6 +25,8 @@ interface Props {
 	initialList: ListPayload | null;
 	initialPage: number;
 	initialStatuses: string[];
+	/** Batched per-card aggregate metrics (index → stats), server-read via getAll. */
+	initialStatsMap: Record<string, { ayePoints: number; nayPoints: number; participatingPoints: number }> | null;
 }
 
 const STATUS_FILTERS = ['Submitted', 'Deciding', 'Confirmed', 'Rejected'] as const;
@@ -37,7 +39,7 @@ function hrefFor(page: number, statuses: string[]): string {
 	return qs ? `/referenda?${qs}` : '/referenda';
 }
 
-function DemoReferendaPage({ initialList, initialPage, initialStatuses }: Props) {
+function DemoReferendaPage({ initialList, initialPage, initialStatuses, initialStatsMap }: Props) {
 	const t = useTranslations();
 	const router = useRouter();
 	const [createOpen, setCreateOpen] = useState(false);
@@ -103,7 +105,10 @@ function DemoReferendaPage({ initialList, initialPage, initialStatuses }: Props)
 							key={item.index}
 							className={idx % 2 === 0 ? 'bg-listing_card1' : 'bg-section_dark_overlay'}
 						>
-							<DemoReferendaCard data={item} />
+							<DemoReferendaCard
+								data={item}
+								metrics={initialStatsMap ? initialStatsMap[String(item.index)] : undefined}
+							/>
 						</div>
 					))}
 				</div>

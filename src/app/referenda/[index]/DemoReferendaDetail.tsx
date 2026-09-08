@@ -6,15 +6,17 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useToast } from '@/hooks/useToast';
 import { ReferendumDetailDto, ReferendumVoteDto, type PublicReferendumVoteDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
 import StatusTag from '@/app/_shared-components/StatusTag/StatusTag';
-import { EProposalStatus } from '@/_shared/types';
+import { EProposalStatus, ENotificationStatus } from '@/_shared/types';
 import DemoReferendaRealtimeStats from '@/app/_shared-components/DemoReferenda/DemoReferendaRealtimeStats';
 import DemoReferendaVoteDialog from '@/app/_shared-components/DemoReferenda/DemoReferendaVoteDialog';
 import { Button } from '@/app/_shared-components/Button';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { onAuthStateChanged } from 'firebase/auth';
-import { fetchMyVote } from '@/app/_client-services/points_referenda_client_service';
+import { fetchMyVote, fetchReferendumCapabilities, type ReferendumCapabilitiesDto, cancelReferendum } from '@/app/_client-services/points_referenda_client_service';
 
 interface Props {
 	index: number;
@@ -26,12 +28,16 @@ interface Props {
 
 function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistory, serverError }: Props) {
 	const router = useRouter();
+	const { toast } = useToast();
+	const t = useTranslations('DemoReferenda');
 	const referendum = initialDetail;
 	const [myVote, setMyVote] = useState<ReferendumVoteDto | null>(null);
 	const [myVoteState, setMyVoteState] = useState<'loading' | 'loaded' | 'error'>('loading');
 	const [authReady, setAuthReady] = useState(false);
 	const [authUid, setAuthUid] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
+	const [capabilities, setCapabilities] = useState<ReferendumCapabilitiesDto | null>(null);
+	const [isCancelling, setIsCancelling] = useState(false);
 
 	// Auth state machine (plan PR-5): anonymous → no own vote; logout or user
 	// switch MUST clear the previously displayed vote immediately.
@@ -71,16 +77,48 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 		}
 	}, [authReady, authUid, loadMyVote]);
 
+	// Trusted server capabilities (admin flag, voting window, pointsBalance).
+	// Refetched whenever the authenticated user changes (login/logout/switch).
+	useEffect(() => {
+		let cancelled = false;
+		if (!authReady) return undefined;
+		fetchReferendumCapabilities(index)
+			.then((caps) => {
+				if (!cancelled) setCapabilities(caps);
+			})
+			.catch(() => {
+				if (!cancelled) setCapabilities(null);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [authReady, authUid, index]);
+
+	// Admin cancellation: double-confirmed; server re-verifies the admin role.
+	const handleCancel = useCallback(async () => {
+		if (!window.confirm(t('admin.confirmBody'))) return;
+		setIsCancelling(true);
+		try {
+			await cancelReferendum(index);
+			toast({ title: t('admin.cancelled'), status: ENotificationStatus.SUCCESS });
+			router.refresh();
+		} catch (err) {
+			toast({ title: (err as Error).message || t('errors.generic'), status: ENotificationStatus.ERROR });
+		} finally {
+			setIsCancelling(false);
+		}
+	}, [index, t, toast, router]);
+
 	if (serverError || !referendum) {
 		return (
 			<div className='container mx-auto flex h-60 flex-col items-center justify-center gap-3 px-4'>
-				<span className='text-sm text-failure'>Unable to load this referendum. Please try again.</span>
+				<span className='text-sm text-failure'>{t('errors.loadFailed')}</span>
 				<Button
 					variant='ghost'
 					size='sm'
 					onClick={() => router.refresh()}
 				>
-					Retry
+					{t('retry')}
 				</Button>
 			</div>
 		);
@@ -104,8 +142,8 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 				</p>
 				{/* Voting window and thresholds — previously backend-only fields */}
 				<p className='mt-1 text-xs text-wallet_btn_text'>
-					Voting: {new Date(referendum.votingStartsAt).toLocaleString()} → {new Date(referendum.votingEndsAt).toLocaleString()} &middot; Approval ≥{' '}
-					{(referendum.approvalThresholdBps / 100).toFixed(2)}% &middot; Min turnout {referendum.minimumTurnoutPoints} points
+					{t('window')}: {new Date(referendum.votingStartsAt).toLocaleString()} → {new Date(referendum.votingEndsAt).toLocaleString()} &middot; {t('approvalThreshold')}{' '}
+					{(referendum.approvalThresholdBps / 100).toFixed(2)}% &middot; {t('minTurnout')} {referendum.minimumTurnoutPoints} {t('points')}
 				</p>
 				{referendum.tags.length > 0 && (
 					<div className='mt-2 flex flex-wrap gap-2'>
@@ -125,32 +163,53 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 				<div className='prose prose-sm dark:prose-invert max-w-none'>{referendum.content}</div>
 			</div>
 
-			{/* Voting - only for authenticated users while Deciding */}
-			{isDeciding && authUid && (
+			{/* Voting - capability-driven (server-trusted), only for authenticated users */}
+			{isDeciding && authUid && capabilities?.canVote && (
 				<div className='mb-6'>
 					<Button
 						size='lg'
 						onClick={() => setDialogOpen(true)}
 					>
-						{myVote ? 'Change Vote' : 'Cast Vote'}
+						{myVote ? t('changeVote') : t('castVote')}
 					</Button>
 				</div>
 			)}
 			{isDeciding && !authUid && authResolved && (
 				<div className='mb-6'>
-					<p className='text-sm text-wallet_btn_text'>Please log in to vote.</p>
+					<p className='text-sm text-wallet_btn_text'>{t('loginToVote')}</p>
+				</div>
+			)}
+			{isDeciding && authUid && capabilities && !capabilities.isVotingOpen && (
+				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
+					<p className='text-sm text-wallet_btn_text'>{t('errors.notOpen')}</p>
+				</div>
+			)}
+
+			{/* Admin-only cancellation (server-verified capability, double confirm) */}
+			{capabilities?.canCancel && (
+				<div className='mb-6 rounded-lg border border-failure/40 bg-failure/5 p-4'>
+					<p className='text-sm font-semibold text-failure'>{t('admin.title')}</p>
+					<Button
+						variant='ghost'
+						size='sm'
+						isLoading={isCancelling}
+						onClick={handleCancel}
+						className='mt-2 text-failure hover:bg-failure/10'
+					>
+						{t('admin.cancelButton')}
+					</Button>
 				</div>
 			)}
 
 			{myVoteState === 'error' && authUid && (
 				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
-					<p className='text-sm text-failure'>Could not load your vote. Please try again later.</p>
+					<p className='text-sm text-failure'>{t('errors.ownVoteFailed')}</p>
 				</div>
 			)}
 
 			{myVote && (
 				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
-					<p className='text-sm font-semibold text-text_primary'>Your Vote</p>
+					<p className='text-sm font-semibold text-text_primary'>{t('yourVote')}</p>
 					<p className='mt-1 text-sm capitalize'>
 						{myVote.decision} &middot; {myVote.pointsUsed} points
 					</p>
