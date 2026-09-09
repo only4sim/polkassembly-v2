@@ -566,3 +566,16 @@ export async function cancelReferendum(index: number): Promise<void> {
 	const headers = await getAuthHeaders();
 	await requestJson(`${API_BASE}/${index}`, { method: 'DELETE', headers });
 }
+
+/**
+ * Admin-only immediate finalization of an expired Deciding referendum
+ * (same exact algorithm as the scheduled processor; local dev / ops).
+ */
+export async function adminFinalizeReferendum(index: number): Promise<{ finalized: true; status: string }> {
+	const headers = await getAuthHeaders();
+	const json = await requestJson(`${API_BASE}/${index}/admin/finalize`, { method: 'POST', headers });
+	if (!json || typeof json !== 'object' || (json as Record<string, unknown>).finalized !== true) {
+		throw new PointsReferendaApiError(502, 'Malformed finalize response.');
+	}
+	return json as { finalized: true; status: string };
+}

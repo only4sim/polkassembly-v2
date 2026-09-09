@@ -18,7 +18,13 @@ import DemoReferendaVoteDialog from '@/app/_shared-components/DemoReferenda/Demo
 import { Button } from '@/app/_shared-components/Button';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { onAuthStateChanged } from 'firebase/auth';
-import { fetchMyVote, fetchReferendumCapabilities, type ReferendumCapabilitiesDto, cancelReferendum } from '@/app/_client-services/points_referenda_client_service';
+import {
+	fetchMyVote,
+	fetchReferendumCapabilities,
+	type ReferendumCapabilitiesDto,
+	cancelReferendum,
+	adminFinalizeReferendum
+} from '@/app/_client-services/points_referenda_client_service';
 import DemoReferendaComments from '@/app/_shared-components/DemoReferenda/DemoReferendaComments';
 
 interface Props {
@@ -43,6 +49,7 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [capabilities, setCapabilities] = useState<ReferendumCapabilitiesDto | null>(null);
 	const [isCancelling, setIsCancelling] = useState(false);
+	const [isFinalizing, setIsFinalizing] = useState(false);
 
 	// Auth state machine (plan PR-5): anonymous → no own vote; logout or user
 	// switch MUST clear the previously displayed vote immediately.
@@ -111,6 +118,21 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 			toast({ title: (err as Error).message || t('errors.generic'), status: ENotificationStatus.ERROR });
 		} finally {
 			setIsCancelling(false);
+		}
+	}, [index, t, toast, router]);
+
+	// Admin manual finalization (same exact algorithm as the scheduler).
+	const handleFinalize = useCallback(async () => {
+		if (!window.confirm(t('admin.finalizeConfirm'))) return;
+		setIsFinalizing(true);
+		try {
+			await adminFinalizeReferendum(index);
+			toast({ title: t('admin.finalized'), status: ENotificationStatus.SUCCESS });
+			router.refresh();
+		} catch (err) {
+			toast({ title: (err as Error).message || t('errors.generic'), status: ENotificationStatus.ERROR });
+		} finally {
+			setIsFinalizing(false);
 		}
 	}, [index, t, toast, router]);
 
@@ -187,6 +209,28 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 			{isDeciding && authUid && capabilities && !capabilities.isVotingOpen && (
 				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
 					<p className='text-sm text-wallet_btn_text'>{t('errors.notOpen')}</p>
+				</div>
+			)}
+
+			{/* Voting window ended on a still-Deciding referendum: the scheduled
+			lifecycle processor finalizes it in production; show the pending
+			state and give admins a manual finalize action (local dev / ops). */}
+			{referendum.status === 'Deciding' && capabilities && !capabilities.isVotingOpen && (
+				<div
+					className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'
+					role='status'
+				>
+					<p className='text-sm text-wallet_btn_text'>{t('errors.endedPending')}</p>
+					{capabilities.canCancel && (
+						<Button
+							size='sm'
+							isLoading={isFinalizing}
+							onClick={handleFinalize}
+							className='mt-2'
+						>
+							{t('admin.finalizeButton')}
+						</Button>
+					)}
 				</div>
 			)}
 

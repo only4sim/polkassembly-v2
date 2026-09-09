@@ -7,15 +7,26 @@ import { GOOGLE_API_KEY, NEWS_GOOGLE_SHEET_ID, NEWS_GOOGLE_SHEET_NAME } from '@/
 import { withErrorHandling } from '@/app/api/_api-utils/withErrorHandling';
 import { GoogleSheetService } from '../../../_api-services/external_api_service/googlesheets_service';
 
+/**
+ * News items from the Google Sheet source.
+ *
+ * NON-CRITICAL cosmetic endpoint (NewsBanner marquee). In no-keys mode — or
+ * whenever the upstream fetch fails for any reason — it degrades to an empty
+ * list instead of an error response, so clients never log API_FETCH_ERROR.
+ */
 export const GET = withErrorHandling(async () => {
-	// Guard: return empty array when Google API key is not configured
+	// Guard: no Google API key configured (no-keys mode).
 	if (!GOOGLE_API_KEY) {
 		return NextResponse.json([]);
 	}
 
-	const sheetId = NEWS_GOOGLE_SHEET_ID;
-	const sheetName = NEWS_GOOGLE_SHEET_NAME;
-	const newsItems = await GoogleSheetService.fetchSheetData(sheetId, sheetName);
-
-	return NextResponse.json(newsItems);
+	try {
+		const newsItems = await GoogleSheetService.fetchSheetData(NEWS_GOOGLE_SHEET_ID, NEWS_GOOGLE_SHEET_NAME);
+		return NextResponse.json(newsItems);
+	} catch (error) {
+		// Non-critical: degrade silently to an empty list.
+		// eslint-disable-next-line no-console
+		console.warn('[external/news] upstream fetch failed, returning empty list:', error instanceof Error ? error.message : error);
+		return NextResponse.json([]);
+	}
 });

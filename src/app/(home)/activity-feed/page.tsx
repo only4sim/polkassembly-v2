@@ -63,14 +63,20 @@ export default async function ActivityFeedPage({ searchParams }: { searchParams:
 		to: dayjs().toDate()
 	});
 
-	if (error || !data) {
+	// DemoOS mode: the chain activity listing is unavailable by design — the
+	// feed degrades to an empty post list (posts live in /discussions) while
+	// the referenda activity card stays functional. Never throw: a failed
+	// chain listing previously crashed the whole page.
+	const isDemoOsMode = process.env.ENABLE_BLOCKCHAIN !== 'true';
+	if ((error || !data) && !isDemoOsMode) {
 		throw new ClientError(ERROR_CODES.CLIENT_ERROR, error?.message || ERROR_MESSAGES[ERROR_CODES.CLIENT_ERROR]);
 	}
+	const safeData = error || !data ? { items: [], totalCount: 0 } : data;
 
 	return (
 		<Suspense fallback={<LoadingSpinner />}>
 			<ActivityFeed
-				initialData={data}
+				initialData={safeData}
 				activeTab={tab}
 				treasuryStatsData={treasuryStatsError ? [] : treasuryStatsData || []}
 			/>

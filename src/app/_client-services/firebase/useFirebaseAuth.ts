@@ -4,12 +4,15 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createUserWithEmailAndPassword, onIdTokenChanged, signInWithEmailAndPassword, signOut, updateProfile, User } from 'firebase/auth';
-import { clientAuth } from './firebaseClientApp';
+import { doc, getDoc } from 'firebase/firestore';
+import { clientAuth, clientDb } from './firebaseClientApp';
 
 export interface IDemoUser {
 	uid: string;
 	email: string | null;
 	displayName: string | null;
+	/** Authoritative role read from the user's own Firestore profile (e.g. 'admin'). */
+	role?: string;
 }
 
 export function useFirebaseAuth() {
@@ -21,8 +24,24 @@ export function useFirebaseAuth() {
 		// receive the updated user (including displayName) when the token is force-refreshed
 		// after updateProfile() in register(). onAuthStateChanged does not fire on token
 		// refreshes, so the Navbar and other components would miss the displayName update.
-		const unsubscribe = onIdTokenChanged(clientAuth, (firebaseUser: User | null) => {
+		const unsubscribe = onIdTokenChanged(clientAuth, async (firebaseUser: User | null) => {
 			if (firebaseUser) {
+				// Read the caller's OWN Firestore profile for the authoritative role.
+				// Rules allow only the owner to read users/{uid}; the trusted API still
+				// re-verifies the role server-side for every admin operation.
+				try {
+					const snap = await getDoc(doc(clientDb, 'users', firebaseUser.uid));
+					const role = snap.data()?.role as string | undefined;
+					setUser({
+						uid: firebaseUser.uid,
+						email: firebaseUser.email,
+						displayName: firebaseUser.displayName,
+						role
+					});
+					return;
+				} catch {
+					// Profile unreadable/missing — fall through to the base identity.
+				}
 				setUser({
 					uid: firebaseUser.uid,
 					email: firebaseUser.email,

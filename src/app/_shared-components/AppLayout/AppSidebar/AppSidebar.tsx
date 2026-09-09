@@ -20,7 +20,9 @@ import { useQuery } from '@tanstack/react-query';
 import { IoChevronUp } from '@react-icons/all-files/io5/IoChevronUp';
 import ChatsHistory from '@/app/_shared-components/Klara/ChatsHistory';
 import { NextApiClientService } from '@/app/_client-services/next_api_client_service';
-import { ITrackCounts, EChatState } from '@/_shared/types';
+import AdminIcon from '@assets/sidebar/admin-icon.svg';
+import { useDemoUser } from '@/hooks/useDemoUser';
+import { ISidebarMenuItem, ITrackCounts, EChatState } from '@/_shared/types';
 import { NavMain } from '../NavItems/NavItems';
 import CreateButton from '../CreateButton/CreateButton';
 import styles from './AppSidebar.module.scss';
@@ -66,6 +68,19 @@ function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 	};
 
 	const data = getSidebarData(network, pathname, t, trackCounts);
+
+	// DemoOS: surface the operations panel entry for verified admins only.
+	// The role comes from the caller's own Firestore profile; every admin
+	// operation is re-verified server-side regardless of this entry.
+	const { user: demoUser } = useDemoUser();
+	if (process.env.NEXT_PUBLIC_ENABLE_BLOCKCHAIN !== 'true' && demoUser?.role === 'admin' && data.length > 0) {
+		const adminEntry: ISidebarMenuItem = {
+			title: t('DemoReferenda.adminPanel.title'),
+			url: '/referenda/admin',
+			icon: AdminIcon.src || AdminIcon
+		};
+		data[0].initalItems = [...(data[0].initalItems || []), adminEntry];
+	}
 
 	return (
 		<Sidebar

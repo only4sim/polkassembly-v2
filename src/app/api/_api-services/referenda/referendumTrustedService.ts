@@ -11,6 +11,7 @@ import { type ReferendumStats } from '@/domain/entities/ReferendumStats';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
 import { assertRemovalAllowed, validateVoteInput, validateCreationInput, VoteValidationError, CreationValidationError } from '@/domain/services/referendumValidation';
 import { applyVoteDelta, emptyReferendumStats, subtractVote } from '@/domain/services/referendumStatsDelta';
+import { computeFinalOutcome } from '@/domain/services/referendumOutcome';
 import { COMMENT_MAX_LENGTH, COMMENT_SCHEMA_VERSION, REFERENDUM_SCHEMA_VERSION, STATS_SCHEMA_VERSION, VOTE_SCHEMA_VERSION } from '@/domain/fixtures/referendaFixtures';
 import { getAdminDb } from '@/adapters/firestore/firestoreInit';
 import { FirestoreReferendumRepository } from '@/adapters/firestore/FirestoreReferendumRepository';
@@ -222,6 +223,40 @@ export class ReferendumTrustedService {
 				approvalThresholdBps: validated.approvalThresholdBps,
 				minimumTurnoutPoints: validated.minimumTurnoutPoints,
 				schemaVersion: REFERENDUM_SCHEMA_VERSION
+			});
+		} catch (err) {
+			throw toServiceError(err);
+		}
+	}
+
+	/**
+	 * Admin finalization (plan P2 / ops): finalizes an EXPIRED Deciding
+	 * referendum immediately using the shared exact outcome algorithm — same
+	 * contract as the scheduled lifecycle processor. Useful for local dev
+	 * (no scheduler) and manual operations; production keeps the automatic
+	 * schedule. Admin-only, transactional, idempotent-in-effect.
+	 */
+	async adminFinalize(index: number, isAdmin: boolean): Promise<{ status: string; outcome: string }> {
+		try {
+			if (!isAdmin) throw new ReferendaServiceError('forbidden', 'Only administrators can finalize.');
+			const nowMs = Date.now();
+			return this.db.runTransaction(async (tx) => {
+				const ref = referendumDoc(this.db, index);
+				const statsRef = statsDoc(this.db, index);
+				const [snap, statsSnap] = await Promise.all([tx.get(ref), tx.get(statsRef)]);
+				if (!snap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
+				const existing = mapReferendum(snap.data()!, index);
+				if (existing.status === ReferendumStatus.Confirmed || existing.status === ReferendumStatus.Rejected || existing.status === ReferendumStatus.Cancelled) {
+					throw new ReferendaServiceError('conflict', 'Referendum is already closed.');
+				}
+				if (existing.status !== ReferendumStatus.Deciding || nowMs < new Date(existing.votingEndsAt).getTime()) {
+					throw new ReferendaServiceError('conflict', 'Finalization is only allowed after the voting window has ended.');
+				}
+				const stats = statsSnap.exists ? mapStats(statsSnap.data()!) : emptyReferendumStats();
+				const outcome = computeFinalOutcome(existing.approvalThresholdBps, existing.minimumTurnoutPoints, stats);
+				const now = Timestamp.now();
+				tx.update(ref, { status: outcome.outcome, closedAt: now, updatedAt: now });
+				return { status: outcome.outcome, outcome: outcome.outcome };
 			});
 		} catch (err) {
 			throw toServiceError(err);

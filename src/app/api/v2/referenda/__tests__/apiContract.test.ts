@@ -33,7 +33,8 @@ const mocks = vi.hoisted(() => ({
 	createReferendum: vi.fn(),
 	requireVerifiedActor: vi.fn(),
 	isAdminActor: vi.fn(),
-	getAdminOverview: vi.fn()
+	getAdminOverview: vi.fn(),
+	adminFinalize: vi.fn()
 }));
 
 vi.mock('@/app/api/_api-services/referenda/referendumReadService', () => ({
@@ -55,6 +56,7 @@ vi.mock('@/app/api/_api-services/referenda/referendumTrustedService', async (imp
 			upsertVote = mocks.upsertVote;
 			removeVote = mocks.removeVote;
 			createReferendum = mocks.createReferendum;
+			adminFinalize = mocks.adminFinalize;
 		}
 	};
 });
@@ -67,6 +69,7 @@ vi.mock('@/app/api/_api-utils/referendaAuth', () => ({
 import { GET as listGET, POST as referendaPOST } from '../route';
 import { GET as historyGET } from '../[index]/votes/route';
 import { GET as adminOverviewGET } from '../admin/overview/route';
+import { POST as adminFinalizePOST } from '../[index]/admin/finalize/route';
 import { DELETE as meDELETE, GET as meGET, PUT as mePUT } from '../[index]/votes/me/route';
 import { CreationValidationError } from '@/domain/services/referendumValidation';
 import { ReferendaServiceError } from '@/app/api/_api-services/referenda/referendumTrustedService';
@@ -349,5 +352,33 @@ describe('GET /referenda/admin/overview (admin operations panel)', () => {
 		expect(body.totalReferenda).toBe(10);
 		expect(body.statusCounts.Deciding).toBe(2);
 		expect(Array.isArray(body.recent)).toBe(true);
+	});
+});
+
+describe('POST /referenda/{index}/admin/finalize (admin finalization)', () => {
+	const FINALIZE_URL = '/api/v2/referenda/5/admin/finalize';
+
+	it('returns 401 for anonymous callers', async () => {
+		mocks.requireVerifiedActor.mockRejectedValue(new ReferendaServiceError('unauthorized', UNAUTHORIZED_MESSAGE));
+		const res = await adminFinalizePOST(req(FINALIZE_URL), ctx('5'));
+		expect(res.status).toBe(401);
+	});
+
+	it('returns 403 for authenticated non-admins', async () => {
+		mocks.requireVerifiedActor.mockResolvedValue({ uid: 'u1', displayName: 'User' });
+		mocks.isAdminActor.mockResolvedValue(false);
+		const res = await adminFinalizePOST(req(FINALIZE_URL), ctx('5'));
+		expect(res.status).toBe(403);
+	});
+
+	it('returns { finalized, status } for admins', async () => {
+		mocks.requireVerifiedActor.mockResolvedValue({ uid: 'admin-1', displayName: 'Admin' });
+		mocks.isAdminActor.mockResolvedValue(true);
+		mocks.adminFinalize.mockResolvedValue({ status: 'Confirmed', outcome: 'Confirmed' });
+		const res = await adminFinalizePOST(req(FINALIZE_URL), ctx('5'));
+		expect(res.status).toBe(200);
+		const body = await res.json();
+		expect(body.finalized).toBe(true);
+		expect(body.status).toBe('Confirmed');
 	});
 });
