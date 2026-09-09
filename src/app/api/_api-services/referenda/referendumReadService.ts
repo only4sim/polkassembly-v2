@@ -106,6 +106,45 @@ export class ReferendumReadService {
 	}
 
 	/**
+	 * All votes cast by one user across every referendum (plan PR-8 profile
+	 * history). Uses a collection-group query on the Admin SDK — trusted path
+	 * only; the matching COLLECTION_GROUP composite index must be deployed
+	 * (see firestore.indexes.json).
+	 */
+	async listUserVotes(uid: string, limit = 20, page = 1): Promise<{ index: number; vote: ReferendumVote }[]> {
+		const cappedLimit = Math.max(1, Math.floor(limit));
+		const offset = (Math.max(1, Math.floor(page)) - 1) * cappedLimit;
+		const snapshot = await this.db.collectionGroup('votes').where('uid', '==', uid).orderBy('updatedAt', 'desc').limit(cappedLimit).offset(offset).get();
+		// The referendum index lives on the document path: referenda/{index}/votes/{uid}.
+		return snapshot.docs.map((d) => ({
+			index: Number(d.ref.parent.parent?.id),
+			vote: mapVote(d.data(), uid)
+		}));
+	}
+
+	/** Count of all votes cast by one user (count aggregation). */
+	async countUserVotes(uid: string): Promise<number> {
+		const snapshot = await this.db.collectionGroup('votes').where('uid', '==', uid).count().get();
+		return snapshot.data().count;
+	}
+
+	/**
+	 * Batch-read referendum summaries (index/title/status/window) for profile
+	 * vote-history rows — a single getAll round trip.
+	 */
+	async getReferendaByIndexes(indexes: number[]): Promise<Map<number, Referendum | null>> {
+		const result = new Map<number, Referendum | null>();
+		if (indexes.length === 0) return result;
+		const refs = indexes.map((index) => referendumDoc(this.db, index));
+		const snapshots = await this.db.getAll(...refs);
+		snapshots.forEach((snap, position) => {
+			const index = indexes[position];
+			result.set(index, snap.exists ? mapReferendum(snap.data()!, index) : null);
+		});
+		return result;
+	}
+
+	/**
 	 * Batch-read the aggregate stats for a page of referenda using a single
 	 * `getAll` round trip (plan PR-6: avoid per-card browser reads).
 	 * Missing/corrupt stats map to null so cards can hide metrics gracefully.

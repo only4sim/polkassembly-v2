@@ -266,21 +266,55 @@ export interface UserRepository {
 
 - `GET /api/v2/users/me` — Returns the authenticated user's public profile.
 
-## Next Architecture Milestone: Points-based Referenda
+## Points-based Referenda (Shipped)
 
-When `ENABLE_BLOCKCHAIN=true`, the existing Referenda code continues to use the current
-on-chain/indexer path unchanged. When it is `false`, `/referenda` and
-`/referenda/{index}` will use Firebase repositories and trusted server-side voting with
-`pointsBalance` as voting power.
+Provider selection happens at the page/API boundary via `ENABLE_BLOCKCHAIN`. With the flag
+on, the original chain Referenda pages (`ReferendaChainPage`/`ReferendaChainDetail`, which
+use `PostDetails`, `PollForProposal`, the wallet/DOT/conviction UI and the on-chain
+transaction path) run unchanged. With the flag off, thin provider wrappers load the
+DemoOS pages backed by Firestore.
 
-The application layer should select a provider at the route boundary. Shared UI receives
-normalized listing/detail/vote view models and must not decide whether data came from the
-chain or Firestore. Points voting must not import wallet, Polkadot API, conviction,
-delegation, or chain transaction modules.
+### Firestore data model
 
-See [`REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](./REFERENDA_POINTS_DEVELOPMENT_GUIDE.md)
-for the target data model, ports, API contracts, UI reuse map, implementation phases, and
-test requirements.
+- `referenda/{index}` — referendum documents; the numeric index is allocated
+  transactionally from `counters/referenda` in the same transaction that writes the
+  referendum and its initial stats document.
+- `referenda/{index}/votes/{uid}` — one effective vote per Firebase UID
+  (aye/nay/abstain; `pointsUsed` snapshot weight, `balanceAtVote` audit snapshot).
+- `referenda/{index}/stats/current` — aggregate points/voters; updated in the same
+  transaction as every vote write (create/change/remove, no clamping, corrupt-state
+  rejection).
+- `referenda/{index}/comments/{id}` — public referendum comments, trusted API only.
+- Profile vote history reads the user’s votes across all referenda through a trusted
+  collection-group query (COLLECTION_GROUP composite index `uid ASC, updatedAt DESC` in
+  `firestore.indexes.json`).
+
+### Trusted services and lifecycle
+
+All browser-side Referenda calls go through the unified client service
+(`points_referenda_client_service.ts`); all mutations run through trusted Next.js API
+routes or Cloud Functions (Admin SDK), which bypass Firestore rules — the client cannot
+write votes, stats, comments, referenda, counters, roles or balances directly. The single
+scheduled lifecycle processor (`functions/src/lifecycle.ts`) opens eligible Submitted
+referenda and finalizes expired Deciding ones with the exact BigInt cross-multiplied
+threshold comparison shared with the domain layer.
+
+### Firestore read-cost profile
+
+- Listing page: 1 list query + 1 batched `getAll` for the whole page of stats (no
+  per-card reads); pagination/filtering are URL-driven server renders.
+- Detail page: 1 referendum read + 1 stats read + up to 20 vote docs + 1 count + up to 20
+  comment docs + 1 count, issued as parallel promises; one realtime listener on
+  `referenda/{index}/stats/current` (never the votes collection), unsubscribed on
+  unmount, seeded from server initial data.
+- Vote history: offset pagination with count aggregation; decision filtering is pushed
+  into the query.
+- Profile history: 1 collection-group query + 1 count + 1 batched `getAll` for titles.
+
+See [`REFERENDA_API_CONTRACT.md`](./REFERENDA_API_CONTRACT.md) for the frozen HTTP
+contracts and
+[`REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](./REFERENDA_POINTS_DEVELOPMENT_GUIDE.md) for
+the product rules.
 
 ## References
 

@@ -67,7 +67,11 @@ function DemoReferendaRealtimeStats({ index, initialStats }: DemoReferendaRealti
 	const approvalPct = Math.round((stats.approvalBps / 100) * 100) / 100;
 
 	return (
-		<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
+		<div
+			className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'
+			aria-live='polite'
+			aria-atomic='false'
+		>
 			<h3 className='mb-3 text-sm font-semibold text-text_primary'>
 				Results{' '}
 				<span className='text-xs font-normal text-wallet_btn_text'>

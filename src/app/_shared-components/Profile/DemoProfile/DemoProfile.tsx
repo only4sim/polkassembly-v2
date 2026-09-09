@@ -76,7 +76,7 @@ function DemoProfile({ user, isOwnProfile = false }: DemoProfileProps) {
 					<DemoProfileOverview user={profileData} />
 				</TabsContent>
 				<TabsContent value={DEMO_TABS.ACTIVITY}>
-					<DemoProfileActivity />
+					<DemoProfileActivity isOwnProfile={isOwnProfile} />
 				</TabsContent>
 				<TabsContent value={DEMO_TABS.POSTS}>
 					<DemoProfilePosts uid={profileData.uid} />

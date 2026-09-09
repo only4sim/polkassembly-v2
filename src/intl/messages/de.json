@@ -1773,60 +1773,60 @@
 		"polkadotMigration": "Hinweis: Polkadot erfolgt der AssetHub-Migration. Einige Funktionen können während der Migration nicht verfügbar sein."
 	},
 	"DemoReferenda": {
-		"castVote": "Cast Vote",
-		"changeVote": "Change Vote",
-		"removeVote": "Remove Vote",
-		"cancel": "Cancel",
-		"close": "Close",
-		"points": "points",
-		"pointsToUse": "Points to use",
-		"yourBalance": "Your points balance",
-		"useMax": "Use max",
-		"decision": "Decision",
-		"loginToVote": "Please log in to vote.",
-		"retry": "Retry",
-		"yourVote": "Your Vote",
-		"votes": "Votes",
-		"window": "Voting window",
-		"approvalThreshold": "Approval ≥",
-		"minTurnout": "Min turnout",
-		"endsAt": "Ends",
-		"ayePoints": "Aye points",
-		"nayPoints": "Nay points",
-		"turnout": "Turnout",
-		"noVotes": "No votes yet",
+		"castVote": "Stimme abgeben",
+		"changeVote": "Stimme ändern",
+		"removeVote": "Stimme zurückziehen",
+		"cancel": "Abbrechen",
+		"close": "Schließen",
+		"points": "Punkte",
+		"pointsToUse": "Einzusetzende Punkte",
+		"yourBalance": "Dein Punktestand",
+		"useMax": "Maximal",
+		"decision": "Entscheidung",
+		"loginToVote": "Bitte melde dich an, um abzustimmen.",
+		"retry": "Erneut versuchen",
+		"yourVote": "Deine Stimme",
+		"votes": "Stimmen",
+		"window": "Abstimmungszeitraum",
+		"approvalThreshold": "Zustimmung ≥",
+		"minTurnout": "Mindestbeteiligung",
+		"endsAt": "Endet",
+		"ayePoints": "Dafür-Punkte",
+		"nayPoints": "Dagegen-Punkte",
+		"turnout": "Beteiligung",
+		"noVotes": "Noch keine Stimmen",
 		"success": {
-			"title": "Vote recorded",
-			"toast": "Vote cast successfully!"
+			"title": "Stimme erfasst",
+			"toast": "Stimme erfolgreich abgegeben!"
 		},
 		"removed": {
-			"toast": "Vote removed."
+			"toast": "Stimme zurückgezogen."
 		},
 		"errors": {
-			"minPoints": "You must use at least 1 point.",
-			"overBalance": "You cannot use more than your current balance ({balance} points).",
-			"invalid": "Enter a whole number of points.",
-			"closed": "Voting has ended for this referendum.",
-			"notOpen": "Voting is not open for this referendum.",
-			"generic": "Something went wrong. Please try again.",
-			"loadFailed": "Unable to load this referendum. Please try again.",
-			"ownVoteFailed": "Could not load your vote. Please try again later."
+			"minPoints": "Du musst mindestens 1 Punkt einsetzen.",
+			"overBalance": "Du kannst nicht mehr als deinen aktuellen Kontostand ({balance} Punkte) einsetzen.",
+			"invalid": "Gib eine ganze Anzahl von Punkten ein.",
+			"closed": "Die Abstimmung für dieses Referendum ist beendet.",
+			"notOpen": "Die Abstimmung ist für dieses Referendum nicht geöffnet.",
+			"generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+			"loadFailed": "Dieses Referendum konnte nicht geladen werden. Bitte versuche es erneut.",
+			"ownVoteFailed": "Deine Stimme konnte nicht geladen werden. Bitte versuche es später erneut."
 		},
 		"admin": {
-			"title": "Administrator actions",
-			"cancelButton": "Cancel Referendum",
-			"confirmBody": "Cancel this referendum? This cannot be undone.",
-			"cancelled": "Referendum cancelled."
+			"title": "Administratoraktionen",
+			"cancelButton": "Referendum absagen",
+			"confirmBody": "Dieses Referendum wirklich absagen? Dies kann nicht rückgängig gemacht werden.",
+			"cancelled": "Referendum abgesagt."
 		},
 		"comments": {
-			"title": "Comments",
-			"empty": "No comments yet. Be the first to comment!",
-			"addPlaceholder": "Add a comment (markdown supported)",
-			"submit": "Comment",
-			"delete": "Delete",
-			"added": "Comment added.",
-			"deleted": "Comment deleted.",
-			"loginPrompt": "Please log in to leave a comment."
+			"title": "Kommentare",
+			"empty": "Noch keine Kommentare. Schreibe den ersten!",
+			"addPlaceholder": "Kommentar hinzufügen (Markdown unterstützt)",
+			"submit": "Kommentieren",
+			"delete": "Löschen",
+			"added": "Kommentar hinzugefügt.",
+			"deleted": "Kommentar gelöscht.",
+			"loginPrompt": "Bitte melde dich an, um zu kommentieren."
 		}
 	}
 }

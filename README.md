@@ -11,12 +11,14 @@ Firebase-backed mode for authentication, discussions, comments, profiles, and vo
 The current implementation status and mandatory preservation rules are documented in
 [`docs/AGENTS.md`](docs/AGENTS.md).
 
-The next development milestone is Firebase-backed Referenda with the existing Referenda
-UI and interaction patterns, using `pointsBalance` in place of DOT. AI Agents and
-developers must follow
-[`docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md).
-To start a new implementation Agent, use the ready-to-copy
-[`docs/REFERENDA_POINTS_AGENT_PROMPT.md`](docs/REFERENDA_POINTS_AGENT_PROMPT.md).
+Firebase-backed, points-based Referenda are implemented for `ENABLE_BLOCKCHAIN=false`:
+`/referenda` and `/referenda/{index}` use Firestore repositories, trusted server-side
+voting with `pointsBalance` as voting power, comments, public vote history, real-time
+aggregate results, an admin cancellation flow and scheduled lifecycle finalization. The
+original chain Referenda implementation (wallet, DOT, conviction, transactions) remains
+untouched for `ENABLE_BLOCKCHAIN=true`. The frozen API/schema contract is documented in
+[`docs/REFERENDA_API_CONTRACT.md`](docs/REFERENDA_API_CONTRACT.md); the product rules
+remain in [`docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md).
 
 ## Getting Started
 

@@ -46,6 +46,14 @@
 				{ "fieldPath": "origin", "order": "ASCENDING" },
 				{ "fieldPath": "createdAt", "order": "DESCENDING" }
 			]
+		},
+		{
+			"collectionGroup": "votes",
+			"queryScope": "COLLECTION_GROUP",
+			"fields": [
+				{ "fieldPath": "uid", "order": "ASCENDING" },
+				{ "fieldPath": "updatedAt", "order": "DESCENDING" }
+			]
 		}
 	],
 	"fieldOverrides": []

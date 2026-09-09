@@ -303,6 +303,8 @@ export async function fetchMyVote(index: number): Promise<ReferendumVoteDto | nu
 	}
 }
 
+const MALFORMED_HISTORY = 'Malformed vote history response.';
+
 export interface PublicVotesPage {
 	items: PublicReferendumVoteDto[];
 	totalCount: number;
@@ -317,9 +319,9 @@ export async function fetchPublicVotes(index: number, options: { limit?: number;
 	const search = new URLSearchParams({ limit: String(limit), page: String(page) });
 	if (options.decision) search.set('decision', options.decision);
 	const json = await requestJson(`${API_BASE}/${index}/votes?${search.toString()}`, { method: 'GET' });
-	if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, 'Malformed vote history response.');
+	if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, MALFORMED_HISTORY);
 	const body = json as Record<string, unknown>;
-	if (!Array.isArray(body.items) || !isSafeNonNegativeInt(body.totalCount)) throw new PointsReferendaApiError(502, 'Malformed vote history response.');
+	if (!Array.isArray(body.items) || !isSafeNonNegativeInt(body.totalCount)) throw new PointsReferendaApiError(502, MALFORMED_HISTORY);
 	const items: PublicReferendumVoteDto[] = [];
 	for (let i = 0; i < body.items.length; i += 1) {
 		const dto = publicVoteDtoFromJson(body.items[i]);
@@ -390,6 +392,52 @@ export async function addReferendumComment(index: number, content: string): Prom
 export async function deleteReferendumComment(index: number, commentId: string): Promise<void> {
 	const headers = await getAuthHeaders();
 	await requestJson(`${API_BASE}/${index}/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE', headers });
+}
+
+// ---------------------------------------------------------------------------
+// Profile vote history (plan PR-8) — own votes with audit fields
+// ---------------------------------------------------------------------------
+
+export interface MyVoteHistoryEntry {
+	vote: ReferendumVoteDto;
+	referendum: { index: number; title: string; status: string; votingStartsAt: string; votingEndsAt: string } | null;
+}
+
+export interface MyVotesPage {
+	items: MyVoteHistoryEntry[];
+	totalCount: number;
+	page: number;
+	pageSize: number;
+}
+
+/**
+ * The verified user's own votes across all referenda (owner-only audit view).
+ * Anonymous callers get an empty page without a network round trip.
+ */
+export async function fetchMyPointsVotes(options: { limit?: number; page?: number } = {}): Promise<MyVotesPage> {
+	const headers = await getAuthHeaders();
+	if (!headers.Authorization) return { items: [], totalCount: 0, page: 1, pageSize: 0 };
+	const limit = Math.max(1, Math.floor(options.limit ?? 20));
+	const page = Math.max(1, Math.floor(options.page ?? 1));
+	const json = await requestJson(`${API_BASE}/me/votes?limit=${limit}&page=${page}`, { method: 'GET', headers });
+	if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, MALFORMED_HISTORY);
+	const body = json as Record<string, unknown>;
+	if (!Array.isArray(body.items) || !isSafeNonNegativeInt(body.totalCount)) throw new PointsReferendaApiError(502, MALFORMED_HISTORY);
+	const items: MyVoteHistoryEntry[] = [];
+	for (let i = 0; i < body.items.length; i += 1) {
+		const entry = body.items[i] as Record<string, unknown>;
+		const vote = voteDtoFromJson(entry.vote);
+		if (!vote) throw new PointsReferendaApiError(502, 'Malformed vote history entry.');
+		const ref = entry.referendum && typeof entry.referendum === 'object' ? (entry.referendum as Record<string, unknown>) : null;
+		items.push({
+			vote,
+			referendum:
+				ref && typeof ref.index === 'number' && isNonEmptyString(ref.title)
+					? { index: ref.index, title: ref.title, status: String(ref.status ?? ''), votingStartsAt: String(ref.votingStartsAt ?? ''), votingEndsAt: String(ref.votingEndsAt ?? '') }
+					: null
+		});
+	}
+	return { items, totalCount: body.totalCount, page: typeof body.page === 'number' ? body.page : page, pageSize: typeof body.pageSize === 'number' ? body.pageSize : limit };
 }
 
 // ---------------------------------------------------------------------------

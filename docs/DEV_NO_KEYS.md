@@ -84,10 +84,12 @@ As of 2026-08-21, `.env.example` is not a canonical no-keys profile: it enables
 `IS_NOTIFICATION_SERVICE_ENABLED` even though their credentials are empty. For a true
 no-keys run, explicitly use the values in this guide until `.env.example` is aligned.
 
-The upcoming points-based Referenda implementation must also run with all blockchain and
-indexer flags disabled. `/referenda` must no longer redirect to `/`; it should select the
-Firebase implementation while preserving the original chain implementation for
-`ENABLE_BLOCKCHAIN=true`.
+The points-based Referenda implementation runs with all blockchain and indexer flags
+disabled: `/referenda` and `/referenda/{index}` select the Firebase implementation
+(verified by the no-chain production build with all optional integrations off), while
+`ENABLE_BLOCKCHAIN=true` keeps the original chain implementation. Points voting needs no
+wallet, Polkadot API, RPC, indexer, Redis or Algolia — only Firebase Auth/Firestore and
+the trusted API routes.
 
 ## Troubleshooting
 

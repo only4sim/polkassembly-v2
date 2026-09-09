@@ -740,16 +740,16 @@ yarn build
 - [x] 投票 balance/max/inline error/success 完整；
 - [x] 管理员取消 UI 完整；
 - [x] comments 和安全 public history 完整；
-- [ ] 本地化和可访问性达到验收要求；
+- [x] 本地化和可访问性达到验收要求；
 - [ ] chain/demo 回归通过；
 - [ ] 文档与实现一致。
 
 ### P2
 
-- [ ] Profile Referenda vote history；
+- [x] Profile Referenda vote history（trusted CG 查询 + Profile Activity 标签，仅本人可见）；
 - [ ] Activity Feed；
 - [ ] points-native bubble/history；
-- [ ] read-cost/performance audit；
+- [x] read-cost/performance audit（ARCHITECTURE「Firestore read-cost profile」一节）；
 - [ ] 高级 observability 和运营面板。
 
 ## 11. 完成定义

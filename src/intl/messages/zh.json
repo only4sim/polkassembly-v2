@@ -1774,60 +1774,60 @@
 		"polkadotMigration": "Polkadot正在迁移至AssetHub。一些功能可能在迁移期间不可用。"
 	},
 	"DemoReferenda": {
-		"castVote": "Cast Vote",
-		"changeVote": "Change Vote",
-		"removeVote": "Remove Vote",
-		"cancel": "Cancel",
-		"close": "Close",
-		"points": "points",
-		"pointsToUse": "Points to use",
-		"yourBalance": "Your points balance",
-		"useMax": "Use max",
-		"decision": "Decision",
-		"loginToVote": "Please log in to vote.",
-		"retry": "Retry",
-		"yourVote": "Your Vote",
-		"votes": "Votes",
-		"window": "Voting window",
-		"approvalThreshold": "Approval ≥",
-		"minTurnout": "Min turnout",
-		"endsAt": "Ends",
-		"ayePoints": "Aye points",
-		"nayPoints": "Nay points",
-		"turnout": "Turnout",
-		"noVotes": "No votes yet",
+		"castVote": "投票",
+		"changeVote": "修改投票",
+		"removeVote": "撤回投票",
+		"cancel": "取消",
+		"close": "关闭",
+		"points": "积分",
+		"pointsToUse": "使用的积分",
+		"yourBalance": "你的积分余额",
+		"useMax": "使用最大值",
+		"decision": "立场",
+		"loginToVote": "请先登录后再投票。",
+		"retry": "重试",
+		"yourVote": "你的投票",
+		"votes": "投票",
+		"window": "投票窗口",
+		"approvalThreshold": "赞成率 ≥",
+		"minTurnout": "最低参与",
+		"endsAt": "截止",
+		"ayePoints": "赞成积分",
+		"nayPoints": "反对积分",
+		"turnout": "参与度",
+		"noVotes": "暂无投票",
 		"success": {
-			"title": "Vote recorded",
-			"toast": "Vote cast successfully!"
+			"title": "投票已记录",
+			"toast": "投票成功！"
 		},
 		"removed": {
-			"toast": "Vote removed."
+			"toast": "投票已撤回。"
 		},
 		"errors": {
-			"minPoints": "You must use at least 1 point.",
-			"overBalance": "You cannot use more than your current balance ({balance} points).",
-			"invalid": "Enter a whole number of points.",
-			"closed": "Voting has ended for this referendum.",
-			"notOpen": "Voting is not open for this referendum.",
-			"generic": "Something went wrong. Please try again.",
-			"loadFailed": "Unable to load this referendum. Please try again.",
-			"ownVoteFailed": "Could not load your vote. Please try again later."
+			"minPoints": "至少需要使用 1 个积分。",
+			"overBalance": "使用的积分不能超过当前余额（{balance} 积分）。",
+			"invalid": "请输入整数积分。",
+			"closed": "该公投的投票已结束。",
+			"notOpen": "该公投当前未开放投票。",
+			"generic": "出现问题，请重试。",
+			"loadFailed": "无法加载该公投，请重试。",
+			"ownVoteFailed": "无法加载你的投票，请稍后重试。"
 		},
 		"admin": {
-			"title": "Administrator actions",
-			"cancelButton": "Cancel Referendum",
-			"confirmBody": "Cancel this referendum? This cannot be undone.",
-			"cancelled": "Referendum cancelled."
+			"title": "管理员操作",
+			"cancelButton": "取消公投",
+			"confirmBody": "确定取消该公投吗？此操作无法撤销。",
+			"cancelled": "公投已取消。"
 		},
 		"comments": {
-			"title": "Comments",
-			"empty": "No comments yet. Be the first to comment!",
-			"addPlaceholder": "Add a comment (markdown supported)",
-			"submit": "Comment",
-			"delete": "Delete",
-			"added": "Comment added.",
-			"deleted": "Comment deleted.",
-			"loginPrompt": "Please log in to leave a comment."
+			"title": "评论",
+			"empty": "还没有评论，来抢沙发！",
+			"addPlaceholder": "写下评论（支持 Markdown）",
+			"submit": "发表评论",
+			"delete": "删除",
+			"added": "评论已发布。",
+			"deleted": "评论已删除。",
+			"loginPrompt": "请先登录后发表评论。"
 		}
 	}
 }

@@ -24,12 +24,14 @@ MVP must NOT require any blockchain-related API keys or on-chain access.
 - E) Moderation: pin / lock / hide posts (admin only)
 - F) Notifications/subscriptions: OUT OF SCOPE for MVP
 
-The next product milestone is a Firebase-backed Referenda experience for
-`ENABLE_BLOCKCHAIN=false`. It should match the existing Referenda UI and interaction
-model as closely as practical, but use `pointsBalance` instead of DOT and must not
-initialize wallets, Polkadot APIs, indexers, or on-chain transactions. The implementation
-guide and acceptance criteria are in
-[`docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`](./REFERENDA_POINTS_DEVELOPMENT_GUIDE.md).
+The Firebase-backed Referenda experience for `ENABLE_BLOCKCHAIN=false` is implemented:
+listing, detail, creation, points voting (aye/nay/abstain with a `pointsBalance` weight
+snapshot), change/remove voting, comments, real-time aggregates, admin cancellation and
+scheduled lifecycle finalization — without initializing wallets, Polkadot APIs, indexers,
+or on-chain transactions. Chain mode (`ENABLE_BLOCKCHAIN=true`) keeps the original
+Referenda implementation untouched. The frozen HTTP contract is
+`docs/REFERENDA_API_CONTRACT.md`; product rules and acceptance criteria remain in
+`docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`.
 
 ## 3) Key Product Decisions
 

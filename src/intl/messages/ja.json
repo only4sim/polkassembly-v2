@@ -1774,60 +1774,60 @@
 		"polkadotMigration": "PolkadotはAssetHub移行中です。一部の機能は移行中に利用できない場合があります。"
 	},
 	"DemoReferenda": {
-		"castVote": "Cast Vote",
-		"changeVote": "Change Vote",
-		"removeVote": "Remove Vote",
-		"cancel": "Cancel",
-		"close": "Close",
-		"points": "points",
-		"pointsToUse": "Points to use",
-		"yourBalance": "Your points balance",
-		"useMax": "Use max",
-		"decision": "Decision",
-		"loginToVote": "Please log in to vote.",
-		"retry": "Retry",
-		"yourVote": "Your Vote",
-		"votes": "Votes",
-		"window": "Voting window",
-		"approvalThreshold": "Approval ≥",
-		"minTurnout": "Min turnout",
-		"endsAt": "Ends",
-		"ayePoints": "Aye points",
-		"nayPoints": "Nay points",
-		"turnout": "Turnout",
-		"noVotes": "No votes yet",
+		"castVote": "投票する",
+		"changeVote": "投票を変更",
+		"removeVote": "投票を取り消す",
+		"cancel": "キャンセル",
+		"close": "閉じる",
+		"points": "ポイント",
+		"pointsToUse": "使用するポイント",
+		"yourBalance": "ポイント残高",
+		"useMax": "最大値を使用",
+		"decision": "判断",
+		"loginToVote": "投票するにはログインしてください。",
+		"retry": "再試行",
+		"yourVote": "あなたの投票",
+		"votes": "投票",
+		"window": "投票期間",
+		"approvalThreshold": "賛成率 ≥",
+		"minTurnout": "最低投票数",
+		"endsAt": "終了",
+		"ayePoints": "賛成ポイント",
+		"nayPoints": "反対ポイント",
+		"turnout": "投票率",
+		"noVotes": "投票はまだありません",
 		"success": {
-			"title": "Vote recorded",
-			"toast": "Vote cast successfully!"
+			"title": "投票が記録されました",
+			"toast": "投票に成功しました！"
 		},
 		"removed": {
-			"toast": "Vote removed."
+			"toast": "投票を取り消しました。"
 		},
 		"errors": {
-			"minPoints": "You must use at least 1 point.",
-			"overBalance": "You cannot use more than your current balance ({balance} points).",
-			"invalid": "Enter a whole number of points.",
-			"closed": "Voting has ended for this referendum.",
-			"notOpen": "Voting is not open for this referendum.",
-			"generic": "Something went wrong. Please try again.",
-			"loadFailed": "Unable to load this referendum. Please try again.",
-			"ownVoteFailed": "Could not load your vote. Please try again later."
+			"minPoints": "1ポイント以上を使用してください。",
+			"overBalance": "現在の残高（{balance}ポイント）を超えて使用することはできません。",
+			"invalid": "整数のポイント数を入力してください。",
+			"closed": "このレファレンダムの投票は終了しました。",
+			"notOpen": "このレファレンダムの投票は行われていません。",
+			"generic": "問題が発生しました。もう一度お試しください。",
+			"loadFailed": "このレファレンダムを読み込めませんでした。もう一度お試しください。",
+			"ownVoteFailed": "あなたの投票を読み込めませんでした。後でもう一度お試しください。"
 		},
 		"admin": {
-			"title": "Administrator actions",
-			"cancelButton": "Cancel Referendum",
-			"confirmBody": "Cancel this referendum? This cannot be undone.",
-			"cancelled": "Referendum cancelled."
+			"title": "管理者操作",
+			"cancelButton": "レファレンダムを取消",
+			"confirmBody": "このレファレンダムを取り消しますか？この操作は元に戻せません。",
+			"cancelled": "レファレンダムを取り消しました。"
 		},
 		"comments": {
-			"title": "Comments",
-			"empty": "No comments yet. Be the first to comment!",
-			"addPlaceholder": "Add a comment (markdown supported)",
-			"submit": "Comment",
-			"delete": "Delete",
-			"added": "Comment added.",
-			"deleted": "Comment deleted.",
-			"loginPrompt": "Please log in to leave a comment."
+			"title": "コメント",
+			"empty": "コメントはまだありません。最初のコメントを書きましょう！",
+			"addPlaceholder": "コメントを追加（Markdown対応）",
+			"submit": "コメントする",
+			"delete": "削除",
+			"added": "コメントを追加しました。",
+			"deleted": "コメントを削除しました。",
+			"loginPrompt": "コメントするにはログインしてください。"
 		}
 	}
 }
