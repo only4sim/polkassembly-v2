@@ -509,7 +509,7 @@
    - 安全 DTO；
    - empty/error/loading state。
 4. Profile 增加本人 Referenda vote history。
-5. Activity Feed 增加 create/vote/finalized/cancelled 事件；投票隐私规则需要产品确认。
+5. Activity Feed 增加 create/vote/finalized/cancelled 事件（已实现 referendum 级事件；per-voter 事件仍需产品确认，默认不展示投票者身份）。
 6. Points-native bubble/history visualization 作为独立能力，不复用 chain curve 算法。
 7. 执行 read-cost audit：列表批量 stats、history pagination、listener 数量和 profile 查询。
 
@@ -747,10 +747,10 @@ yarn build
 ### P2
 
 - [x] Profile Referenda vote history（trusted CG 查询 + Profile Activity 标签，仅本人可见）；
-- [ ] Activity Feed；
-- [ ] points-native bubble/history；
+- [x] Activity Feed（ReferendaActivityEvents 侧边卡片：公开 referendum 级事件，含隐私安全默认值）；
+- [x] points-native bubble/history（DemoReferendaVoteBubbles：气泡面积∝pointsUsed，独立组件不复用链曲线）；
 - [x] read-cost/performance audit（ARCHITECTURE「Firestore read-cost profile」一节）；
-- [ ] 高级 observability 和运营面板。
+- [x] 高级 observability 和运营面板（/referenda/admin + admin/overview API：状态计数/总量/最近公投统计，仅管理员）。
 
 ## 11. 完成定义
 

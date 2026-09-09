@@ -32,7 +32,8 @@ const mocks = vi.hoisted(() => ({
 	removeVote: vi.fn(),
 	createReferendum: vi.fn(),
 	requireVerifiedActor: vi.fn(),
-	isAdminActor: vi.fn()
+	isAdminActor: vi.fn(),
+	getAdminOverview: vi.fn()
 }));
 
 vi.mock('@/app/api/_api-services/referenda/referendumReadService', () => ({
@@ -42,6 +43,7 @@ vi.mock('@/app/api/_api-services/referenda/referendumReadService', () => ({
 		getVote = mocks.getVote;
 		listVotes = mocks.listVotes;
 		countVotes = mocks.countVotes;
+		getAdminOverview = mocks.getAdminOverview;
 	}
 }));
 
@@ -64,10 +66,14 @@ vi.mock('@/app/api/_api-utils/referendaAuth', () => ({
 
 import { GET as listGET, POST as referendaPOST } from '../route';
 import { GET as historyGET } from '../[index]/votes/route';
+import { GET as adminOverviewGET } from '../admin/overview/route';
 import { DELETE as meDELETE, GET as meGET, PUT as mePUT } from '../[index]/votes/me/route';
 import { CreationValidationError } from '@/domain/services/referendumValidation';
 import { ReferendaServiceError } from '@/app/api/_api-services/referenda/referendumTrustedService';
 import { ReferendumDecision, ReferendumStatus } from '@/domain/entities/Referendum';
+
+const UNAUTHORIZED_MESSAGE = 'You must be logged in.';
+const ADMIN_OVERVIEW_URL = '/api/v2/referenda/admin/overview';
 import { makeReferendum, makeStats, makeVote } from '@/domain/fixtures/referendaFixtures';
 import { toPublicReferendumVoteDto, toReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
 
@@ -208,7 +214,7 @@ describe('GET /api/v2/referenda/{index}/votes/me', () => {
 	});
 
 	it('returns 401 when authentication fails', async () => {
-		mocks.requireVerifiedActor.mockRejectedValue(new ReferendaServiceError('unauthorized', 'You must be logged in.'));
+		mocks.requireVerifiedActor.mockRejectedValue(new ReferendaServiceError('unauthorized', UNAUTHORIZED_MESSAGE));
 		const res = await meGET(req(meUrl), ctx('1'));
 		expect(res.status).toBe(401);
 	});
@@ -310,5 +316,38 @@ describe('GET /api/v2/referenda/{index}/votes (public history)', () => {
 		mocks.getByIndex.mockResolvedValue(null);
 		const res = await historyGET(req('/api/v2/referenda/999/votes'), ctx('999'));
 		expect(res.status).toBe(404);
+	});
+});
+
+describe('GET /referenda/admin/overview (admin operations panel)', () => {
+	const overview = {
+		statusCounts: { Submitted: 1, Deciding: 2, Confirmed: 3, Rejected: 4, Cancelled: 0 },
+		totalReferenda: 10,
+		recent: []
+	};
+
+	it('returns 401 for anonymous callers', async () => {
+		mocks.requireVerifiedActor.mockRejectedValue(new ReferendaServiceError('unauthorized', UNAUTHORIZED_MESSAGE));
+		const res = await adminOverviewGET(req(ADMIN_OVERVIEW_URL));
+		expect(res.status).toBe(401);
+	});
+
+	it('returns 403 for authenticated non-admins', async () => {
+		mocks.requireVerifiedActor.mockResolvedValue({ uid: 'u1', displayName: 'User' });
+		mocks.isAdminActor.mockResolvedValue(false);
+		const res = await adminOverviewGET(req(ADMIN_OVERVIEW_URL));
+		expect(res.status).toBe(403);
+	});
+
+	it('returns the overview DTO for admins', async () => {
+		mocks.requireVerifiedActor.mockResolvedValue({ uid: 'admin-1', displayName: 'Admin' });
+		mocks.isAdminActor.mockResolvedValue(true);
+		mocks.getAdminOverview.mockResolvedValue(overview);
+		const res = await adminOverviewGET(req(ADMIN_OVERVIEW_URL));
+		expect(res.status).toBe(200);
+		const body = await res.json();
+		expect(body.totalReferenda).toBe(10);
+		expect(body.statusCounts.Deciding).toBe(2);
+		expect(Array.isArray(body.recent)).toBe(true);
 	});
 });

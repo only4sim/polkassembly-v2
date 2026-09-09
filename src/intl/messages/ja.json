@@ -1828,6 +1828,25 @@
 			"added": "コメントを追加しました。",
 			"deleted": "コメントを削除しました。",
 			"loginPrompt": "コメントするにはログインしてください。"
+		},
+		"feed": {
+			"title": "レファレンダム活動",
+			"viewAll": "すべて表示",
+			"created": "作成",
+			"opened": "投票開始",
+			"finalized": "確定",
+			"cancelled": "取消"
+		},
+		"bubbles": {
+			"title": "投票バブル",
+			"showAll": "すべて表示（{count}）",
+			"showLess": "表示を減らす",
+			"truncated": "最初の30投票のみ表示されます。"
+		},
+		"adminPanel": {
+			"title": "レファレンダム運用",
+			"total": "レファレンダム総数",
+			"recent": "最近のレファレンダム"
 		}
 	}
 }

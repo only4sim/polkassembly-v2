@@ -6,15 +6,18 @@ import React from 'react';
 import { useUser } from '@/hooks/useUser';
 import TreasuryStats from '@/app/_shared-components/TreasuryStats/TreasuryStats';
 import { ITreasuryStats } from '@/_shared/types';
+import ReferendaActivityEvents from '@/app/_shared-components/DemoReferenda/ReferendaActivityEvents';
 import VotedActiveProposalCard from '../../../_shared-components/VotedActiveProposalCard/VotedActiveProposalCard';
 import ActivityFeedRankCard from './Sidebar/ActivityFeedRankCard';
 import ActivityFeedFeaturesSection from './Sidebar/ActivityFeedFeaturesSection/ActivityFeedFeaturesSection';
 
 function ActivityFeedSidebar({ treasuryStatsData }: { treasuryStatsData: ITreasuryStats[] }) {
 	const { user } = useUser();
+	const isDemoOsMode = process.env.NEXT_PUBLIC_ENABLE_BLOCKCHAIN !== 'true';
 
 	return (
 		<div className='flex flex-col gap-5'>
+			{isDemoOsMode && <ReferendaActivityEvents />}
 			{user && user.addresses?.length && <VotedActiveProposalCard addresses={user.addresses} />}
 			<TreasuryStats
 				data={treasuryStatsData}

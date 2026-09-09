@@ -13,6 +13,7 @@ import { ReferendumDetailDto, ReferendumVoteDto, type PublicReferendumVoteDto, t
 import StatusTag from '@/app/_shared-components/StatusTag/StatusTag';
 import { EProposalStatus, ENotificationStatus } from '@/_shared/types';
 import DemoReferendaRealtimeStats from '@/app/_shared-components/DemoReferenda/DemoReferendaRealtimeStats';
+import DemoReferendaVoteBubbles from '@/app/_shared-components/DemoReferenda/DemoReferendaVoteBubbles';
 import DemoReferendaVoteDialog from '@/app/_shared-components/DemoReferenda/DemoReferendaVoteDialog';
 import { Button } from '@/app/_shared-components/Button';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
@@ -224,6 +225,9 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 				index={referendum.index}
 				initialStats={initialStats}
 			/>
+
+			{/* Points-native bubble view of the public history (independent P2 visual) */}
+			{initialHistory && initialHistory.items.length > 0 && <DemoReferendaVoteBubbles votes={initialHistory.items} />}
 
 			{/* Privacy-safe public vote history (no UID, no balance — contract) */}
 			{initialHistory && (

@@ -441,8 +441,41 @@ export async function fetchMyPointsVotes(options: { limit?: number; page?: numbe
 }
 
 // ---------------------------------------------------------------------------
-// Trusted mutations
+// Admin operations panel (plan P2)
 // ---------------------------------------------------------------------------
+
+export interface ReferendaAdminOverview {
+	statusCounts: Record<string, number>;
+	totalReferenda: number;
+	recent: { referendum: ReferendumDetailDto; stats: ReferendumStatsDto | null }[];
+}
+
+/**
+ * Admin-only lifecycle overview. 401/403 surface as PointsReferendaApiError so
+ * the panel can render its gated states.
+ */
+export async function fetchReferendaAdminOverview(): Promise<ReferendaAdminOverview> {
+	const headers = await getAuthHeaders();
+	const json = await requestJson(`${API_BASE}/admin/overview`, { method: 'GET', headers });
+	if (!json || typeof json !== 'object') throw new PointsReferendaApiError(502, 'Malformed overview response.');
+	const body = json as Record<string, unknown>;
+	if (!body.statusCounts || typeof body.statusCounts !== 'object' || !isSafeNonNegativeInt(body.totalReferenda) || !Array.isArray(body.recent)) {
+		throw new PointsReferendaApiError(502, 'Malformed overview response.');
+	}
+	const recent: ReferendaAdminOverview['recent'] = [];
+	for (let i = 0; i < body.recent.length; i += 1) {
+		const entry = body.recent[i] as Record<string, unknown>;
+		const referendum = detailDtoFromJson(entry.referendum);
+		const stats = statsDtoFromJson(entry.stats);
+		if (!referendum) throw new PointsReferendaApiError(502, 'Malformed overview entry.');
+		recent.push({ referendum, stats });
+	}
+	const statusCounts: Record<string, number> = {};
+	Object.entries(body.statusCounts as Record<string, unknown>).forEach(([status, count]) => {
+		if (isSafeNonNegativeInt(count)) statusCounts[status] = count;
+	});
+	return { statusCounts, totalReferenda: body.totalReferenda, recent };
+}
 
 export interface CreatePointsReferendumInput {
 	title: string;

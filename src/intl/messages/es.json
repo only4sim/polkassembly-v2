@@ -1829,6 +1829,25 @@
 			"added": "Comentario añadido.",
 			"deleted": "Comentario eliminado.",
 			"loginPrompt": "Inicia sesión para dejar un comentario."
+		},
+		"feed": {
+			"title": "Actividad de referéndums",
+			"viewAll": "Ver todos",
+			"created": "Creado",
+			"opened": "Votación abierta",
+			"finalized": "Finalizado",
+			"cancelled": "Cancelado"
+		},
+		"bubbles": {
+			"title": "Burbujas de votos",
+			"showAll": "Mostrar todos ({count})",
+			"showLess": "Mostrar menos",
+			"truncated": "Solo se muestran los primeros 30 votos."
+		},
+		"adminPanel": {
+			"title": "Operaciones de referéndums",
+			"total": "Total de referéndums",
+			"recent": "Referéndums recientes"
 		}
 	}
 }

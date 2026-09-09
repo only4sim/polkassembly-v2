@@ -1827,6 +1827,25 @@
 			"added": "Kommentar hinzugefügt.",
 			"deleted": "Kommentar gelöscht.",
 			"loginPrompt": "Bitte melde dich an, um zu kommentieren."
+		},
+		"feed": {
+			"title": "Referenda-Aktivität",
+			"viewAll": "Alle anzeigen",
+			"created": "Erstellt",
+			"opened": "Abstimmung eröffnet",
+			"finalized": "Abgeschlossen",
+			"cancelled": "Abgesagt"
+		},
+		"bubbles": {
+			"title": "Stimm-Blasen",
+			"showAll": "Alle anzeigen ({count})",
+			"showLess": "Weniger anzeigen",
+			"truncated": "Nur die ersten 30 Stimmen werden angezeigt."
+		},
+		"adminPanel": {
+			"title": "Referenda-Betrieb",
+			"total": "Referenda insgesamt",
+			"recent": "Neueste Referenda"
 		}
 	}
 }

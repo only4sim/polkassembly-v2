@@ -2,7 +2,7 @@
 // This software may be modified and distributed under the terms
 // of the Apache-2.0 license. See the LICENSE file for details.
 
-import { type Referendum } from '@/domain/entities/Referendum';
+import { type Referendum, ReferendumStatus } from '@/domain/entities/Referendum';
 import { type ReferendumComment } from '@/domain/entities/ReferendumComment';
 import { type ReferendumStats } from '@/domain/entities/ReferendumStats';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
@@ -86,6 +86,40 @@ export class ReferendumReadService {
 		const snapshot = await query.count().get();
 		return snapshot.data().count;
 	}
+
+	/**
+	 * Admin operations overview (plan P2): status counts via count aggregation,
+	 * the most recent referenda with their stats joined via one batched getAll.
+	 * The calling route is responsible for admin authorisation.
+	 */
+	async getAdminOverview(): Promise<{
+		statusCounts: Record<ReferendumStatus, number>;
+		recent: { referendum: Referendum; stats: ReferendumStats | null }[];
+		totalReferenda: number;
+	}> {
+		const STATUSES = [ReferendumStatus.Submitted, ReferendumStatus.Deciding, ReferendumStatus.Confirmed, ReferendumStatus.Rejected, ReferendumStatus.Cancelled];
+		const statusCounts = {} as Record<ReferendumStatus, number>;
+		await Promise.all(
+			STATUSES.map(async (status) => {
+				const snap = await this.db.collection(REFERENDA_COLLECTION).where('status', '==', status).count().get();
+				statusCounts[status] = snap.data().count;
+			})
+		);
+		const totalReferenda = Object.values(statusCounts).reduce((sum, n) => sum + n, 0);
+
+		const recentSnap = await this.db.collection(REFERENDA_COLLECTION).orderBy('createdAt', 'desc').limit(10).get();
+		const referenda = recentSnap.docs.map((d) => mapReferendum(d.data(), Number(d.id)));
+		const statsMap = await this.getStatsForIndexes(referenda.map((r) => r.index));
+		return {
+			statusCounts,
+			recent: referenda.map((referendum) => ({ referendum, stats: statsMap.get(referendum.index) ?? null })),
+			totalReferenda
+		};
+	}
+
+	/**
+	 * Referendum comments (plan PR-7), oldest first for chronological reading.
+	 */
 
 	/**
 	 * Referendum comments (plan PR-7), oldest first for chronological reading.

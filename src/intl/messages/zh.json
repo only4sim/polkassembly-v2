@@ -1828,6 +1828,25 @@
 			"added": "评论已发布。",
 			"deleted": "评论已删除。",
 			"loginPrompt": "请先登录后发表评论。"
+		},
+		"feed": {
+			"title": "公投动态",
+			"viewAll": "查看全部",
+			"created": "已创建",
+			"opened": "投票已开启",
+			"finalized": "已结算",
+			"cancelled": "已取消"
+		},
+		"bubbles": {
+			"title": "投票气泡图",
+			"showAll": "显示全部（{count}）",
+			"showLess": "收起",
+			"truncated": "仅显示前 30 条投票。"
+		},
+		"adminPanel": {
+			"title": "公投运营面板",
+			"total": "公投总数",
+			"recent": "最近公投"
 		}
 	}
 }
