@@ -7,6 +7,8 @@
 import { Suspense } from 'react';
 import { IGenericListingResponse, IPostListing, ITreasuryStats } from '@/_shared/types';
 import LoadingLayover from '@/app/_shared-components/LoadingLayover';
+import { type DemoPost } from '@/domain/entities/Post';
+import { type ReferendumSummaryDto } from '@/domain/dtos/ReferendaDtos';
 import SpendPeriodStats from '@/app/_shared-components/TreasuryStats/SpendPeriodStats';
 import OverviewTreasuryStats from './OverviewTreasuryStats';
 import styles from './Overview.module.scss';
@@ -19,11 +21,17 @@ import JobsAndBounties from './JobsAndBounties/JobsAndBounties';
 function Overview({
 	allTracksData,
 	treasuryStatsData,
-	isBlockchainEnabled = true
+	isBlockchainEnabled = true,
+	demoDiscussions = [],
+	demoReferenda = []
 }: {
 	allTracksData: IGenericListingResponse<IPostListing>;
 	treasuryStatsData: ITreasuryStats[];
 	isBlockchainEnabled?: boolean;
+	/** DemoOS mode: Firestore discussion posts for the Latest Activity card. */
+	demoDiscussions?: DemoPost[];
+	/** DemoOS mode: points-based referenda (votes) for the Latest Activity card. */
+	demoReferenda?: ReferendumSummaryDto[];
 }) {
 	return (
 		<div className={styles.overview_container}>
@@ -54,7 +62,12 @@ function Overview({
 								</div>
 							}
 						>
-							<LatestActivity allTracksData={allTracksData} />
+							<LatestActivity
+								allTracksData={allTracksData}
+								isBlockchainEnabled={isBlockchainEnabled}
+								demoDiscussions={demoDiscussions}
+								demoReferenda={demoReferenda}
+							/>
 						</Suspense>
 					</div>
 

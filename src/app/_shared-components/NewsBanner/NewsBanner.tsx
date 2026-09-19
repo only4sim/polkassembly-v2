@@ -71,6 +71,11 @@ function NewsBanner() {
 	const marqueeRef = useRef<HTMLDivElement>(null);
 	const [animationDuration, setAnimationDuration] = useState(60);
 
+	// DemoOS (no-keys) mode: the news marquee depends on a Google Sheets API
+	// key that is not configured — skip the fetch entirely so the client can
+	// never surface API_FETCH_ERROR noise. Chain mode keeps the banner.
+	const isDemoOsMode = process.env.NEXT_PUBLIC_ENABLE_BLOCKCHAIN !== 'true';
+
 	const { data: newsItems = [] } = useQuery({
 		queryKey: ['polkadot-news'],
 		queryFn: fetchNewsItems,
@@ -78,6 +83,7 @@ function NewsBanner() {
 		gcTime: 10 * 60 * 1000,
 		refetchOnWindowFocus: false,
 		refetchOnMount: true,
+		enabled: !isDemoOsMode,
 		retry: 3,
 		retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
 	});

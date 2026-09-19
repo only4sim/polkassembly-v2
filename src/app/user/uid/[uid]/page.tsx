@@ -4,21 +4,19 @@
 
 import { redirect } from 'next/navigation';
 import { User } from '@/domain/entities/User';
+import { FirestoreUserRepository } from '@/adapters/firestore/FirestoreUserRepository';
 import DemoProfile from '@/app/_shared-components/Profile/DemoProfile/DemoProfile';
 
 async function fetchUserByUid(uid: string): Promise<User | null> {
 	try {
-		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-		const res = await fetch(`${baseUrl}/api/v2/users/uid/${uid}`, { cache: 'no-store' });
-		if (!res.ok) return null;
-		const data = await res.json();
-		return {
-			...data,
-			// email is not returned by the public route; use empty string as fallback
-			email: data.email ?? '',
-			createdAt: new Date(data.createdAt),
-			updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(data.createdAt)
-		};
+		// Server components must not self-fetch over HTTP: NEXT_PUBLIC_APP_URL may
+		// point at a remote deployment whose Firestore does not contain this user.
+		// Call the repository in-process (same pattern as the public API route).
+		const userRepository = new FirestoreUserRepository();
+		const user = await userRepository.getUserByUid(uid);
+		if (!user) return null;
+		// Mirror the public route's privacy trimming — email is never exposed.
+		return { ...user, email: '' };
 	} catch {
 		return null;
 	}

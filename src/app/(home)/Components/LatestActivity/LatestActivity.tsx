@@ -8,24 +8,69 @@ import { EPostOrigin, IGenericListingResponse, IPostListing } from '@/_shared/ty
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/_shared-components/Tabs';
 import { useTranslations } from 'next-intl';
 import { useState, useRef, useEffect } from 'react';
+import { type DemoPost } from '@/domain/entities/Post';
+import { type ReferendumSummaryDto } from '@/domain/dtos/ReferendaDtos';
 import { parseCamelCase } from '@/app/_client-utils/parseCamelCase';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import DiscussionsTab from './DiscussionsTab';
 import TrackTabs from './TrackTabs';
 import ActivityList from './ActivityList';
 import ActivityStats from './ActivityStats';
+import DemoActivityList, { type DemoActivityItem } from './DemoActivityList';
 
 enum EOverviewTabs {
 	All = 'all',
 	Discussion = 'discussion'
 }
 
-function LatestActivity({ allTracksData, isLoading = false }: { allTracksData: IGenericListingResponse<IPostListing> | null; isLoading?: boolean }) {
+function LatestActivity({
+	allTracksData,
+	isLoading = false,
+	isBlockchainEnabled = true,
+	demoDiscussions = [],
+	demoReferenda = []
+}: {
+	allTracksData: IGenericListingResponse<IPostListing> | null;
+	isLoading?: boolean;
+	/** Server-computed DemoOS flag (from `process.env.ENABLE_BLOCKCHAIN`). Not read
+	 *  directly on the client since only `NEXT_PUBLIC_`-prefixed env vars are
+	 *  available in the browser bundle. */
+	isBlockchainEnabled?: boolean;
+	/** DemoOS mode: Firestore discussion posts rendered with Demo-native rows. */
+	demoDiscussions?: DemoPost[];
+	/** DemoOS mode: points-based referenda (votes) rendered with Demo-native rows. */
+	demoReferenda?: ReferendumSummaryDto[];
+}) {
 	const t = useTranslations('Overview');
 	const network = getCurrentNetwork();
 	const tabsListRef = useRef<HTMLDivElement>(null);
 	const TAB_TRIGGER_CLASS =
 		'text-xm px-4 py-1.5 rounded-lg border border-transparent font-medium text-text_primary data-[state=active]:border-pink-500 data-[state=active]:text-pink-600 data-[state=active]:bg-pink-50 dark:data-[state=active]:bg-pink-900/10 mr-2';
+
+	const isDemoOsMode = !isBlockchainEnabled;
+
+	const discussionItems: DemoActivityItem[] = demoDiscussions.map((post) => {
+		const author = post.authorName || post.authorUid;
+		const subtitle = post.topic ? `${author} · ${post.topic}` : author;
+		return {
+			id: `post-${post.id}`,
+			title: post.title,
+			subtitle,
+			createdAt: post.createdAt,
+			href: `/discussions/${post.id}`
+		};
+	});
+
+	const referendumItems: DemoActivityItem[] = demoReferenda.map((referendum) => ({
+		id: `referendum-${referendum.index}`,
+		title: referendum.title,
+		subtitle: `${parseCamelCase(referendum.origin)} · ${referendum.status}`,
+		createdAt: new Date(referendum.createdAt),
+		href: `/referenda/${referendum.index}`
+	}));
+
+	// "All" tab: merge discussion posts and referenda, newest first, capped at 10.
+	const allActivityItems: DemoActivityItem[] = [...discussionItems, ...referendumItems].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
 
 	const [selectedTab, setSelectedTab] = useState<string>(EOverviewTabs.All);
 	const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -173,16 +218,31 @@ function LatestActivity({ allTracksData, isLoading = false }: { allTracksData: I
 				</div>
 
 				<TabsContent value={EOverviewTabs.All}>
-					<ActivityList
-						items={allTracksData?.items || []}
-						isFetching={isLoading}
-						noActivityText={t('noactivity')}
-						viewAllUrl='/all'
-					/>
+					{isDemoOsMode ? (
+						<DemoActivityList
+							items={allActivityItems}
+							isLoading={isLoading}
+							noActivityText={t('noactivity')}
+						/>
+					) : (
+						<ActivityList
+							items={allTracksData?.items || []}
+							isFetching={isLoading}
+							noActivityText={t('noactivity')}
+							viewAllUrl='/all'
+						/>
+					)}
 				</TabsContent>
 
 				<TabsContent value={EOverviewTabs.Discussion}>
-					<DiscussionsTab />
+					{isDemoOsMode ? (
+						<DemoActivityList
+							items={discussionItems}
+							noActivityText={t('nodiscussionposts')}
+						/>
+					) : (
+						<DiscussionsTab />
+					)}
 				</TabsContent>
 
 				{Object.keys(tracks).map((track) => (
