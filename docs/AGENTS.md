@@ -33,6 +33,14 @@ Referenda implementation untouched. The frozen HTTP contract is
 `docs/REFERENDA_API_CONTRACT.md`; product rules and acceptance criteria remain in
 `docs/REFERENDA_POINTS_DEVELOPMENT_GUIDE.md`.
 
+For the next Referenda development iteration, use
+[`REFERENDA_AGENT_DEVELOPMENT_GUIDE_2026-10-01.md`](./REFERENDA_AGENT_DEVELOPMENT_GUIDE_2026-10-01.md),
+the companion [execution prompt](./REFERENDA_AGENT_EXECUTION_PROMPT_2026-10-01.md), and
+[execution tracker](./REFERENDA_AGENT_EXECUTION_TRACKER_2026-10-01.md).
+They define the remaining fixes, feature work, and verification gates. Historical
+implementation statements and checked boxes below or in older plans are not evidence
+that the new iteration has passed its acceptance checks.
+
 ## 3) Key Product Decisions
 
 - Discussion poll voting is one-person-one-vote.

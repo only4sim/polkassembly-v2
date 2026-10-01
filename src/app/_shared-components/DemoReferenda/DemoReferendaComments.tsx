@@ -5,7 +5,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { type ReferendumCommentDto } from '@/domain/dtos/ReferendaDtos';
 import { MarkdownViewer } from '@ui/MarkdownViewer/MarkdownViewer';
@@ -14,8 +13,8 @@ import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useToast } from '@/hooks/useToast';
 import { ENotificationStatus } from '@/_shared/types';
-import { addReferendumComment, deleteReferendumComment } from '@/app/_client-services/points_referenda_client_service';
 import CreatedAtTime from '@ui/CreatedAtTime/CreatedAtTime';
+import { useReferendumComments, useAddComment, useDeleteComment } from '@/hooks/usePointsReferenda';
 
 interface Props {
 	index: number;
@@ -26,19 +25,27 @@ interface Props {
 /**
  * Referendum comments (plan PR-7). Reuses the Demo comment visual language
  * (MarkdownViewer, login gate, own-delete) without the post-path assumptions.
- * All writes go through the trusted client service; refresh is server-driven.
+ * All writes go through React Query mutations; the hook handles cache
+ * invalidation so the list stays consistent (F02/F03).
  */
 function DemoReferendaComments({ index, initialComments }: Props) {
-	const router = useRouter();
 	const { toast } = useToast();
 	const t = useTranslations('DemoReferenda');
-	const [comments, setComments] = useState<ReferendumCommentDto[]>(initialComments?.items ?? []);
-	const [totalCount, setTotalCount] = useState(initialComments?.totalCount ?? 0);
 	const [authUid, setAuthUid] = useState<string | null>(null);
 	const [authReady, setAuthReady] = useState(false);
 	const [content, setContent] = useState('');
-	const [submitting, setSubmitting] = useState(false);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
+	// F06 fix: client-side page accumulator — "Load more" appends subsequent pages.
+	const [page, setPage] = useState(1);
+
+	const initialPage = initialComments ? { ...initialComments, page: 1, pageSize: 20 } : null;
+	const { data: commentsData } = useReferendumComments({ index, page, initialData: page === 1 ? initialPage : undefined });
+	const addComment = useAddComment(index);
+	const deleteComment = useDeleteComment(index);
+
+	const comments = commentsData?.items ?? initialComments?.items ?? [];
+	const totalCount = commentsData?.totalCount ?? initialComments?.totalCount ?? 0;
+	const hasMore = comments.length < totalCount;
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(clientAuth, (user) => {
@@ -50,39 +57,30 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 
 	const handleAdd = useCallback(async () => {
 		const trimmed = content.trim();
-		if (!trimmed || submitting) return;
-		setSubmitting(true);
+		if (!trimmed || addComment.isPending) return;
 		try {
-			const comment = await addReferendumComment(index, trimmed);
-			setComments((prev) => [...prev, comment]);
-			setTotalCount((count) => count + 1);
+			await addComment.mutateAsync({ content: trimmed });
 			setContent('');
 			toast({ title: t('comments.added'), status: ENotificationStatus.SUCCESS });
-			router.refresh();
 		} catch (err) {
 			toast({ title: (err as Error).message || t('errors.generic'), status: ENotificationStatus.ERROR });
-		} finally {
-			setSubmitting(false);
 		}
-	}, [content, submitting, index, toast, t, router]);
+	}, [content, addComment, toast, t]);
 
 	const handleDelete = useCallback(
 		async (commentId: string) => {
 			if (deletingId) return;
 			setDeletingId(commentId);
 			try {
-				await deleteReferendumComment(index, commentId);
-				setComments((prev) => prev.filter((c) => c.id !== commentId));
-				setTotalCount((count) => Math.max(0, count - 1));
+				await deleteComment.mutateAsync({ commentId });
 				toast({ title: t('comments.deleted'), status: ENotificationStatus.SUCCESS });
-				router.refresh();
 			} catch (err) {
 				toast({ title: (err as Error).message || t('errors.generic'), status: ENotificationStatus.ERROR });
 			} finally {
 				setDeletingId(null);
 			}
 		},
-		[index, deletingId, toast, t, router]
+		[deletingId, deleteComment, toast, t]
 	);
 
 	return (
@@ -127,7 +125,20 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 				</ul>
 			)}
 
-			{/* Add comment — login gated; trusted write via client service */}
+			{/* F06 fix: pagination — load more comments when available */}
+			{hasMore && (
+				<div className='mt-3 flex justify-center'>
+					<Button
+						variant='ghost'
+						size='sm'
+						onClick={() => setPage((p) => p + 1)}
+					>
+						{t('comments.loadMore') ?? 'Load more'}
+					</Button>
+				</div>
+			)}
+
+			{/* Add comment — login gated; trusted write via React Query mutation */}
 			<div className='mt-4'>
 				{!authReady ? null : authUid ? (
 					<div>
@@ -147,7 +158,7 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 						<div className='mt-2 flex justify-end'>
 							<Button
 								onClick={handleAdd}
-								isLoading={submitting}
+								isLoading={addComment.isPending}
 								disabled={!content.trim()}
 							>
 								{t('comments.submit')}

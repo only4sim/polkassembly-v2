@@ -485,4 +485,120 @@ describe('Referenda trusted service (Firestore emulator)', () => {
 			expect(await readSvc().countVotes(idx, 'nay')).toBe(2);
 		});
 	});
+
+	// F10 fix: collectionGroup('votes') must exclude discussion poll votes.
+	describe('Profile vote history excludes discussion votes (F10, emulator)', () => {
+		it('writes type=referendum on vote documents and filters collectionGroup queries', async () => {
+			const idx = 720;
+			await seedDecidingReferendum(idx);
+			await seedUser('voter-x', 500);
+			await service().upsertVote(idx, actor('voter-x'), { decision: ReferendumDecision.AYE, pointsUsed: 25 });
+
+			// Verify the vote document has the discriminator field.
+			const voteSnap = await adminDb.collection('referenda').doc(String(idx)).collection('votes').doc('voter-x').get();
+			expect(voteSnap.data()?.type).toBe('referendum');
+
+			// Seed a discussion poll vote under posts/{postId}/votes/{uid} WITHOUT the type field.
+			await adminDb
+				.collection('posts')
+				.doc('post-1')
+				.collection('votes')
+				.doc('voter-x')
+				.set({
+					uid: 'voter-x',
+					selectedOptions: [0, 1],
+					votedAt: Timestamp.now()
+				});
+
+			// Profile history must return ONLY the referendum vote, not the discussion vote.
+			const userVotes = await readSvc().listUserVotes('voter-x');
+			expect(userVotes).toHaveLength(1);
+			expect(userVotes[0].index).toBe(idx);
+			expect(await readSvc().countUserVotes('voter-x')).toBe(1);
+		});
+	});
+
+	describe('F16/P7: Activity events', () => {
+		it('writes activity events on create and vote', async () => {
+			await seedUser('author-a', 1000, 'Author');
+			const created = await service().createReferendum(actor('author-a'), {
+				title: 'Activity Test',
+				content: REFERENDUM_CONTENT,
+				origin: 'root',
+				tags: [],
+				votingStartsAt: past(HOUR).toISOString(),
+				votingEndsAt: future(HOUR).toISOString(),
+				approvalThresholdBps: 5000,
+				minimumTurnoutPoints: 10
+			});
+
+			// Verify creation event
+			const eventsAfterCreate = await service().listActivityEvents({ limit: 10 });
+			expect(eventsAfterCreate.totalCount).toBeGreaterThanOrEqual(1);
+			const createEvent = eventsAfterCreate.items.find((e: { type: string }) => e.type === 'created');
+			expect(createEvent).toBeDefined();
+			expect(createEvent.index).toBe(created.index);
+
+			// Vote and verify vote_cast event
+			await seedUser('voter-v', 500, 'VoterV');
+			await service().upsertVote(created.index, actor('voter-v'), { decision: ReferendumDecision.AYE, pointsUsed: 50 });
+			const eventsAfterVote = await service().listActivityEvents({ limit: 10 });
+			const voteEvent = eventsAfterVote.items.find((e: { type: string }) => e.type === 'vote_cast');
+			expect(voteEvent).toBeDefined();
+		});
+
+		it('writes activity event on finalize', async () => {
+			const idx = 801;
+			await seedDecidingReferendum(idx, { start: past(2 * HOUR), end: past(HOUR) });
+			const result = await service().adminFinalize(idx, true);
+			expect([ReferendumStatus.Confirmed, ReferendumStatus.Rejected]).toContain(result.status);
+			const events = await service().listActivityEvents({ limit: 20 });
+			expect(events.totalCount).toBeGreaterThanOrEqual(1);
+			const outcomeEvent = events.items.find((e: { index: number; type: string }) => e.index === idx && (e.type === 'confirmed' || e.type === 'rejected'));
+			expect(outcomeEvent).toBeDefined();
+		});
+
+		it('writes activity event on cancel', async () => {
+			const idx = 801;
+			await seedDecidingReferendum(idx);
+			await service().cancelReferendum(idx, actor('admin-1', 'Admin'), true);
+			const events = await service().listActivityEvents({ limit: 10 });
+			const cancelEvent = events.items.find((e: { type: string }) => e.type === 'cancelled');
+			expect(cancelEvent).toBeDefined();
+			expect(cancelEvent.index).toBe(idx);
+		});
+	});
+
+	describe('P7: Discussion lock', () => {
+		const COMMENTER = 'commenter-c';
+
+		it('prevents comments when discussion is locked', async () => {
+			const idx = 810;
+			await seedDecidingReferendum(idx);
+			await seedUser(COMMENTER, 100, 'Commenter');
+
+			// Comment should work before lock
+			await service().addComment(idx, actor(COMMENTER), 'Before lock');
+			const beforeLock = await readSvc().listComments(idx);
+			expect(beforeLock.items).toHaveLength(1);
+
+			// Lock the discussion
+			await service().setDiscussionLock(idx, true, actor('admin-1', 'Admin'), true);
+
+			// Comment should fail after lock
+			await expect(service().addComment(idx, actor(COMMENTER), 'After lock')).rejects.toThrow('Discussion is locked.');
+
+			// Unlock and comment should work again
+			await service().setDiscussionLock(idx, false, actor('admin-1', 'Admin'), true);
+			await service().addComment(idx, actor(COMMENTER), 'After unlock');
+			const afterUnlock = await readSvc().listComments(idx);
+			expect(afterUnlock.items).toHaveLength(2);
+		});
+
+		it('non-admin cannot lock discussion', async () => {
+			const idx = 811;
+			await seedDecidingReferendum(idx);
+			await expect(service().setDiscussionLock(idx, true, actor('regular-user', 'Regular'), false)).rejects.toThrow();
+		});
+	});
 });

@@ -8,5 +8,7 @@
 	"prettier.useTabs": true,
 	"[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
 	"[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-	"scss.lint.unknownAtRules": "ignore"
+	"scss.lint.unknownAtRules": "ignore",
+	"QoderCN.aI Chat.mcpToolsInAgentMode": true,
+	"QoderCN.aI Chat.webToolsInAsk/AgentMode": "Auto-execute"
 }

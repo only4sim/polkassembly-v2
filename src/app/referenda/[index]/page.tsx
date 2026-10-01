@@ -76,7 +76,13 @@ export default async function ReferendaDetailProvider({
 		initialStats = stats ? toReferendumStatsDto(stats) : null;
 		initialHistory = { items: votes.map(toPublicReferendumVoteDto), totalCount: voteCount };
 		initialComments = { items: commentsPage.items.map(toReferendumCommentDto), totalCount: commentsPage.totalCount };
-	} catch {
+	} catch (err) {
+		// F08 fix: Next.js notFound() works by throwing an error with a specific
+		// digest — re-throw it so the framework renders a proper 404 instead of
+		// the error shell.
+		if (err instanceof Error && 'digest' in err && typeof err.digest === 'string' && err.digest.includes('404')) {
+			throw err;
+		}
 		// Do not leak a fake referendum on infrastructure failure — surface the
 		// error state in the client shell with a retry.
 		serverError = true;

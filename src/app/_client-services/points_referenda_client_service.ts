@@ -143,24 +143,43 @@ export function publicVoteDtoFromJson(json: unknown): PublicReferendumVoteDto | 
 	};
 }
 
-const STAT_NUMERIC_FIELDS = ['ayePoints', 'nayPoints', 'abstainPoints', 'ayeVoters', 'nayVoters', 'abstainVoters', 'totalVoters', 'approvalBps', 'participatingPoints'] as const;
+// F01 fix: Only validate fields that are actually stored in Firestore.
+// approvalBps and participatingPoints are derived fields computed on the client.
+const STAT_STORED_FIELDS = ['ayePoints', 'nayPoints', 'abstainPoints', 'ayeVoters', 'nayVoters', 'abstainVoters', 'totalVoters'] as const;
+
+/** Compute approval basis points from aye/nay points. Zero denominator returns 0. */
+function computeApprovalBps(ayePoints: number, nayPoints: number): number {
+	const denominator = ayePoints + nayPoints;
+	if (denominator === 0) return 0;
+	return Math.round((ayePoints / denominator) * 10000);
+}
 
 /** Validate a stats payload; returns null when malformed. */
 export function statsDtoFromJson(json: unknown): ReferendumStatsDto | null {
 	if (!json || typeof json !== 'object') return null;
 	const s = json as Record<string, unknown>;
-	const allNumeric = STAT_NUMERIC_FIELDS.every((field) => isSafeNonNegativeInt(s[field]));
+	// Only validate fields that are actually stored in Firestore
+	const allNumeric = STAT_STORED_FIELDS.every((field) => isSafeNonNegativeInt(s[field]));
 	if (!allNumeric || !isIsoDate(s.updatedAt)) return null;
+
+	const ayePoints = s.ayePoints as number;
+	const nayPoints = s.nayPoints as number;
+	const abstainPoints = s.abstainPoints as number;
+
+	// Compute derived fields (F01 fix)
+	const approvalBps = computeApprovalBps(ayePoints, nayPoints);
+	const participatingPoints = ayePoints + nayPoints + abstainPoints;
+
 	return {
-		ayePoints: s.ayePoints as number,
-		nayPoints: s.nayPoints as number,
-		abstainPoints: s.abstainPoints as number,
+		ayePoints,
+		nayPoints,
+		abstainPoints,
 		ayeVoters: s.ayeVoters as number,
 		nayVoters: s.nayVoters as number,
 		abstainVoters: s.abstainVoters as number,
 		totalVoters: s.totalVoters as number,
-		approvalBps: s.approvalBps as number,
-		participatingPoints: s.participatingPoints as number,
+		approvalBps,
+		participatingPoints,
 		updatedAt: s.updatedAt
 	};
 }

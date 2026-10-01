@@ -18,6 +18,12 @@
 		"test:rules": "firebase emulators:exec --only firestore \"vitest run --config vitest.rules.config.mts\"",
 		"test:integration": "firebase emulators:exec --only firestore \"vitest run --config vitest.integration.config.mts\"",
 		"test:emulators": "firebase emulators:exec --only firestore \"npm --prefix functions run build && vitest run --config vitest.rules.config.mts && vitest run --config vitest.integration.config.mts\"",
+		"test:components": "vitest run --config vitest.components.config.mts",
+		"test:e2e:points": "firebase emulators:exec --only firestore,auth,storage --project demo-referenda-e2e \"npm --prefix functions run build && npx playwright test --config playwright.points.config.ts\"",
+		"test:e2e:points:production": "ENABLE_BLOCKCHAIN=false NEXT_PUBLIC_ENABLE_BLOCKCHAIN=false ENABLE_INDEXERS=false ENABLE_REDIS=false ENABLE_ALGOLIA=false ENABLE_AI=false IS_CACHE_ENABLED=false IS_AI_ENABLED=false IS_NOTIFICATION_SERVICE_ENABLED=false firebase emulators:exec --only firestore,auth,storage --project demo-referenda-e2e-prod \"npm run build && npx playwright test --config playwright.points.config.ts\"",
+		"test:e2e:chain": "vitest run --config vitest.chain.config.mts",
+		"test:media": "firebase emulators:exec --only firestore,storage --project demo-referenda-media \"vitest run --config vitest.media.config.mts\"",
+		"referenda:lifecycle:emulator": "firebase emulators:exec --only firestore --project demo-referenda-lifecycle \"npm --prefix functions run build && vitest run tests/emulator/referendaLifecycle.test.ts\"",
 		"api-bump:polkadot": "yarn add @polkadot/api @polkadot/api-augment @polkadot/extension-dapp @polkadot/extension-inject @polkadot/react-identicon @polkadot/react-qr @polkadot/types @polkadot/util @polkadot/util-crypto"
 	},
 	"engines": {

@@ -9,23 +9,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/hooks/useToast';
-import { ReferendumDetailDto, ReferendumVoteDto, type PublicReferendumVoteDto, type ReferendumCommentDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
+import { ReferendumDetailDto, type PublicReferendumVoteDto, type ReferendumCommentDto, type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
 import StatusTag from '@/app/_shared-components/StatusTag/StatusTag';
 import { EProposalStatus, ENotificationStatus } from '@/_shared/types';
 import DemoReferendaRealtimeStats from '@/app/_shared-components/DemoReferenda/DemoReferendaRealtimeStats';
 import DemoReferendaVoteBubbles from '@/app/_shared-components/DemoReferenda/DemoReferendaVoteBubbles';
 import DemoReferendaVoteDialog from '@/app/_shared-components/DemoReferenda/DemoReferendaVoteDialog';
+import { MarkdownViewer } from '@ui/MarkdownViewer/MarkdownViewer';
 import { Button } from '@/app/_shared-components/Button';
 import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { onAuthStateChanged } from 'firebase/auth';
-import {
-	fetchMyVote,
-	fetchReferendumCapabilities,
-	type ReferendumCapabilitiesDto,
-	cancelReferendum,
-	adminFinalizeReferendum
-} from '@/app/_client-services/points_referenda_client_service';
+import { cancelReferendum, adminFinalizeReferendum } from '@/app/_client-services/points_referenda_client_service';
 import DemoReferendaComments from '@/app/_shared-components/DemoReferenda/DemoReferendaComments';
+import { useMyVote, useCapabilities, usePublicVotes } from '@/hooks/usePointsReferenda';
 
 interface Props {
 	index: number;
@@ -42,12 +38,9 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 	const { toast } = useToast();
 	const t = useTranslations('DemoReferenda');
 	const referendum = initialDetail;
-	const [myVote, setMyVote] = useState<ReferendumVoteDto | null>(null);
-	const [myVoteState, setMyVoteState] = useState<'loading' | 'loaded' | 'error'>('loading');
 	const [authReady, setAuthReady] = useState(false);
 	const [authUid, setAuthUid] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [capabilities, setCapabilities] = useState<ReferendumCapabilitiesDto | null>(null);
 	const [isCancelling, setIsCancelling] = useState(false);
 	const [isFinalizing, setIsFinalizing] = useState(false);
 
@@ -56,55 +49,25 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(clientAuth, (user) => {
 			setAuthReady(true);
-			const uid = user?.uid ?? null;
-			setAuthUid(uid);
-			if (!uid) {
-				setMyVote(null);
-				setMyVoteState('loaded');
-			}
+			setAuthUid(user?.uid ?? null);
 		});
 		return () => unsubscribe();
 	}, []);
 
-	// Own vote: fetched only for an authenticated user, via the client service.
-	// 401 (expired token) is surfaced as an error rather than shown as a vote.
-	const loadMyVote = useCallback(async () => {
-		if (!authUid) return;
-		setMyVoteState('loading');
-		try {
-			const vote = await fetchMyVote(index);
-			setMyVote(vote);
-			setMyVoteState('loaded');
-		} catch (err) {
-			// eslint-disable-next-line no-console
-			console.error('[DemoReferendaDetail] failed to load own vote:', err);
-			setMyVote(null);
-			setMyVoteState('error');
-		}
-	}, [authUid, index]);
+	// F09 fix: React Query hooks handle stale request cancellation and
+	// identity-aware cache clearing automatically.
+	const { data: myVoteData, isError: isMyVoteError } = useMyVote({ index, uid: authUid });
+	const myVote = myVoteData ?? null;
+	const { data: capabilities } = useCapabilities(index);
+	const { data: publicVotesData } = usePublicVotes({
+		index,
+		limit: 20,
+		decision: decisionFilter,
+		initialData: initialHistory ? { ...initialHistory, page: 1, pageSize: 20 } : null
+	});
 
-	useEffect(() => {
-		if (authReady && authUid) {
-			loadMyVote();
-		}
-	}, [authReady, authUid, loadMyVote]);
-
-	// Trusted server capabilities (admin flag, voting window, pointsBalance).
-	// Refetched whenever the authenticated user changes (login/logout/switch).
-	useEffect(() => {
-		let cancelled = false;
-		if (!authReady) return undefined;
-		fetchReferendumCapabilities(index)
-			.then((caps) => {
-				if (!cancelled) setCapabilities(caps);
-			})
-			.catch(() => {
-				if (!cancelled) setCapabilities(null);
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, [authReady, authUid, index]);
+	// Use the hook data when available, fall back to SSR initial data.
+	const publicVotes = publicVotesData ?? initialHistory;
 
 	// Admin cancellation: double-confirmed; server re-verifies the admin role.
 	const handleCancel = useCallback(async () => {
@@ -187,7 +150,10 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 			</div>
 
 			<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
-				<div className='prose prose-sm dark:prose-invert max-w-none'>{referendum.content}</div>
+				{/* F11 fix: render body as Markdown, consistent with comments */}
+				<div className='prose prose-sm dark:prose-invert max-w-none'>
+					<MarkdownViewer markdown={referendum.content} />
+				</div>
 			</div>
 
 			{/* Voting - capability-driven (server-trusted), only for authenticated users */}
@@ -250,7 +216,7 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 				</div>
 			)}
 
-			{myVoteState === 'error' && authUid && (
+			{isMyVoteError && authUid && (
 				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
 					<p className='text-sm text-failure'>{t('errors.ownVoteFailed')}</p>
 				</div>
@@ -271,14 +237,14 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 			/>
 
 			{/* Points-native bubble view of the public history (independent P2 visual) */}
-			{initialHistory && initialHistory.items.length > 0 && <DemoReferendaVoteBubbles votes={initialHistory.items} />}
+			{publicVotes && publicVotes.items.length > 0 && <DemoReferendaVoteBubbles votes={publicVotes.items} />}
 
 			{/* Privacy-safe public vote history (no UID, no balance — contract) */}
-			{initialHistory && (
+			{publicVotes && (
 				<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
 					<div className='mb-2 flex items-center justify-between'>
 						<h3 className='text-sm font-semibold text-text_primary'>
-							{t('votes')} <span className='text-xs font-normal text-wallet_btn_text'>({initialHistory.totalCount})</span>
+							{t('votes')} <span className='text-xs font-normal text-wallet_btn_text'>({publicVotes.totalCount})</span>
 						</h3>
 						{/* URL-driven decision filter (plan PR-7) */}
 						<div className='flex gap-2'>
@@ -293,11 +259,11 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 							))}
 						</div>
 					</div>
-					{initialHistory.items.length === 0 ? (
+					{publicVotes.items.length === 0 ? (
 						<p className='text-sm text-wallet_btn_text'>{t('noVotes')}</p>
 					) : (
 						<ul className='divide-y divide-border_grey'>
-							{initialHistory.items.map((vote, i) => (
+							{publicVotes.items.map((vote, i) => (
 								<li
 									// eslint-disable-next-line react/no-array-index-key
 									key={`${vote.voterDisplayName}-${vote.updatedAt}-${i}`}
@@ -325,16 +291,6 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 					index={referendum.index}
 					existingVote={myVote}
 					onClose={() => setDialogOpen(false)}
-					onVoteChanged={(vote) => {
-						setMyVote(vote);
-						setMyVoteState('loaded');
-						setDialogOpen(false);
-					}}
-					onVoteRemoved={() => {
-						setMyVote(null);
-						setMyVoteState('loaded');
-						setDialogOpen(false);
-					}}
 				/>
 			)}
 		</div>

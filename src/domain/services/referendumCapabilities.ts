@@ -37,13 +37,17 @@ export interface ReferendumCapabilities {
 /**
  * Half-open window: `votingStartsAt <= now < votingEndsAt` — matching the
  * server-side validation contract exactly (PR-1).
+ *
+ * F17 fix: also treat Submitted + open window as votable, since the vote
+ * transaction performs lazy activation atomically.
  */
 export function deriveReferendumCapabilities(input: ReferendumCapabilityInput): ReferendumCapabilities {
 	const { status } = input;
 	const nowMs = input.now.getTime();
 	const startsOk = input.votingStartsAt ? nowMs >= input.votingStartsAt.getTime() : false;
 	const endsOk = input.votingEndsAt ? nowMs < input.votingEndsAt.getTime() : false;
-	const isVotingOpen = status === ReferendumStatus.Deciding && startsOk && endsOk;
+	const windowOpen = startsOk && endsOk;
+	const isVotingOpen = (status === ReferendumStatus.Deciding || status === ReferendumStatus.Submitted) && windowOpen;
 	const isClosed = status === ReferendumStatus.Confirmed || status === ReferendumStatus.Rejected || status === ReferendumStatus.Cancelled;
 	const canCancel = input.isAdmin && !isClosed && status !== undefined;
 

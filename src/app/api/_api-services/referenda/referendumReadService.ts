@@ -144,11 +144,21 @@ export class ReferendumReadService {
 	 * history). Uses a collection-group query on the Admin SDK — trusted path
 	 * only; the matching COLLECTION_GROUP composite index must be deployed
 	 * (see firestore.indexes.json).
+	 *
+	 * F10 fix: filter on type='referendum' to exclude discussion poll votes
+	 * that live under posts/{postId}/votes/{uid}.
 	 */
 	async listUserVotes(uid: string, limit = 20, page = 1): Promise<{ index: number; vote: ReferendumVote }[]> {
 		const cappedLimit = Math.max(1, Math.floor(limit));
 		const offset = (Math.max(1, Math.floor(page)) - 1) * cappedLimit;
-		const snapshot = await this.db.collectionGroup('votes').where('uid', '==', uid).orderBy('updatedAt', 'desc').limit(cappedLimit).offset(offset).get();
+		const snapshot = await this.db
+			.collectionGroup('votes')
+			.where('type', '==', 'referendum')
+			.where('uid', '==', uid)
+			.orderBy('updatedAt', 'desc')
+			.limit(cappedLimit)
+			.offset(offset)
+			.get();
 		// The referendum index lives on the document path: referenda/{index}/votes/{uid}.
 		return snapshot.docs.map((d) => ({
 			index: Number(d.ref.parent.parent?.id),
@@ -156,9 +166,9 @@ export class ReferendumReadService {
 		}));
 	}
 
-	/** Count of all votes cast by one user (count aggregation). */
+	/** Count of all referendum votes cast by one user (count aggregation). */
 	async countUserVotes(uid: string): Promise<number> {
-		const snapshot = await this.db.collectionGroup('votes').where('uid', '==', uid).count().get();
+		const snapshot = await this.db.collectionGroup('votes').where('type', '==', 'referendum').where('uid', '==', uid).count().get();
 		return snapshot.data().count;
 	}
 

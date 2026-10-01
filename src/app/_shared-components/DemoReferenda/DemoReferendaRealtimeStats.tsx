@@ -4,11 +4,9 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { onSnapshot, doc } from 'firebase/firestore';
-import { clientDb } from '@/app/_client-services/firebase/firebaseClientApp';
+import React from 'react';
 import { type ReferendumStatsDto } from '@/domain/dtos/ReferendaDtos';
-import { statsDtoFromSnapshotData } from '@/app/_client-services/points_referenda_client_service';
+import { useReferendumStats } from '@/hooks/usePointsReferenda';
 
 interface DemoReferendaRealtimeStatsProps {
 	index: number;
@@ -21,49 +19,19 @@ function pct(part: number, total: number): number {
 }
 
 function DemoReferendaRealtimeStats({ index, initialStats }: DemoReferendaRealtimeStatsProps) {
-	// Hydration-safe: state is seeded from the SERVER-provided value, so the
-	// first client render matches SSR markup exactly.
-	const [stats, setStats] = useState<ReferendumStatsDto | null>(initialStats);
-	const [error, setError] = useState<string | null>(null);
-
-	useEffect(() => {
-		// Exactly ONE realtime listener on referenda/{index}/stats/current —
-		// no HTTP seed fetch that could race with (and overwrite) the snapshot.
-		const statsRef = doc(clientDb, 'referenda', String(index), 'stats', 'current');
-		const unsubscribe = onSnapshot(
-			statsRef,
-			(snapshot) => {
-				if (!snapshot.exists()) {
-					setStats(null);
-					return;
-				}
-				// Snapshot → DTO via the shared client-service mapper (single
-				// source of validation/normalisation).
-				const dto = statsDtoFromSnapshotData(snapshot.data() as Record<string, unknown>);
-				if (dto) {
-					setStats(dto);
-					setError(null);
-				}
-			},
-			(err) => {
-				// eslint-disable-next-line no-console
-				console.error('[DemoReferendaRealtimeStats] onSnapshot error:', err);
-				// Preserve the last known value; just mark the feed stale.
-				setError('Live results are unavailable — showing the last known results.');
-			}
-		);
-
-		return () => unsubscribe();
-	}, [index]);
+	// F02 fix: React Query + Firestore listener via the hook is the single source
+	// of truth. The initialStats prop seeds the cache for hydration-safe SSR.
+	const { data: stats, isError } = useReferendumStats({ index, initialData: initialStats });
 
 	if (!stats) {
 		return <div className='mb-6 text-sm text-wallet_btn_text'>No vote data yet.</div>;
 	}
 
-	const total = stats.participatingPoints + stats.abstainPoints;
+	// F05 fix: participatingPoints already includes abstainPoints (aye + nay + abstain).
+	// Use it as the single denominator so all three bars sum to 100%.
 	const ayePct = pct(stats.ayePoints, stats.participatingPoints);
 	const nayPct = pct(stats.nayPoints, stats.participatingPoints);
-	const abstainPct = pct(stats.abstainPoints, total);
+	const abstainPct = pct(stats.abstainPoints, stats.participatingPoints);
 	const approvalPct = Math.round((stats.approvalBps / 100) * 100) / 100;
 
 	return (
@@ -77,7 +45,7 @@ function DemoReferendaRealtimeStats({ index, initialStats }: DemoReferendaRealti
 				<span className='text-xs font-normal text-wallet_btn_text'>
 					({stats.totalVoters} {stats.totalVoters === 1 ? 'voter' : 'voters'})
 				</span>
-				{error && <span className='ml-2 text-xs font-normal text-failure'>{error}</span>}
+				{isError && <span className='ml-2 text-xs font-normal text-failure'>Live results are unavailable — showing the last known results.</span>}
 			</h3>
 
 			{/* Aye bar */}

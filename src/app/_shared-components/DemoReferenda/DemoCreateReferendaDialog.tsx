@@ -5,6 +5,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
 import { ENotificationStatus } from '@/_shared/types';
 import { Button } from '@/app/_shared-components/Button';
@@ -18,6 +19,7 @@ interface Props {
 
 function DemoCreateReferendaDialog({ onClose, onCreated }: Props) {
 	const { toast } = useToast();
+	const router = useRouter();
 	const [title, setTitle] = useState('');
 	const [content, setContent] = useState('');
 	const [origin, setOrigin] = useState('root');
@@ -39,9 +41,8 @@ function DemoCreateReferendaDialog({ onClose, onCreated }: Props) {
 		}
 		setIsLoading(true);
 		try {
-			// Auth header, response.ok and DTO validation are handled by the
-			// unified client service (plan PR-5).
-			await createPointsReferendum({
+			// F04 fix: navigate to the new referendum's detail page after creation.
+			const created = await createPointsReferendum({
 				title,
 				content,
 				origin,
@@ -58,6 +59,7 @@ function DemoCreateReferendaDialog({ onClose, onCreated }: Props) {
 			});
 			toast({ title: 'Referendum created!', status: ENotificationStatus.SUCCESS });
 			onCreated();
+			router.push(`/referenda/${created.index}`);
 		} catch (err) {
 			toast({ title: (err as Error).message || 'Failed.', status: ENotificationStatus.ERROR });
 		} finally {

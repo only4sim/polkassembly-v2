@@ -60,3 +60,20 @@ export function referendaErrorResponse(err: unknown): NextResponse {
 
 	return NextResponse.json({ message }, { status });
 }
+
+// ─── Cache-Control helpers (F13) ─────────────────────────────────────────────
+// Prevent shared caches (CDN, proxy) from serving user-specific data to other
+// users. Applied to every JSON response from the referenda API family.
+
+/** Private, no-store — for auth-required routes (votes/me, capabilities, admin). */
+export function privateCache(response: NextResponse): NextResponse {
+	response.headers.set('Cache-Control', 'private, no-store, must-revalidate');
+	response.headers.set('Vary', 'Authorization');
+	return response;
+}
+
+/** Short public cache — for anonymous-safe routes (list, detail, stats, public votes). */
+export function publicCache(response: NextResponse, maxAgeSeconds = 10): NextResponse {
+	response.headers.set('Cache-Control', `public, s-maxage=${maxAgeSeconds}, stale-while-revalidate=30`);
+	return response;
+}

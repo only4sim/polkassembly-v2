@@ -72,8 +72,17 @@ describe('deriveReferendumCapabilities', () => {
 		});
 	});
 
-	it('Submitted is not votable even when window dates would fit', () => {
+	// F17 fix: Submitted is votable when the window is open — the vote
+	// transaction performs lazy activation atomically.
+	it('Submitted IS votable when window is open (lazy activation)', () => {
 		const caps = deriveReferendumCapabilities(base({ status: ReferendumStatus.Submitted }));
+		expect(caps.isVotingOpen).toBe(true);
+		expect(caps.canVote).toBe(true);
+	});
+
+	it('Submitted is NOT votable when window has not started yet', () => {
+		const futureStart = new Date(Date.now() + 60 * 60 * 1000);
+		const caps = deriveReferendumCapabilities(base({ status: ReferendumStatus.Submitted, votingStartsAt: futureStart }));
 		expect(caps.isVotingOpen).toBe(false);
 		expect(caps.canVote).toBe(false);
 	});

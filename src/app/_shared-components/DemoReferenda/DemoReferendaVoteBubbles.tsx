@@ -51,13 +51,15 @@ function DemoReferendaVoteBubbles({ votes }: Props) {
 
 	if (votes.length === 0) return null;
 
-	const visible = expanded ? votes.length : 30;
+	const visible = expanded ? votes.length : 20;
 
 	return (
 		<div className='mb-6 rounded-lg border border-border_grey bg-bg_modal p-4'>
 			<div className='mb-3 flex items-center justify-between'>
 				<h3 className='text-sm font-semibold text-text_primary'>{t('bubbles.title')}</h3>
-				{votes.length > 30 && (
+				{/* F07 fix: the chart receives at most 20 votes from the server page,
+				so show the expand control when we have a full page (may be more). */}
+				{votes.length >= 20 && (
 					<button
 						type='button'
 						onClick={() => setExpanded((prev) => !prev)}

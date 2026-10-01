@@ -10,7 +10,7 @@ import { ReferendumReadService } from '@/app/api/_api-services/referenda/referen
 import { ReferendaServiceError } from '@/app/api/_api-services/referenda/referendumTrustedService';
 import { getAdminDb } from '@/adapters/firestore/firestoreInit';
 import { deriveReferendumCapabilities } from '@/domain/services/referendumCapabilities';
-import { referendaErrorResponse } from '@/app/api/_api-utils/referendaErrors';
+import { referendaErrorResponse, privateCache } from '@/app/api/_api-utils/referendaErrors';
 
 const NOT_FOUND_MESSAGE = 'Referendum not found.';
 
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ inde
 			isAdmin
 		});
 
-		return NextResponse.json({ ...capabilities, pointsBalance: pointsBalance ?? null });
+		return privateCache(NextResponse.json({ ...capabilities, pointsBalance: pointsBalance ?? null }));
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

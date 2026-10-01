@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ENABLE_BLOCKCHAIN } from '@/app/api/_api-constants/apiEnvVars';
 import { ReferendumReadService } from '@/app/api/_api-services/referenda/referendumReadService';
 import { toReferendumVoteDto } from '@/domain/dtos/ReferendaDtos';
-import { referendaErrorResponse } from '@/app/api/_api-utils/referendaErrors';
+import { referendaErrorResponse, privateCache } from '@/app/api/_api-utils/referendaErrors';
 import { requireVerifiedActor } from '@/app/api/_api-utils/referendaAuth';
 
 /**
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 			};
 		});
 
-		return NextResponse.json({ items, totalCount, page, pageSize: limit });
+		return privateCache(NextResponse.json({ items, totalCount, page, pageSize: limit }));
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

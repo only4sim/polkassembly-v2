@@ -9,7 +9,7 @@ import { ReferendumTrustedService, ReferendaServiceError } from '@/app/api/_api-
 import { requireVerifiedActor } from '@/app/api/_api-utils/referendaAuth';
 import { toReferendumStatsDto, toReferendumVoteDto } from '@/domain/dtos/ReferendaDtos';
 import { ReferendumDecision } from '@/domain/entities/Referendum';
-import { referendaErrorResponse } from '@/app/api/_api-utils/referendaErrors';
+import { referendaErrorResponse, privateCache } from '@/app/api/_api-utils/referendaErrors';
 
 const NOT_FOUND_MESSAGE = 'Referendum not found.';
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ inde
 			return referendaErrorResponse(new ReferendaServiceError('not-found', NOT_FOUND_MESSAGE));
 		}
 		const vote = await service.getVote(index, actor.uid);
-		return NextResponse.json({ vote: vote ? toReferendumVoteDto(vote) : null });
+		return privateCache(NextResponse.json({ vote: vote ? toReferendumVoteDto(vote) : null }));
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}
@@ -71,7 +71,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ inde
 			decision: body.decision as ReferendumDecision,
 			pointsUsed: body.pointsUsed as number
 		});
-		return NextResponse.json({ vote: toReferendumVoteDto(vote), stats: toReferendumStatsDto(stats) });
+		return privateCache(NextResponse.json({ vote: toReferendumVoteDto(vote), stats: toReferendumStatsDto(stats) }));
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}
@@ -96,7 +96,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 		const actor = await requireVerifiedActor(req);
 		const service = new ReferendumTrustedService();
 		const stats = await service.removeVote(index, actor);
-		return NextResponse.json({ removed: true, stats: toReferendumStatsDto(stats) });
+		return privateCache(NextResponse.json({ removed: true, stats: toReferendumStatsDto(stats) }));
 	} catch (err) {
 		return referendaErrorResponse(err);
 	}

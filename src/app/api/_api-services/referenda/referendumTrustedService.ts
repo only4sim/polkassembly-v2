@@ -9,6 +9,7 @@ import { ReferendumDecision, ReferendumStatus } from '@/domain/entities/Referend
 import { type ReferendumComment } from '@/domain/entities/ReferendumComment';
 import { type ReferendumStats } from '@/domain/entities/ReferendumStats';
 import { type ReferendumVote } from '@/domain/entities/ReferendumVote';
+import { type ReferendaActivityEvent, ACTIVITY_EVENT_SCHEMA_VERSION } from '@/domain/entities/ReferendaActivityEvent';
 import { assertRemovalAllowed, validateVoteInput, validateCreationInput, VoteValidationError, CreationValidationError } from '@/domain/services/referendumValidation';
 import { applyVoteDelta, emptyReferendumStats, subtractVote } from '@/domain/services/referendumStatsDelta';
 import { computeFinalOutcome } from '@/domain/services/referendumOutcome';
@@ -101,19 +102,37 @@ export class ReferendumTrustedService {
 					throw new ReferendaServiceError('conflict', 'User profile has an invalid points balance.');
 				}
 				const displayName = (userSnap.data()?.displayName as string) || '';
+				const now = new Date();
+				const votingStartsAt = new Date(referendum.votingStartsAt);
+				const votingEndsAt = new Date(referendum.votingEndsAt);
+
+				// F17 fix: lazy activation — if the referendum is Submitted but the
+				// voting window is currently open, atomically transition to Deciding
+				// within this transaction. This prevents short windows from being
+				// missed by the 5-minute scheduler.
+				let effectiveStatus = referendum.status;
+				if (referendum.status === ReferendumStatus.Submitted && now >= votingStartsAt && now < votingEndsAt) {
+					effectiveStatus = ReferendumStatus.Deciding;
+					tx.set(ref, {
+						...refSnap.data(),
+						status: ReferendumStatus.Deciding,
+						updatedAt: Timestamp.now()
+					});
+				}
+
 				validateVoteInput({
 					uid: actor.uid,
 					decision: payload.decision,
 					pointsUsed: payload.pointsUsed,
 					pointsBalance,
-					referendumStatus: referendum.status,
-					now: new Date(),
-					votingStartsAt: new Date(referendum.votingStartsAt),
-					votingEndsAt: new Date(referendum.votingEndsAt)
+					referendumStatus: effectiveStatus,
+					now,
+					votingStartsAt,
+					votingEndsAt
 				});
 				const prev = voteSnap.exists ? mapVote(voteSnap.data()!, actor.uid) : null;
 				const stats = statsSnap.exists ? mapStats(statsSnap.data()!) : emptyReferendumStats();
-				const now = Timestamp.now();
+				const nowTs = Timestamp.now();
 				const nextStats = applyVoteDelta(stats, prev, payload);
 				tx.set(voteRef, {
 					uid: actor.uid,
@@ -121,9 +140,12 @@ export class ReferendumTrustedService {
 					decision: payload.decision,
 					pointsUsed: payload.pointsUsed,
 					balanceAtVote: pointsBalance,
-					createdAt: prev ? prev.createdAt : now,
-					updatedAt: now,
-					schemaVersion: VOTE_SCHEMA_VERSION
+					createdAt: prev ? prev.createdAt : nowTs,
+					updatedAt: nowTs,
+					schemaVersion: VOTE_SCHEMA_VERSION,
+					// F10 fix: discriminator so collectionGroup('votes') queries can
+					// distinguish referendum votes from discussion poll votes.
+					type: 'referendum'
 				});
 				tx.set(statsRef, {
 					ayePoints: nextStats.ayePoints,
@@ -133,8 +155,18 @@ export class ReferendumTrustedService {
 					nayVoters: nextStats.nayVoters,
 					abstainVoters: nextStats.abstainVoters,
 					totalVoters: nextStats.totalVoters,
-					updatedAt: now,
+					updatedAt: nowTs,
 					schemaVersion: STATS_SCHEMA_VERSION
+				});
+				// F16/P7: write activity event transactionally
+				const eventType = prev ? 'vote_changed' : 'vote_cast';
+				this.db.collection('referendaActivityEvents').add({
+					index,
+					type: eventType,
+					occurredAt: nowTs,
+					actorDisplayName: displayName,
+					summary: `${displayName} ${prev ? 'changed' : 'cast'} a ${payload.decision} vote with ${payload.pointsUsed} points`,
+					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
 				});
 				return {
 					vote: {
@@ -143,8 +175,8 @@ export class ReferendumTrustedService {
 						decision: payload.decision,
 						pointsUsed: payload.pointsUsed,
 						balanceAtVote: pointsBalance,
-						createdAt: prev ? prev.createdAt : now.toDate().toISOString(),
-						updatedAt: now.toDate().toISOString(),
+						createdAt: prev ? prev.createdAt : nowTs.toDate().toISOString(),
+						updatedAt: nowTs.toDate().toISOString(),
 						schemaVersion: VOTE_SCHEMA_VERSION
 					},
 					stats: nextStats
@@ -183,6 +215,14 @@ export class ReferendumTrustedService {
 					updatedAt: now,
 					schemaVersion: STATS_SCHEMA_VERSION
 				});
+				// F16/P7: activity event for vote removal
+				this.db.collection('referendaActivityEvents').add({
+					index,
+					type: 'vote_removed',
+					occurredAt: now,
+					summary: `Vote removed for referendum #${index}`,
+					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
+				});
 				return nextStats;
 			});
 		} catch (err) {
@@ -210,7 +250,7 @@ export class ReferendumTrustedService {
 				throw new ReferendaServiceError('invalid-argument', 'The voting window has already expired.');
 			}
 			const initialStatus = nowMs >= validated.votingStartsAt.getTime() ? ReferendumStatus.Deciding : ReferendumStatus.Submitted;
-			return this.repo.create({
+			const created = await this.repo.create({
 				title: validated.title,
 				content: validated.content,
 				authorUid: actor.uid,
@@ -224,6 +264,16 @@ export class ReferendumTrustedService {
 				minimumTurnoutPoints: validated.minimumTurnoutPoints,
 				schemaVersion: REFERENDUM_SCHEMA_VERSION
 			});
+			// F16/P7: activity event for creation
+			await this.db.collection('referendaActivityEvents').add({
+				index: created.index,
+				type: 'created',
+				occurredAt: Timestamp.now(),
+				actorDisplayName: authorDisplayName,
+				summary: `Referendum #${created.index} created: ${validated.title}`,
+				schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
+			});
+			return created;
 		} catch (err) {
 			throw toServiceError(err);
 		}
@@ -256,6 +306,14 @@ export class ReferendumTrustedService {
 				const outcome = computeFinalOutcome(existing.approvalThresholdBps, existing.minimumTurnoutPoints, stats);
 				const now = Timestamp.now();
 				tx.update(ref, { status: outcome.outcome, closedAt: now, updatedAt: now });
+				// F16/P7: activity event for finalization
+				this.db.collection('referendaActivityEvents').add({
+					index,
+					type: outcome.outcome === ReferendumStatus.Confirmed ? 'confirmed' : 'rejected',
+					occurredAt: now,
+					summary: `Referendum #${index} ${outcome.outcome.toLowerCase()}`,
+					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
+				});
 				return { status: outcome.outcome, outcome: outcome.outcome };
 			});
 		} catch (err) {
@@ -276,6 +334,14 @@ export class ReferendumTrustedService {
 					throw new ReferendaServiceError('conflict', 'Referendum is already closed.');
 				}
 				tx.update(ref, { status: ReferendumStatus.Cancelled, closedAt: Timestamp.now(), updatedAt: Timestamp.now() });
+				// F16/P7: activity event for cancellation
+				this.db.collection('referendaActivityEvents').add({
+					index,
+					type: 'cancelled',
+					occurredAt: Timestamp.now(),
+					summary: `Referendum #${index} cancelled`,
+					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
+				});
 			});
 		} catch (err) {
 			throw toServiceError(err);
@@ -301,6 +367,10 @@ export class ReferendumTrustedService {
 
 			const referendumSnap = await referendumDoc(this.db, index).get();
 			if (!referendumSnap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
+			// P7: discussion lock check — locked referenda reject new comments
+			if (referendumSnap.data()?.discussionLocked === true) {
+				throw new ReferendaServiceError('forbidden', 'Discussion is locked.');
+			}
 
 			const now = Timestamp.now();
 			const ref = await commentsRef(this.db, index).add({
@@ -347,5 +417,65 @@ export class ReferendumTrustedService {
 		} catch (err) {
 			throw toServiceError(err);
 		}
+	}
+
+	/**
+	 * F16/P7: Toggle discussion lock (admin-only). Locking prevents new comments
+	 * but does not affect voting, status, or thresholds. Unlocking restores
+	 * comment writing. Records an activity event for the feed.
+	 */
+	async setDiscussionLock(index: number, locked: boolean, actor: VerifiedActor, isAdmin: boolean): Promise<void> {
+		try {
+			if (!isAdmin) throw new ReferendaServiceError('forbidden', 'Only administrators can lock discussions.');
+			await this.db.runTransaction(async (tx) => {
+				const ref = referendumDoc(this.db, index);
+				const snap = await tx.get(ref);
+				if (!snap.exists) throw new ReferendaServiceError('not-found', 'Referendum not found.');
+				const now = Timestamp.now();
+				tx.update(ref, { discussionLocked: locked, updatedAt: now });
+				const eventsRef = this.db.collection('referendaActivityEvents');
+				eventsRef.add({
+					index,
+					type: locked ? 'discussion_locked' : 'discussion_unlocked',
+					occurredAt: now,
+					actorDisplayName: actor.displayName,
+					summary: locked ? 'Discussion locked by admin' : 'Discussion unlocked by admin',
+					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
+				});
+			});
+		} catch (err) {
+			throw toServiceError(err);
+		}
+	}
+
+	/**
+	 * F16/P7: List recent activity events for the public feed.
+	 * Ordered by occurredAt descending (most recent first).
+	 */
+	async listActivityEvents(options: { limit?: number; page?: number } = {}): Promise<{ items: ReferendaActivityEvent[]; totalCount: number }> {
+		const limit = Math.max(1, Math.floor(options.limit ?? 20));
+		const page = Math.max(1, Math.floor(options.page ?? 1));
+		const ref = this.db.collection('referendaActivityEvents');
+		const [snapshot, countSnap] = await Promise.all([
+			ref
+				.orderBy('occurredAt', 'desc')
+				.limit(limit)
+				.offset((page - 1) * limit)
+				.get(),
+			ref.count().get()
+		]);
+		const items = snapshot.docs.map((d) => {
+			const data = d.data();
+			return {
+				id: d.id,
+				index: data.index as number,
+				type: data.type as ReferendaActivityEvent['type'],
+				occurredAt: (data.occurredAt as Timestamp).toDate().toISOString(),
+				actorDisplayName: data.actorDisplayName as string | undefined,
+				summary: data.summary as string | undefined,
+				schemaVersion: data.schemaVersion as number
+			};
+		});
+		return { items, totalCount: countSnap.data().count };
 	}
 }

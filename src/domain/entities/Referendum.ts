@@ -92,6 +92,8 @@ export interface Referendum {
 	updatedAt: string;
 	/** Set when the referendum is finalised or cancelled. */
 	closedAt?: string;
+	/** P7: admin-controlled discussion lock. When true, new comments are rejected. */
+	discussionLocked?: boolean;
 	/** Schema version for forward/backward compatibility. */
 	schemaVersion: number;
 }

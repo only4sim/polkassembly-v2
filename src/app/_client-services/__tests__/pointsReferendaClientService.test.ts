@@ -73,8 +73,11 @@ const VALID_STATS = {
 	nayVoters: 1,
 	abstainVoters: 1,
 	totalVoters: 4,
+	// F01 fix: approvalBps and participatingPoints are now computed on the client
+	// approvalBps = 60 / (60 + 40) * 10000 = 6000
+	// participatingPoints = 60 + 40 + 10 = 110
 	approvalBps: 6000,
-	participatingPoints: 100,
+	participatingPoints: 110,
 	updatedAt: TS
 };
 
@@ -114,7 +117,7 @@ describe('DTO runtime validation', () => {
 		};
 		const dto = statsDtoFromSnapshotData(snapshotData as any);
 		expect(dto?.updatedAt).toBe('2026-02-03T04:05:06.000Z');
-		expect(dto?.participatingPoints).toBe(100);
+		expect(dto?.participatingPoints).toBe(110);
 	});
 
 	it('returns null when a snapshot lacks numeric fields', () => {
@@ -286,7 +289,8 @@ describe('mutations', () => {
 		const fn = mockFetchOnce(200, { vote: VALID_VOTE, stats: VALID_STATS });
 		const { vote, stats } = await upsertMyVote(1, VALID_VOTE.decision as ReferendumDecision, 25);
 		expect(vote.uid).toBe('u1');
-		expect(stats.participatingPoints).toBe(100);
+		// F01 fix: participatingPoints is now computed as ayePoints + nayPoints + abstainPoints = 110
+		expect(stats.participatingPoints).toBe(110);
 		expect((fn.mock.calls[0][1] as { method: string }).method).toBe('PUT');
 		mockFetchOnce(200, { vote: VALID_VOTE });
 		await expect(upsertMyVote(1, VALID_VOTE.decision as ReferendumDecision, 25)).rejects.toBeInstanceOf(PointsReferendaApiError);

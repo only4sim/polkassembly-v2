@@ -29,7 +29,8 @@ interface Props {
 	initialStatsMap: Record<string, { ayePoints: number; nayPoints: number; participatingPoints: number }> | null;
 }
 
-const STATUS_FILTERS = ['Submitted', 'Deciding', 'Confirmed', 'Rejected'] as const;
+// F15 fix: include Cancelled in the status filters.
+const STATUS_FILTERS = ['Submitted', 'Deciding', 'Confirmed', 'Rejected', 'Cancelled'] as const;
 
 function hrefFor(page: number, statuses: string[]): string {
 	const params = new URLSearchParams();
