@@ -8,17 +8,26 @@ runConfig:
   # memoryMiB: 512
 
 # Environment variables and secrets.
-# env:
-  # Configure environment variables.
-  # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
-  # - variable: MESSAGE
-  #   value: Hello world!
-  #   availability:
-  #     - BUILD
-  #     - RUNTIME
-
-  # Grant access to secrets in Cloud Secret Manager.
-  # You can create secrets with the CLI command `firebase apphosting:secrets:set <secretName>`.
-  # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
-  # - variable: MY_SECRET
-  #   secret: mySecretRef
+env:
+  # DemoOS mode: disable blockchain integration
+  - variable: ENABLE_BLOCKCHAIN
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_ENABLE_BLOCKCHAIN
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
+  # Disable features not needed for DemoOS
+  - variable: ENABLE_INDEXERS
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: ENABLE_REDIS
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
