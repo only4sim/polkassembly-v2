@@ -86,7 +86,8 @@ export class ReferendumTrustedService {
 
 	async upsertVote(index: number, actor: VerifiedActor, payload: VotePayload): Promise<{ vote: ReferendumVote; stats: ReferendumStats }> {
 		try {
-			return await this.db.runTransaction(async (tx) => {
+			const eventRef: { current: { eventType: string; displayName: string; summary: string; nowTs: Timestamp } | null } = { current: null };
+			const result = await this.db.runTransaction(async (tx) => {
 				const ref = referendumDoc(this.db, index);
 				const voteRef = voteDoc(this.db, index, actor.uid);
 				const userRef = this.db.collection('users').doc(actor.uid);
@@ -158,16 +159,14 @@ export class ReferendumTrustedService {
 					updatedAt: nowTs,
 					schemaVersion: STATS_SCHEMA_VERSION
 				});
-				// F16/P7: write activity event transactionally
+				// Capture activity event data to write AFTER the transaction commits
 				const eventType = prev ? 'vote_changed' : 'vote_cast';
-				this.db.collection('referendaActivityEvents').add({
-					index,
-					type: eventType,
-					occurredAt: nowTs,
-					actorDisplayName: displayName,
+				eventRef.current = {
+					eventType,
+					displayName,
 					summary: `${displayName} ${prev ? 'changed' : 'cast'} a ${payload.decision} vote with ${payload.pointsUsed} points`,
-					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
-				});
+					nowTs
+				};
 				return {
 					vote: {
 						uid: actor.uid,
@@ -182,6 +181,18 @@ export class ReferendumTrustedService {
 					stats: nextStats
 				};
 			});
+			// Write activity event only after the transaction commits successfully
+			if (eventRef.current) {
+				await this.db.collection('referendaActivityEvents').add({
+					index,
+					type: eventRef.current.eventType,
+					occurredAt: eventRef.current.nowTs,
+					actorDisplayName: eventRef.current.displayName,
+					summary: eventRef.current.summary,
+					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
+				});
+			}
+			return result;
 		} catch (err) {
 			throw toServiceError(err);
 		}
@@ -189,7 +200,8 @@ export class ReferendumTrustedService {
 
 	async removeVote(index: number, actor: VerifiedActor): Promise<ReferendumStats> {
 		try {
-			return await this.db.runTransaction(async (tx) => {
+			const eventRef: { current: { now: Timestamp } | null } = { current: null };
+			const result = await this.db.runTransaction(async (tx) => {
 				const ref = referendumDoc(this.db, index);
 				const voteRef = voteDoc(this.db, index, actor.uid);
 				const statsRef = statsDoc(this.db, index);
@@ -215,16 +227,21 @@ export class ReferendumTrustedService {
 					updatedAt: now,
 					schemaVersion: STATS_SCHEMA_VERSION
 				});
-				// F16/P7: activity event for vote removal
-				this.db.collection('referendaActivityEvents').add({
+				// Capture activity event to write after transaction commits
+				eventRef.current = { now };
+				return nextStats;
+			});
+			// Write activity event only after the transaction commits successfully
+			if (eventRef.current) {
+				await this.db.collection('referendaActivityEvents').add({
 					index,
 					type: 'vote_removed',
-					occurredAt: now,
+					occurredAt: eventRef.current.now,
 					summary: `Vote removed for referendum #${index}`,
 					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
 				});
-				return nextStats;
-			});
+			}
+			return result;
 		} catch (err) {
 			throw toServiceError(err);
 		}
@@ -290,7 +307,8 @@ export class ReferendumTrustedService {
 		try {
 			if (!isAdmin) throw new ReferendaServiceError('forbidden', 'Only administrators can finalize.');
 			const nowMs = Date.now();
-			return this.db.runTransaction(async (tx) => {
+			const eventRef: { current: { type: 'confirmed' | 'rejected'; now: Timestamp } | null } = { current: null };
+			const result = this.db.runTransaction(async (tx) => {
 				const ref = referendumDoc(this.db, index);
 				const statsRef = statsDoc(this.db, index);
 				const [snap, statsSnap] = await Promise.all([tx.get(ref), tx.get(statsRef)]);
@@ -306,16 +324,25 @@ export class ReferendumTrustedService {
 				const outcome = computeFinalOutcome(existing.approvalThresholdBps, existing.minimumTurnoutPoints, stats);
 				const now = Timestamp.now();
 				tx.update(ref, { status: outcome.outcome, closedAt: now, updatedAt: now });
-				// F16/P7: activity event for finalization
-				this.db.collection('referendaActivityEvents').add({
-					index,
+				// Capture activity event to write after transaction commits
+				eventRef.current = {
 					type: outcome.outcome === ReferendumStatus.Confirmed ? 'confirmed' : 'rejected',
-					occurredAt: now,
-					summary: `Referendum #${index} ${outcome.outcome.toLowerCase()}`,
-					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
-				});
+					now
+				};
 				return { status: outcome.outcome, outcome: outcome.outcome };
 			});
+			const resolved = await result;
+			// Write activity event only after the transaction commits successfully
+			if (eventRef.current) {
+				await this.db.collection('referendaActivityEvents').add({
+					index,
+					type: eventRef.current.type,
+					occurredAt: eventRef.current.now,
+					summary: `Referendum #${index} ${eventRef.current.type}`,
+					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
+				});
+			}
+			return resolved;
 		} catch (err) {
 			throw toServiceError(err);
 		}
@@ -325,6 +352,7 @@ export class ReferendumTrustedService {
 		try {
 			if (!actorUid) throw new ReferendaServiceError('unauthorized', 'You must be logged in.');
 			if (!isAdmin) throw new ReferendaServiceError('forbidden', 'Only administrators can cancel.');
+			let cancelled = false;
 			await this.db.runTransaction(async (tx) => {
 				const ref = referendumDoc(this.db, index);
 				const snap = await tx.get(ref);
@@ -334,15 +362,18 @@ export class ReferendumTrustedService {
 					throw new ReferendaServiceError('conflict', 'Referendum is already closed.');
 				}
 				tx.update(ref, { status: ReferendumStatus.Cancelled, closedAt: Timestamp.now(), updatedAt: Timestamp.now() });
-				// F16/P7: activity event for cancellation
-				this.db.collection('referendaActivityEvents').add({
+				cancelled = true;
+			});
+			// Write activity event only after the transaction commits successfully
+			if (cancelled) {
+				await this.db.collection('referendaActivityEvents').add({
 					index,
 					type: 'cancelled',
 					occurredAt: Timestamp.now(),
 					summary: `Referendum #${index} cancelled`,
 					schemaVersion: ACTIVITY_EVENT_SCHEMA_VERSION
 				});
-			});
+			}
 		} catch (err) {
 			throw toServiceError(err);
 		}

@@ -4,7 +4,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { type ReferendumCommentDto } from '@/domain/dtos/ReferendaDtos';
 import { MarkdownViewer } from '@ui/MarkdownViewer/MarkdownViewer';
@@ -22,12 +22,6 @@ interface Props {
 	initialComments: { items: ReferendumCommentDto[]; totalCount: number } | null;
 }
 
-/**
- * Referendum comments (plan PR-7). Reuses the Demo comment visual language
- * (MarkdownViewer, login gate, own-delete) without the post-path assumptions.
- * All writes go through React Query mutations; the hook handles cache
- * invalidation so the list stays consistent (F02/F03).
- */
 function DemoReferendaComments({ index, initialComments }: Props) {
 	const { toast } = useToast();
 	const t = useTranslations('DemoReferenda');
@@ -35,17 +29,38 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 	const [authReady, setAuthReady] = useState(false);
 	const [content, setContent] = useState('');
 	const [deletingId, setDeletingId] = useState<string | null>(null);
-	// F06 fix: client-side page accumulator — "Load more" appends subsequent pages.
 	const [page, setPage] = useState(1);
+	const [accumulated, setAccumulated] = useState<ReferendumCommentDto[]>(() => initialComments?.items ?? []);
+	const prevDataRef = useRef<ReferendumCommentDto[] | null>(null);
 
 	const initialPage = initialComments ? { ...initialComments, page: 1, pageSize: 20 } : null;
 	const { data: commentsData } = useReferendumComments({ index, page, initialData: page === 1 ? initialPage : undefined });
 	const addComment = useAddComment(index);
 	const deleteComment = useDeleteComment(index);
 
-	const comments = commentsData?.items ?? initialComments?.items ?? [];
+	useEffect(() => {
+		const newItems = commentsData?.items;
+		if (!newItems || newItems === prevDataRef.current) return;
+		prevDataRef.current = newItems;
+		if (page === 1) {
+			setAccumulated(newItems);
+		} else {
+			setAccumulated((prev) => {
+				const existingIds = new Set(prev.map((c) => c.id));
+				const fresh = newItems.filter((c) => !existingIds.has(c.id));
+				return fresh.length > 0 ? [...prev, ...fresh] : prev;
+			});
+		}
+	}, [commentsData, page]);
+
+	useEffect(() => {
+		setAccumulated(initialComments?.items ?? []);
+		setPage(1);
+		prevDataRef.current = null;
+	}, [index, initialComments]);
+
 	const totalCount = commentsData?.totalCount ?? initialComments?.totalCount ?? 0;
-	const hasMore = comments.length < totalCount;
+	const hasMore = accumulated.length < totalCount;
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(clientAuth, (user) => {
@@ -89,11 +104,11 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 				{t('comments.title')} <span className='text-xs font-normal text-wallet_btn_text'>({totalCount})</span>
 			</h3>
 
-			{comments.length === 0 ? (
+			{accumulated.length === 0 ? (
 				<p className='text-sm text-wallet_btn_text'>{t('comments.empty')}</p>
 			) : (
 				<ul className='divide-y divide-border_grey'>
-					{comments.map((comment) => (
+					{accumulated.map((comment) => (
 						<li
 							key={comment.id}
 							className='py-3'
@@ -125,7 +140,6 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 				</ul>
 			)}
 
-			{/* F06 fix: pagination — load more comments when available */}
 			{hasMore && (
 				<div className='mt-3 flex justify-center'>
 					<Button
@@ -138,7 +152,6 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 				</div>
 			)}
 
-			{/* Add comment — login gated; trusted write via React Query mutation */}
 			<div className='mt-4'>
 				{!authReady ? null : authUid ? (
 					<div>

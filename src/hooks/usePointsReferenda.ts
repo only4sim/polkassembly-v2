@@ -53,7 +53,7 @@ interface UseReferendumStatsOptions {
 
 export function useReferendumStats({ index, initialData }: UseReferendumStatsOptions) {
 	const queryClient = useQueryClient();
-	const queryKey = referendaKeys.stats(index);
+	const queryKey = useMemo(() => referendaKeys.stats(index), [index]);
 
 	// Seed the cache with SSR data so the first render is hydration-safe.
 	useEffect(() => {
@@ -117,7 +117,7 @@ interface UseMyVoteOptions {
 }
 
 export function useMyVote({ index, uid }: UseMyVoteOptions) {
-	const queryKey = referendaKeys.myVote(index);
+	const queryKey = useMemo(() => referendaKeys.myVote(index), [index]);
 
 	// F09 fix: when the UID changes (user switch), immediately clear the cache
 	// so stale data from the previous user is never shown.

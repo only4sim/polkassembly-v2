@@ -148,9 +148,6 @@ function DemoReferendaPage({ initialList, initialPage, initialStatuses, initialS
 					onClose={() => setCreateOpen(false)}
 					onCreated={() => {
 						setCreateOpen(false);
-						// Frozen contract (PR-5): refresh via the server provider so the
-						// list (including page one) reflects the creation immediately.
-						router.refresh();
 					}}
 				/>
 			)}

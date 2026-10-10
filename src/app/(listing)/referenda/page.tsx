@@ -5,6 +5,8 @@
 import { Metadata } from 'next';
 import { type ReferendumSummaryDto } from '@/domain/dtos/ReferendaDtos';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(): Promise<Metadata> {
 	if (process.env.ENABLE_BLOCKCHAIN !== 'true') {
 		return { title: 'Referenda – DemoOS' };
