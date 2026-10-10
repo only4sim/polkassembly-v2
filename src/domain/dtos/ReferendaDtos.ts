@@ -29,6 +29,7 @@ export interface ReferendumDetailDto extends ReferendumSummaryDto {
 	content: string;
 	updatedAt: string;
 	closedAt?: string;
+	discussionLocked?: boolean;
 	schemaVersion: number;
 }
 
@@ -114,6 +115,7 @@ export function toReferendumDetailDto(r: Referendum): ReferendumDetailDto {
 		createdAt: r.createdAt,
 		updatedAt: r.updatedAt,
 		closedAt: r.closedAt,
+		discussionLocked: r.discussionLocked,
 		schemaVersion: r.schemaVersion
 	};
 }

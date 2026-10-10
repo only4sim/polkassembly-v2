@@ -21,7 +21,7 @@ import { clientAuth } from '@/app/_client-services/firebase/firebaseClientApp';
 import { onAuthStateChanged } from 'firebase/auth';
 import { cancelReferendum, adminFinalizeReferendum } from '@/app/_client-services/points_referenda_client_service';
 import DemoReferendaComments from '@/app/_shared-components/DemoReferenda/DemoReferendaComments';
-import { useMyVote, useCapabilities, usePublicVotes } from '@/hooks/usePointsReferenda';
+import { useMyVote, useCapabilities, usePublicVotes, useReferendumDetail } from '@/hooks/usePointsReferenda';
 
 interface Props {
 	index: number;
@@ -37,7 +37,9 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 	const router = useRouter();
 	const { toast } = useToast();
 	const t = useTranslations('DemoReferenda');
-	const referendum = initialDetail;
+	// Use the hook to enable auto-refetch; fall back to SSR data while loading.
+	const { data: fetchedDetail } = useReferendumDetail({ index, initialData: initialDetail });
+	const referendum = fetchedDetail ?? initialDetail;
 	const [authReady, setAuthReady] = useState(false);
 	const [authUid, setAuthUid] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -284,6 +286,7 @@ function DemoReferendaDetail({ index, initialDetail, initialStats, initialHistor
 			<DemoReferendaComments
 				index={index}
 				initialComments={initialComments}
+				discussionLocked={referendum.discussionLocked}
 			/>
 
 			{dialogOpen && (

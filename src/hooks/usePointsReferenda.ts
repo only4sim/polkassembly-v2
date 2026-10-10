@@ -188,6 +188,8 @@ export function useUpsertVote(index: number) {
 			// case the listener is temporarily disconnected.
 			queryClient.invalidateQueries({ queryKey: referendaKeys.stats(index) });
 			queryClient.invalidateQueries({ queryKey: referendaKeys.capabilities(index) });
+			// Invalidate detail so status changes (e.g., Submitted→Deciding) are picked up.
+			queryClient.invalidateQueries({ queryKey: referendaKeys.detail(index) });
 		}
 	});
 }
@@ -201,6 +203,7 @@ export function useRemoveVote(index: number) {
 			queryClient.invalidateQueries({ queryKey: referendaKeys.votes(index) });
 			queryClient.invalidateQueries({ queryKey: referendaKeys.stats(index) });
 			queryClient.invalidateQueries({ queryKey: referendaKeys.capabilities(index) });
+			queryClient.invalidateQueries({ queryKey: referendaKeys.detail(index) });
 		}
 	});
 }

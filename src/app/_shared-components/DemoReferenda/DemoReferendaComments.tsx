@@ -20,9 +20,11 @@ interface Props {
 	index: number;
 	/** Server-rendered first page of comments (plan PR-7). */
 	initialComments: { items: ReferendumCommentDto[]; totalCount: number } | null;
+	/** P7: admin-controlled discussion lock. When true, new comments are rejected. */
+	discussionLocked?: boolean;
 }
 
-function DemoReferendaComments({ index, initialComments }: Props) {
+function DemoReferendaComments({ index, initialComments, discussionLocked }: Props) {
 	const { toast } = useToast();
 	const t = useTranslations('DemoReferenda');
 	const [authUid, setAuthUid] = useState<string | null>(null);
@@ -153,7 +155,11 @@ function DemoReferendaComments({ index, initialComments }: Props) {
 			)}
 
 			<div className='mt-4'>
-				{!authReady ? null : authUid ? (
+				{discussionLocked ? (
+					<p className='rounded-lg border border-border_grey bg-bg_modal p-3 text-sm text-wallet_btn_text'>
+						{t('comments.locked') ?? 'Discussion is locked. New comments are not accepted.'}
+					</p>
+				) : !authReady ? null : authUid ? (
 					<div>
 						<label
 							htmlFor='comment-input'
