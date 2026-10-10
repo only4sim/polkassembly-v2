@@ -16,15 +16,20 @@
  *   1. Start the Firebase emulator: `firebase emulators:start --only firestore,auth`
  *   2. Run this script: `npx tsx scripts/populate-test-data.ts`
  *
- * The script connects to the Firestore emulator at 127.0.0.1:8080.
+ * The script connects to the Firestore emulator at 127.0.0.1:8080
+ * and Auth emulator at 127.0.0.1:9099.
  */
 
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-console */
 
+// Must be set BEFORE importing firebase-admin modules
 import { Timestamp } from 'firebase-admin/firestore';
+import * as admin from 'firebase-admin';
 
 process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
+process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
 process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'demo-test-data';
+process.env.NODE_ENV = 'development';
 
 const PROJECT_ID = 'demo-test-data';
 const NUM_USERS = 25;
@@ -37,17 +42,18 @@ interface TestUser {
 	pointsBalance: number;
 }
 
+// Initialize admin SDK for emulator
+if (!admin.apps.length) {
+	admin.initializeApp({
+		projectId: PROJECT_ID
+	});
+}
+
 async function main() {
 	console.log('🚀 Starting test data population...\n');
 
-	const { initializeApp } = await import('firebase-admin/app');
-	const { getAuth } = await import('firebase-admin/auth');
-
-	initializeApp({ projectId: PROJECT_ID });
-	const auth = getAuth();
-
-	const { getAdminDb } = await import('@/adapters/firestore/firestoreInit');
-	const db = getAdminDb();
+	const auth = admin.auth();
+	const db = admin.firestore();
 
 	const { ReferendumTrustedService } = await import('@/app/api/_api-services/referenda/referendumTrustedService');
 	const trustedService = new ReferendumTrustedService();
@@ -65,7 +71,8 @@ async function main() {
 		try {
 			await auth.createUser({ uid, email, displayName });
 		} catch (err) {
-			if ((err as { code?: string }).code !== 'auth/uid-exists') throw err;
+			const { code } = err as { code?: string };
+			if (code !== 'auth/uid-already-exists' && code !== 'auth/uid-exists') throw err;
 		}
 
 		await db
@@ -84,6 +91,11 @@ async function main() {
 
 		users.push({ uid, email, displayName, pointsBalance });
 		console.log(`  ✓ Created ${displayName} (${pointsBalance} points${i === 1 ? ', admin' : ''})`);
+
+		// Small delay to avoid transaction lock timeouts in emulator
+		await new Promise((resolve) => {
+			setTimeout(resolve, 50);
+		});
 	}
 
 	// Step 2: Create a test referendum
@@ -122,7 +134,7 @@ Use this referendum to test:
 
 	const actor = { uid: users[0].uid, displayName: users[0].displayName };
 	const created = await trustedService.createReferendum(actor, referendumInput);
-	const referendumIndex = created.referendum.index;
+	const referendumIndex = created.index;
 
 	console.log(`  ✓ Created referendum #${referendumIndex}`);
 
@@ -140,6 +152,11 @@ Use this referendum to test:
 		await trustedService.upsertVote(referendumIndex, voteActor, { decision, pointsUsed });
 
 		console.log(`  ✓ ${user.displayName} voted ${decision} with ${pointsUsed} points`);
+
+		// Small delay to avoid transaction lock timeouts in emulator
+		await new Promise((resolve) => {
+			setTimeout(resolve, 100);
+		});
 	}
 
 	// Step 4: Add comments from all users
@@ -174,13 +191,20 @@ Use this referendum to test:
 	];
 
 	for (let i = 0; i < NUM_COMMENTS; i += 1) {
+		// eslint-disable-next-line security/detect-object-injection
 		const user = users[i % users.length];
+		// eslint-disable-next-line security/detect-object-injection
 		const content = commentTemplates[i % commentTemplates.length];
 
 		const commentActor = { uid: user.uid, displayName: user.displayName };
 		await trustedService.addComment(referendumIndex, commentActor, content);
 
 		console.log(`  ✓ ${user.displayName} commented: "${content.substring(0, 50)}..."`);
+
+		// Small delay to avoid transaction lock timeouts in emulator
+		await new Promise((resolve) => {
+			setTimeout(resolve, 100);
+		});
 	}
 
 	// Summary

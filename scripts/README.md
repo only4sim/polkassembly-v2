@@ -119,7 +119,14 @@ The first user created by `populate-test-data.ts` is an admin:
 
 ## Notes
 
-- All scripts connect to the emulator at `127.0.0.1:8080`
+- All scripts connect to the emulator at `127.0.0.1:8080` (Firestore) and `127.0.0.1:9099` (Auth)
 - Data is isolated to the `demo-test-data` project
-- Restart the emulator to clear all data: `firebase emulators:start --only firestore,auth --project demo-test-data`
 - Scripts are idempotent - running them multiple times won't create duplicate users
+- Small delays are added between operations to avoid emulator transaction lock timeouts
+- To clear all test data and start fresh:
+  ```bash
+  # Clear Firestore
+  curl -X DELETE "http://127.0.0.1:8080/emulator/v1/projects/demo-test-data/databases/(default)/documents"
+  # Clear Auth
+  curl -X DELETE "http://127.0.0.1:9099/emulator/v1/projects/demo-test-data/accounts"
+  ```

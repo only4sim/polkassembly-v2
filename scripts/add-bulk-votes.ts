@@ -18,10 +18,23 @@
 
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-console */
 
+// Must be set BEFORE importing firebase-admin modules
+import { Timestamp } from 'firebase-admin/firestore';
+import * as admin from 'firebase-admin';
+
 process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
+process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
 process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'demo-test-data';
+process.env.NODE_ENV = 'development';
 
 const PROJECT_ID = 'demo-test-data';
+
+// Initialize admin SDK for emulator
+if (!admin.apps.length) {
+	admin.initializeApp({
+		projectId: PROJECT_ID
+	});
+}
 
 async function main() {
 	const args = process.argv.slice(2);
@@ -35,24 +48,14 @@ async function main() {
 
 	console.log(`🚀 Adding ${numVotes} votes to referendum #${referendumIndex}...\n`);
 
-	const { initializeApp } = await import('firebase-admin/app');
-	const { getAuth } = await import('firebase-admin/auth');
-
-	initializeApp({ projectId: PROJECT_ID });
-	const auth = getAuth();
-
-	const { getAdminDb } = await import('@/adapters/firestore/firestoreInit');
-	const db = getAdminDb();
+	const auth = admin.auth();
+	const db = admin.firestore();
 
 	const { ReferendumTrustedService } = await import('@/app/api/_api-services/referenda/referendumTrustedService');
 	const { ReferendumDecision } = await import('@/domain/entities/Referendum');
 	const trustedService = new ReferendumTrustedService();
 
-	const decisions: Array<typeof ReferendumDecision.Aye | typeof ReferendumDecision.Nay | typeof ReferendumDecision.Abstain> = [
-		ReferendumDecision.Aye,
-		ReferendumDecision.Nay,
-		ReferendumDecision.Abstain
-	];
+	const decisions = [ReferendumDecision.AYE, ReferendumDecision.NAY, ReferendumDecision.ABSTAIN];
 
 	for (let i = 1; i <= numVotes; i += 1) {
 		const uid = `bulk-voter-${i}`;
@@ -63,14 +66,14 @@ async function main() {
 		try {
 			await auth.createUser({ uid, email, displayName });
 		} catch (err) {
-			if ((err as { code?: string }).code !== 'auth/uid-exists') throw err;
+			const { code } = err as { code?: string };
+			if (code !== 'auth/uid-already-exists' && code !== 'auth/uid-exists') throw err;
 		}
 
 		const userDoc = db.collection('users').doc(uid);
 		const userSnap = await userDoc.get();
 
 		if (!userSnap.exists) {
-			const { Timestamp } = await import('firebase-admin/firestore');
 			await userDoc.set({
 				uid,
 				email,
@@ -90,6 +93,11 @@ async function main() {
 		await trustedService.upsertVote(referendumIndex, actor, { decision, pointsUsed });
 
 		console.log(`  ✓ ${displayName} voted ${decision} with ${pointsUsed} points`);
+
+		// Small delay to avoid transaction lock timeouts in emulator
+		await new Promise((resolve) => {
+			setTimeout(resolve, 100);
+		});
 	}
 
 	console.log(`\n✅ Added ${numVotes} votes to referendum #${referendumIndex}`);
