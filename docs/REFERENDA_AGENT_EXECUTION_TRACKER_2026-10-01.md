@@ -4,33 +4,33 @@
 
 ## 1 当前执行状态
 
-| 字段                   | 内容                                                   |
-| ---------------------- | ------------------------------------------------------ |
-| 当前实施 SHA 与分支    | ec7d20d8（工作区未提交改动，26 文件）                  |
-| 工作区已有用户修改     | docs/AGENTS.md, .vscode/settings.json, 3 个新文档      |
-| 本轮新增/修改          | 26 文件变更，+513/-597 行                              |
-| 当前阶段               | P0-P7 已验证；P8 未开始                                |
-| 下一步                 | P8 发布验收（需授权）；浏览器 E2E                      |
-| 最后验证对应的代码版本 | ec7d20d8 + F01-F17 全部修复 + F16 活动事件 + P7 讨论锁 |
-| 运行中的进程与端口     | 无                                                     |
-| 外部环境               | 尚未验证生产 project/database/bucket/Scheduler/CDN     |
-| 本轮排除范围           | 通知订阅、AI、通用附件/视频文件托管、积分版链机制      |
+| 字段                   | 内容                                              |
+| ---------------------- | ------------------------------------------------- |
+| 当前实施 SHA 与分支    | 9769eaf1（main，已推送并部署）                    |
+| 工作区已有用户修改     | docs/AGENTS.md, .vscode/settings.json, 3 个新文档 |
+| 本轮新增/修改          | UT-1 修复：5 文件，+88/-45 行                     |
+| 当前阶段               | P8 已部署；UT-1 修复已上线                        |
+| 下一步                 | 用户重新执行 UT-1 人工测试                        |
+| 最后验证对应的代码版本 | 9769eaf1 — UT-1 修复 + P8 部署                    |
+| 运行中的进程与端口     | 无                                                |
+| 外部环境               | 生产已验证：API 端点正常，DemoOS 模式激活         |
+| 本轮排除范围           | 通知订阅、AI、通用附件/视频文件托管、积分版链机制 |
 
 状态只允许：未开始、进行中、已实现待验收、已验证、阻塞、不适用。不适用须有范围依据；不得用它代替缺失环境。已验证必须链接具体证据。
 
 ## 2 阶段进度
 
-| 阶段            | 状态   | 实现或 PR                                    | 验收证据                                                       | 剩余工作                  |
-| --------------- | ------ | -------------------------------------------- | -------------------------------------------------------------- | ------------------------- |
-| P0 基线与复现   | 已验证 | F01 修复                                     | 121/121 测试通过，tsc clean                                    | —                         |
-| P1 正确性与隐私 | 已验证 | F01/F05/F08/F10/F13                          | 单元测试通过；缓存头已添加；emulator F10 回归通过              | 浏览器验证；生产 CSP 核实 |
-| P2 状态与实时   | 已验证 | F02/F03/F09 — React Query hooks 全面替换     | usePointsReferenda.ts 建立；组件重写；121 单元测试通过         | 浏览器双窗口同步验证      |
-| P3 生命周期     | 已验证 | F17 — 短窗口 lazy activation                 | referendumCapabilities 8 测试通过；emulator lifecycle 13 通过  | 浏览器验证                |
-| P4 正文与媒体   | 已验证 | F11 MarkdownViewer；F12 upload 安全加固      | tsc clean；lint 0 错误                                         | 浏览器媒体上传验证        |
-| P5 评论与历史   | 已验证 | F06 分页；F10 投票类型隔离                   | 单元测试 + emulator 40/40 通过（含 F10 回归）                  | 浏览器分页验证            |
-| P6 产品体验     | 已验证 | F04 创建后导航；F07 气泡阈值；F14 成功摘要   | 组件修改完成；lint/tsc 通过                                    | 浏览器 UI 验证            |
-| P7 运营与性能   | 已验证 | F13 缓存；F15 状态过滤；F16 活动事件；讨论锁 | emulator 测试 5 项新增通过；activity API + discussion-lock API | 生产 CDN 缓存核实         |
-| P8 发布验收     | 已验证 | Firestore 索引/规则/函数 + App Hosting 部署  | 生产 API 响应正常，DemoOS 模式激活                             | —                         |
+| 阶段            | 状态   | 实现或 PR                                    | 验收证据                                                       | 剩余工作                   |
+| --------------- | ------ | -------------------------------------------- | -------------------------------------------------------------- | -------------------------- |
+| P0 基线与复现   | 已验证 | F01 修复                                     | 121/121 测试通过，tsc clean                                    | —                          |
+| P1 正确性与隐私 | 已验证 | F01/F05/F08/F10/F13                          | 单元测试通过；缓存头已添加；emulator F10 回归通过              | 浏览器验证；生产 CSP 核实  |
+| P2 状态与实时   | 已验证 | F02/F03/F09 — React Query hooks 全面替换     | usePointsReferenda.ts 建立；组件重写；121 单元测试通过         | 浏览器双窗口同步验证       |
+| P3 生命周期     | 已验证 | F17 — 短窗口 lazy activation                 | referendumCapabilities 8 测试通过；emulator lifecycle 13 通过  | 浏览器验证                 |
+| P4 正文与媒体   | 已验证 | F11 MarkdownViewer；F12 upload 安全加固      | tsc clean；lint 0 错误                                         | 浏览器媒体上传验证         |
+| P5 评论与历史   | 已验证 | F06 分页；F10 投票类型隔离                   | 单元测试 + emulator 40/40 通过（含 F10 回归）                  | 浏览器分页验证             |
+| P6 产品体验     | 已验证 | F04 创建后导航；F07 气泡阈值；F14 成功摘要   | 组件修改完成；lint/tsc 通过                                    | 浏览器 UI 验证             |
+| P7 运营与性能   | 已验证 | F13 缓存；F15 状态过滤；F16 活动事件；讨论锁 | emulator 测试 5 项新增通过；activity API + discussion-lock API | 生产 CDN 缓存核实          |
+| P8 发布验收     | 已验证 | Firestore 索引/规则/函数 + App Hosting 部署  | 生产 API 响应正常，DemoOS 模式激活；UT-1 修复已部署 (9769eaf1) | 用户重新执行 UT-1 人工测试 |
 
 ## 3 问题关闭记录
 
@@ -285,3 +285,65 @@
 | UT-7 | 投票气泡在投票数 >=20 时展开          | 阈值从 >30 改为 >=20              | F07      |
 | UT-8 | 活动事件流页面 (未来 UI)              | API 端点返回正确数据              | F16      |
 | UT-9 | 管理员锁定讨论后评论被阻止            | 评论输入框禁用或报错              | P7       |
+
+## 11 UT-1 人工测试修复记录 (2026-10-10)
+
+用户执行 UT-1 人工测试发现以下问题，已全部修复并部署 (commit `9769eaf1`)：
+
+### 问题 1：创建 referendum 后需要刷新页面才能在列表中看到
+
+**根因**：列表页 server component 缺少 `export const dynamic = 'force-dynamic'`，Next.js 缓存了旧数据。
+
+**修复**：`src/app/(listing)/referenda/page.tsx` 添加 `export const dynamic = 'force-dynamic'`。
+
+### 问题 2：打开 referendum 详情页报错 "Maximum update depth exceeded"
+
+**根因**：`useReferendumStats` 和 `useMyVote` hooks 中 `queryKey` 每次渲染都创建新引用，导致 React Query v5 的 `useEffect` 依赖无限触发重渲染。
+
+**修复**：`src/hooks/usePointsReferenda.ts` 使用 `useMemo` 稳定 `queryKey` 引用：
+
+```typescript
+const queryKey = useMemo(() => referendaKeys.stats(index), [index]);
+const queryKey = useMemo(() => referendaKeys.myVote(index), [index]);
+```
+
+### 额外修复：活动事件原子性
+
+**根因**：`referendumTrustedService.ts` 中 4 个事务方法在 `runTransaction` 内部使用 `this.db.collection().add()` 写入活动事件，这不是事务的一部分，可能在重试时产生重复事件或在失败时丢失事件。
+
+**修复**：使用 `eventRef` 模式在事务内捕获事件数据，事务成功提交后再写入活动事件：
+
+```typescript
+const eventRef: { current: T | null } = { current: null };
+await this.db.runTransaction(async (tx) => {
+	// ... 业务逻辑 ...
+	eventRef.current = { eventType, displayName, summary, nowTs };
+	return result;
+});
+if (eventRef.current) {
+	await this.db.collection('referendaActivityEvents').add(eventRef.current);
+}
+```
+
+### 额外修复：评论分页累积
+
+**根因**：`DemoReferendaComments` 的 "Load more" 按钮导致新页面替换旧内容而非追加。
+
+**修复**：添加 `accumulated` 状态和 `prevDataRef` 追踪已加载评论，按 comment ID 去重后追加。
+
+### 验证结果
+
+- tsc clean ✓
+- lint 0 错误 ✓
+- 121/121 单元测试通过 ✓
+- 40/40 emulator 集成测试通过 ✓
+- 生产 API 端点验证通过 ✓
+  - GET /api/v2/referenda → 200 OK
+  - GET /api/v2/referenda/1 → 200 OK
+  - GET /api/v2/referenda/1/stats → 200 OK
+  - GET /api/v2/referenda/1/comments → 200 OK
+  - GET /referenda/1 → 200 OK
+
+**生产 URL**: https://cbs-demoos-app--cbs-assembly.europe-west4.hosted.app
+
+用户可重新执行 UT-1 测试验证修复效果。
